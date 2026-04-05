@@ -1,0 +1,118 @@
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+
+const prisma = new PrismaClient();
+
+const permissions = [
+  { code: 'auth.login', name: 'Login', module: 'auth' },
+  { code: 'auth.refresh', name: 'Refresh session', module: 'auth' },
+  { code: 'users.read', name: 'Read users', module: 'users' },
+  { code: 'users.create', name: 'Create users', module: 'users' },
+  { code: 'users.update', name: 'Update users', module: 'users' },
+  { code: 'users.block', name: 'Block users', module: 'users' },
+  { code: 'roles.read', name: 'Read roles', module: 'roles' },
+  { code: 'roles.assign', name: 'Assign roles', module: 'roles' },
+  { code: 'tenants.read', name: 'Read tenants', module: 'tenants' },
+  { code: 'tenants.update', name: 'Update tenants', module: 'tenants' },
+  { code: 'units.read', name: 'Read units', module: 'units' },
+  { code: 'units.create', name: 'Create units', module: 'units' },
+  { code: 'units.update', name: 'Update units', module: 'units' },
+  { code: 'settings.read', name: 'Read settings', module: 'business-settings' },
+  { code: 'settings.update', name: 'Update settings', module: 'business-settings' },
+  { code: 'audit.read', name: 'Read audit logs', module: 'audit' },
+  { code: 'clients.read', name: 'Read clients', module: 'clients' },
+  { code: 'clients.create', name: 'Create clients', module: 'clients' },
+  { code: 'professionals.read', name: 'Read professionals', module: 'professionals' },
+  { code: 'professionals.create', name: 'Create professionals', module: 'professionals' },
+];
+
+async function main() {
+  for (const p of permissions) {
+    await prisma.permission.upsert({
+      where: { code: p.code },
+      update: {},
+      create: p,
+    });
+  }
+
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: 'mix-demo' },
+    update: {},
+    create: {
+      name: 'Mix Demo',
+      slug: 'mix-demo',
+    },
+  });
+
+  const unit = await prisma.unit.create({
+    data: {
+      tenantId: tenant.id,
+      name: 'Unidade Principal',
+      code: 'MIX-01',
+    },
+  }).catch(async () => {
+    const existing = await prisma.unit.findFirst({ where: { tenantId: tenant.id, code: 'MIX-01' } });
+    return existing!;
+  });
+
+  const adminRole = await prisma.role.upsert({
+    where: { tenantId_code: { tenantId: tenant.id, code: 'ADMIN' } },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      code: 'ADMIN',
+      name: 'Administrador',
+      description: 'Perfil administrativo',
+    },
+  });
+
+  const allPermissions = await prisma.permission.findMany();
+  for (const permission of allPermissions) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: adminRole.id, permissionId: permission.id } },
+      update: {},
+      create: { roleId: adminRole.id, permissionId: permission.id },
+    });
+  }
+
+  await prisma.businessSettings.upsert({
+    where: { tenantId: tenant.id },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      timezone: 'America/Sao_Paulo',
+      currency: 'BRL',
+    },
+  });
+
+  const passwordHash = await bcrypt.hash('Admin@12345', 10);
+
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@mix-demo.local' },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      unitId: unit.id,
+      name: 'Admin Demo',
+      email: 'admin@mix-demo.local',
+      passwordHash,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId: adminUser.id, roleId: adminRole.id } },
+    update: {},
+    create: { userId: adminUser.id, roleId: adminRole.id },
+  });
+
+  console.log('Seed concluído com sucesso.');
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

@@ -1,0 +1,207 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../database/prisma.service';
+import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { CancelAppointmentDto } from './dto/cancel-appointment.dto';
+
+type AppointmentAction = 'cancel' | 'markNoShow';
+type AppointmentTransitionOutcome =
+  | 'ALLOW'
+  | 'ALREADY_CANCELED'
+  | 'ALREADY_NO_SHOW'
+  | 'INVALID_TRANSITION';
+
+type AppointmentTransitionStatus = 'SCHEDULED' | 'CANCELED' | 'NO_SHOW';
+
+const APPOINTMENT_TRANSITIONS: Record<
+  AppointmentTransitionStatus,
+  Record<AppointmentAction, AppointmentTransitionOutcome>
+> = {
+  SCHEDULED: {
+    cancel: 'ALLOW',
+    markNoShow: 'ALLOW',
+  },
+  CANCELED: {
+    cancel: 'ALREADY_CANCELED',
+    markNoShow: 'INVALID_TRANSITION',
+  },
+  NO_SHOW: {
+    cancel: 'INVALID_TRANSITION',
+    markNoShow: 'ALREADY_NO_SHOW',
+  },
+};
+
+@Injectable()
+export class AppointmentsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private assertTransitionAllowed(currentStatus: string, action: AppointmentAction): void {
+    const transition = APPOINTMENT_TRANSITIONS[currentStatus as AppointmentTransitionStatus];
+
+    // Para este corte do R1.1, estados fora da matriz seguem permitidos.
+    // Ex.: CONFIRMED, CHECKED_IN, IN_SERVICE.
+    if (!transition) {
+      return;
+    }
+
+    const outcome = transition[action];
+
+    if (outcome === 'ALLOW') {
+      return;
+    }
+
+    if (outcome === 'ALREADY_CANCELED') {
+      throw new BadRequestException({
+        code: 'APPOINTMENT_ALREADY_CANCELED',
+        title: 'Agendamento já cancelado',
+        message: 'Este agendamento já foi cancelado anteriormente.',
+        recommendedAction: 'Atualize a agenda antes de tentar uma nova ação.',
+      });
+    }
+
+    if (outcome === 'ALREADY_NO_SHOW') {
+      throw new BadRequestException({
+        code: 'APPOINTMENT_ALREADY_NO_SHOW',
+        title: 'Agendamento já marcado como falta',
+        message: 'Este agendamento já está marcado como no-show.',
+        recommendedAction: 'Atualize a agenda antes de tentar uma nova ação.',
+      });
+    }
+
+    throw new BadRequestException({
+      code: 'APPOINTMENT_INVALID_STATUS_TRANSITION',
+      title: 'Transição de status inválida',
+      message: 'Esta ação não é permitida para o status atual do agendamento.',
+      recommendedAction: 'Atualize a agenda e revise o status antes de tentar novamente.',
+    });
+  }
+
+  findAllByTenant(tenantId: string) {
+    return this.prisma.appointment.findMany({
+      where: { tenantId },
+      orderBy: { startAt: 'asc' },
+    });
+  }
+
+  async create(tenantId: string, unitId: string | null, dto: CreateAppointmentDto) {
+    const startAt = new Date(dto.startAt);
+    const endAt = new Date(dto.endAt);
+
+    if (endAt <= startAt) {
+      throw new BadRequestException({
+        code: 'APPOINTMENT_INVALID_RANGE',
+        title: 'Intervalo inválido',
+        message: 'O horário final precisa ser maior que o horário inicial.',
+        recommendedAction: 'Revise o intervalo informado e tente novamente.',
+      });
+    }
+
+    if (!dto.isOverbook && dto.professionalId) {
+      const conflict = await this.prisma.appointment.findFirst({
+        where: {
+          tenantId,
+          professionalId: dto.professionalId,
+          status: { in: ['SCHEDULED', 'CONFIRMED', 'CHECKED_IN', 'IN_SERVICE'] },
+          startAt: { lt: endAt },
+          endAt: { gt: startAt },
+        },
+      });
+
+      if (conflict) {
+        throw new BadRequestException({
+          code: 'APPOINTMENT_CONFLICT',
+          title: 'Conflito de agenda',
+          message: 'Já existe um atendimento neste intervalo para este profissional.',
+          recommendedAction: 'Escolha outro horário, profissional ou utilize encaixe autorizado.',
+        });
+      }
+    }
+
+    if (dto.resourceId) {
+      const resourceBlocked = await this.prisma.appointmentBlock.findFirst({
+        where: {
+          tenantId,
+          resourceId: dto.resourceId,
+          active: true,
+          startsAt: { lt: endAt },
+          endsAt: { gt: startAt },
+        },
+      });
+
+      if (resourceBlocked) {
+        throw new BadRequestException({
+          code: 'RESOURCE_BLOCKED',
+          title: 'Recurso indisponível',
+          message: 'O recurso está bloqueado no horário informado.',
+          recommendedAction: 'Escolha outro horário ou outro recurso.',
+        });
+      }
+    }
+
+    return this.prisma.appointment.create({
+      data: {
+        tenantId,
+        unitId,
+        clientId: dto.clientId,
+        professionalId: dto.professionalId,
+        serviceId: dto.serviceId,
+        resourceId: dto.resourceId,
+        startAt,
+        endAt,
+        isWalkIn: dto.isWalkIn ?? false,
+        isOverbook: dto.isOverbook ?? false,
+        notes: dto.notes,
+      },
+    });
+  }
+
+  async cancel(tenantId: string, appointmentId: string, dto: CancelAppointmentDto) {
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id: appointmentId, tenantId },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException({
+        code: 'APPOINTMENT_NOT_FOUND',
+        title: 'Agendamento não encontrado',
+        message: 'Não encontramos o agendamento informado.',
+        recommendedAction: 'Atualize a agenda e tente novamente.',
+      });
+    }
+
+    this.assertTransitionAllowed(appointment.status, 'cancel');
+
+    return this.prisma.appointment.update({
+      where: { id: appointment.id },
+      data: {
+        status: 'CANCELED',
+        canceledAt: new Date(),
+        canceledReason: dto.reason,
+      },
+    });
+  }
+
+  async markNoShow(tenantId: string, appointmentId: string) {
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id: appointmentId, tenantId },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException({
+        code: 'APPOINTMENT_NOT_FOUND',
+        title: 'Agendamento não encontrado',
+        message: 'Não encontramos o agendamento informado.',
+        recommendedAction: 'Atualize a agenda e tente novamente.',
+      });
+    }
+
+    this.assertTransitionAllowed(appointment.status, 'markNoShow');
+
+    return this.prisma.appointment.update({
+      where: { id: appointment.id },
+      data: {
+        status: 'NO_SHOW',
+        noShowAt: new Date(),
+      },
+    });
+  }
+}

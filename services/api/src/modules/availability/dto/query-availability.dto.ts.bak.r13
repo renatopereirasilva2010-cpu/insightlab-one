@@ -1,0 +1,20 @@
+import { IsDateString, IsOptional, IsString, MaxLength } from 'class-validator';
+
+export class QueryAvailabilityDto {
+  @IsString()
+  @MaxLength(50)
+  serviceId!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  professionalId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  resourceId?: string;
+
+  @IsDateString()
+  date!: string;
+}

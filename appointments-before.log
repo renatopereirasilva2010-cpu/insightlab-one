@@ -1,0 +1,14 @@
+
+> api@0.0.1 test /home/renato/projects/insightlab-one/workspace/services/api
+> jest --config ./jest.config.js "appointments.service.spec.ts"
+
+PASS test/appointments.service.spec.ts (12.907 s)
+  AppointmentsService
+    ✓ should be defined (5 ms)
+    ✓ should reject invalid date range logic assumption (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        14.913 s, estimated 19 s
+Ran all test suites matching /appointments.service.spec.ts/i.

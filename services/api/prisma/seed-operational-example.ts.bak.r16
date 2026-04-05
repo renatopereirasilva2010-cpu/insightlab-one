@@ -1,0 +1,48 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  const tenant = await prisma.tenant.findFirst({ where: { slug: 'mix-demo' } });
+  if (!tenant) throw new Error('Tenant mix-demo não encontrado');
+
+  const unit = await prisma.unit.findFirst({ where: { tenantId: tenant.id } });
+  if (!unit) throw new Error('Unit demo não encontrada');
+
+  await prisma.serviceCategory.createMany({
+    data: [
+      { tenantId: tenant.id, name: 'Cabelo' },
+      { tenantId: tenant.id, name: 'Estética' },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.productCategory.createMany({
+    data: [{ tenantId: tenant.id, name: 'Revenda' }],
+    skipDuplicates: true,
+  });
+
+  await prisma.supplyCategory.createMany({
+    data: [{ tenantId: tenant.id, name: 'Colorimetria' }],
+    skipDuplicates: true,
+  });
+
+  await prisma.operationalResource.createMany({
+    data: [
+      { tenantId: tenant.id, unitId: unit.id, name: 'Cabine 1', type: 'CABINE' },
+      { tenantId: tenant.id, unitId: unit.id, name: 'Estação 1', type: 'ESTACAO' },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log('Seed operacional mínima concluída.');
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

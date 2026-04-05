@@ -1,0 +1,15 @@
+
+> api@0.0.1 test /home/renato/projects/insightlab-one/workspace/services/api
+> jest --config ./jest.config.js "agenda.integration.spec.ts"
+
+PASS test/agenda.integration.spec.ts (9.314 s)
+  Agenda integration assumptions
+    ✓ should preserve appointment state names (8 ms)
+    ✓ should preserve confirmation status names (4 ms)
+    ✓ should preserve overbook flag behavior assumption (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        10.291 s
+Ran all test suites matching /agenda.integration.spec.ts/i.

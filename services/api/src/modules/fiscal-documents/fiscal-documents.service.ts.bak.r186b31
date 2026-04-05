@@ -1,0 +1,322 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  FiscalDocumentEventType,
+  FiscalDocumentSourceType,
+  FiscalDocumentStatus,
+  FiscalDocumentType,
+  Prisma,
+} from '@prisma/client';
+import { PrismaService } from '../../database/prisma.service';
+import { CreateFiscalDocumentDto } from './dto/create-fiscal-document.dto';
+import { UpdateFiscalDocumentStatusDto } from './dto/update-fiscal-document-status.dto';
+
+const FISCAL_DOCUMENT_STATUS_TRANSITIONS: Record<
+  FiscalDocumentStatus,
+  FiscalDocumentStatus[]
+> = {
+  [FiscalDocumentStatus.DRAFT]: [FiscalDocumentStatus.REQUESTED],
+  [FiscalDocumentStatus.REQUESTED]: [
+    FiscalDocumentStatus.AUTHORIZED,
+    FiscalDocumentStatus.FAILED,
+  ],
+  [FiscalDocumentStatus.AUTHORIZED]: [FiscalDocumentStatus.CANCELED],
+  [FiscalDocumentStatus.CANCELED]: [],
+  [FiscalDocumentStatus.FAILED]: [],
+};
+
+@Injectable()
+export class FiscalDocumentsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async list(tenantId: string) {
+    return this.prisma.fiscalDocument.findMany({
+      where: { tenantId },
+      include: {
+        events: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async detail(tenantId: string, id: string) {
+    const fiscalDocument = await this.prisma.fiscalDocument.findFirst({
+      where: {
+        id,
+        tenantId,
+      },
+      include: {
+        events: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!fiscalDocument) {
+      throw new NotFoundException({
+        code: 'FISCAL_DOCUMENT_NOT_FOUND',
+        title: 'Documento fiscal não encontrado',
+        message: 'Não encontramos o documento fiscal informado.',
+        recommendedAction: 'Revise o identificador e tente novamente.',
+      });
+    }
+
+    return fiscalDocument;
+  }
+
+  async create(
+    tenantId: string,
+    unitId: string | null,
+    dto: CreateFiscalDocumentDto,
+  ) {
+    const sourceType = this.parseSourceType(dto.sourceType);
+    const documentType = this.parseDocumentType(dto.documentType);
+
+    const payload: Prisma.InputJsonValue = {
+      sourceType: dto.sourceType,
+      sourceId: dto.sourceId,
+      documentType: dto.documentType,
+      provider: dto.provider ?? null,
+    };
+
+    return this.prisma.fiscalDocument.create({
+      data: {
+        tenantId,
+        unitId,
+        sourceType,
+        sourceId: dto.sourceId,
+        documentType,
+        provider: dto.provider ?? null,
+        events: {
+          create: {
+            eventType: FiscalDocumentEventType.CREATED,
+            message: 'Documento fiscal registrado no sistema.',
+            payload,
+          },
+        },
+      },
+      include: {
+        events: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+  }
+
+  async updateStatus(
+    tenantId: string,
+    id: string,
+    dto: UpdateFiscalDocumentStatusDto,
+  ) {
+    const fiscalDocument = await this.prisma.fiscalDocument.findFirst({
+      where: {
+        id,
+        tenantId,
+      },
+    });
+
+    if (!fiscalDocument) {
+      throw new NotFoundException({
+        code: 'FISCAL_DOCUMENT_NOT_FOUND',
+        title: 'Documento fiscal não encontrado',
+        message: 'Não encontramos o documento fiscal informado.',
+        recommendedAction: 'Revise o identificador e tente novamente.',
+      });
+    }
+
+    const nextStatus = this.parseStatus(dto.status);
+    this.assertTransitionAllowed(fiscalDocument.status, nextStatus);
+
+    const { eventType, defaultMessage } = this.mapEventForStatus(nextStatus);
+    const now = new Date();
+
+    const payload: Prisma.InputJsonValue = {
+      previousStatus: fiscalDocument.status,
+      nextStatus,
+      referenceNumber: dto.referenceNumber ?? null,
+      accessKey: dto.accessKey ?? null,
+      errorCode: dto.errorCode ?? null,
+      errorMessage: dto.errorMessage ?? null,
+    };
+
+    const data: Prisma.FiscalDocumentUpdateInput = {
+      status: nextStatus,
+      events: {
+        create: {
+          eventType,
+          message: dto.message ?? defaultMessage,
+          payload,
+        },
+      },
+    };
+
+    if (dto.referenceNumber !== undefined) {
+      data.referenceNumber = dto.referenceNumber;
+    }
+
+    if (dto.accessKey !== undefined) {
+      data.accessKey = dto.accessKey;
+    }
+
+    if (nextStatus === FiscalDocumentStatus.REQUESTED) {
+      data.requestedAt = now;
+    }
+
+    if (nextStatus === FiscalDocumentStatus.AUTHORIZED) {
+      data.authorizedAt = now;
+    }
+
+    if (nextStatus === FiscalDocumentStatus.CANCELED) {
+      data.canceledAt = now;
+    }
+
+    if (nextStatus === FiscalDocumentStatus.FAILED) {
+      if (dto.errorCode !== undefined) {
+        data.errorCode = dto.errorCode;
+      }
+
+      if (dto.errorMessage !== undefined) {
+        data.errorMessage = dto.errorMessage;
+      }
+    }
+
+    return this.prisma.fiscalDocument.update({
+      where: { id: fiscalDocument.id },
+      data,
+      include: {
+        events: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+  }
+
+  private parseSourceType(value: string): FiscalDocumentSourceType {
+    switch (value) {
+      case 'SALE':
+        return FiscalDocumentSourceType.SALE;
+      case 'PAYMENT':
+        return FiscalDocumentSourceType.PAYMENT;
+      case 'MANUAL':
+        return FiscalDocumentSourceType.MANUAL;
+      default:
+        throw new BadRequestException({
+          code: 'FISCAL_DOCUMENT_INVALID_SOURCE_TYPE',
+          title: 'sourceType inválido',
+          message: 'sourceType deve ser SALE, PAYMENT ou MANUAL.',
+          recommendedAction:
+            'Revise o tipo de origem do documento fiscal e tente novamente.',
+        });
+    }
+  }
+
+  private parseDocumentType(value: string): FiscalDocumentType {
+    switch (value) {
+      case 'NFSE':
+        return FiscalDocumentType.NFSE;
+      case 'NFE':
+        return FiscalDocumentType.NFE;
+      case 'NFCE':
+        return FiscalDocumentType.NFCE;
+      case 'OTHER':
+        return FiscalDocumentType.OTHER;
+      default:
+        throw new BadRequestException({
+          code: 'FISCAL_DOCUMENT_INVALID_DOCUMENT_TYPE',
+          title: 'documentType inválido',
+          message: 'documentType deve ser NFSE, NFE, NFCE ou OTHER.',
+          recommendedAction:
+            'Revise o tipo de documento fiscal e tente novamente.',
+        });
+    }
+  }
+
+  private parseStatus(value: string): FiscalDocumentStatus {
+    switch (value) {
+      case 'REQUESTED':
+        return FiscalDocumentStatus.REQUESTED;
+      case 'AUTHORIZED':
+        return FiscalDocumentStatus.AUTHORIZED;
+      case 'FAILED':
+        return FiscalDocumentStatus.FAILED;
+      case 'CANCELED':
+        return FiscalDocumentStatus.CANCELED;
+      default:
+        throw new BadRequestException({
+          code: 'FISCAL_DOCUMENT_INVALID_STATUS',
+          title: 'status inválido',
+          message: 'status deve ser REQUESTED, AUTHORIZED, FAILED ou CANCELED.',
+          recommendedAction:
+            'Revise o status informado para a transição fiscal e tente novamente.',
+        });
+    }
+  }
+
+  private assertTransitionAllowed(
+    currentStatus: FiscalDocumentStatus,
+    nextStatus: FiscalDocumentStatus,
+  ) {
+    if (currentStatus === nextStatus) {
+      throw new BadRequestException({
+        code: 'FISCAL_DOCUMENT_ALREADY_IN_STATUS',
+        title: 'Documento fiscal já está neste status',
+        message: `O documento fiscal já está com status ${currentStatus}.`,
+        recommendedAction: 'Informe um novo status válido para continuar.',
+      });
+    }
+
+    const allowedTransitions =
+      FISCAL_DOCUMENT_STATUS_TRANSITIONS[currentStatus] ?? [];
+
+    if (!allowedTransitions.includes(nextStatus)) {
+      throw new BadRequestException({
+        code: 'FISCAL_DOCUMENT_INVALID_STATUS_TRANSITION',
+        title: 'Transição de status inválida',
+        message: `Não é permitido mudar o documento fiscal de ${currentStatus} para ${nextStatus}.`,
+        recommendedAction:
+          'Revise a sequência de status fiscal e tente novamente.',
+      });
+    }
+  }
+
+  private mapEventForStatus(status: FiscalDocumentStatus): {
+    eventType: FiscalDocumentEventType;
+    defaultMessage: string;
+  } {
+    switch (status) {
+      case FiscalDocumentStatus.REQUESTED:
+        return {
+          eventType: FiscalDocumentEventType.REQUESTED,
+          defaultMessage: 'Emissão fiscal solicitada.',
+        };
+      case FiscalDocumentStatus.AUTHORIZED:
+        return {
+          eventType: FiscalDocumentEventType.AUTHORIZED,
+          defaultMessage: 'Documento fiscal autorizado.',
+        };
+      case FiscalDocumentStatus.FAILED:
+        return {
+          eventType: FiscalDocumentEventType.ERROR,
+          defaultMessage: 'Falha no processamento do documento fiscal.',
+        };
+      case FiscalDocumentStatus.CANCELED:
+        return {
+          eventType: FiscalDocumentEventType.CANCELED,
+          defaultMessage: 'Documento fiscal cancelado.',
+        };
+      default:
+        throw new BadRequestException({
+          code: 'FISCAL_DOCUMENT_INVALID_STATUS',
+          title: 'status inválido',
+          message: 'Não foi possível mapear o evento para o status informado.',
+          recommendedAction:
+            'Revise o status fiscal informado e tente novamente.',
+        });
+    }
+  }
+}

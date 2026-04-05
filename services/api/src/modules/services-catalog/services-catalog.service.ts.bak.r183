@@ -1,0 +1,29 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../database/prisma.service';
+import { CreateServiceDto } from './dto/create-service.dto';
+
+@Injectable()
+export class ServicesCatalogService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  findAllByTenant(tenantId: string) {
+    return this.prisma.serviceCatalog.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  create(tenantId: string, unitId: string | null, dto: CreateServiceDto) {
+    return this.prisma.serviceCatalog.create({
+      data: {
+        tenantId,
+        unitId,
+        name: dto.name,
+        description: dto.description,
+        durationMinutes: dto.durationMinutes,
+        price: dto.price,
+        availableOnline: dto.availableOnline ?? true,
+      },
+    });
+  }
+}

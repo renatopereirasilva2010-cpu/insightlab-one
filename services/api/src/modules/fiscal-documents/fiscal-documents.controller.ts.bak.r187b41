@@ -1,0 +1,51 @@
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequiredPermissions } from '../../common/decorators/required-permissions.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../common/guards/permission.guard';
+import { TenantGuard } from '../../common/guards/tenant.guard';
+import { CreateFiscalDocumentDto } from './dto/create-fiscal-document.dto';
+import { UpdateFiscalDocumentStatusDto } from './dto/update-fiscal-document-status.dto';
+import { FiscalDocumentsService } from './fiscal-documents.service';
+
+@Controller('v1/fiscal-documents')
+@UseGuards(JwtAuthGuard, TenantGuard, PermissionGuard)
+export class FiscalDocumentsController {
+  constructor(private readonly fiscalDocumentsService: FiscalDocumentsService) {}
+
+  @Get()
+  @RequiredPermissions('fiscal-documents.read')
+  list(@CurrentTenant() tenant: { id: string }) {
+    return this.fiscalDocumentsService.list(tenant.id);
+  }
+
+  @Get(':id')
+  @RequiredPermissions('fiscal-documents.read')
+  detail(
+    @CurrentTenant() tenant: { id: string },
+    @Param('id') id: string,
+  ) {
+    return this.fiscalDocumentsService.detail(tenant.id, id);
+  }
+
+  @Post()
+  @RequiredPermissions('fiscal-documents.create')
+  create(
+    @CurrentTenant() tenant: { id: string },
+    @CurrentUser() user: { unitId?: string | null },
+    @Body() dto: CreateFiscalDocumentDto,
+  ) {
+    return this.fiscalDocumentsService.create(tenant.id, user?.unitId ?? null, dto);
+  }
+
+  @Post(':id/status')
+  @RequiredPermissions('fiscal-documents.update-status')
+  updateStatus(
+    @CurrentTenant() tenant: { id: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateFiscalDocumentStatusDto,
+  ) {
+    return this.fiscalDocumentsService.updateStatus(tenant.id, id, dto);
+  }
+}

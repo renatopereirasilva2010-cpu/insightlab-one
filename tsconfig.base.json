@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowJs": false,
+    "baseUrl": ".",
+    "paths": {
+      "@insightlab-one/ui/*": ["packages/ui/*"],
+      "@insightlab-one/config/*": ["packages/config/*"],
+      "@insightlab-one/types/*": ["packages/types/*"],
+      "@insightlab-one/utils/*": ["packages/utils/*"],
+      "@insightlab-one/auth/*": ["packages/auth/*"],
+      "@insightlab-one/validation/*": ["packages/validation/*"],
+      "@insightlab-one/analytics-contracts/*": ["packages/analytics-contracts/*"],
+      "@insightlab-one/design-tokens/*": ["packages/design-tokens/*"]
+    }
+  }
+}

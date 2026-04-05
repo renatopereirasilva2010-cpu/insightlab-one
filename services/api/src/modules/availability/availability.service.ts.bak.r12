@@ -1,0 +1,30 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../database/prisma.service';
+import { QueryAvailabilityDto } from './dto/query-availability.dto';
+
+@Injectable()
+export class AvailabilityService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async query(tenantId: string, dto: QueryAvailabilityDto) {
+    const date = new Date(dto.date);
+    const weekday = date.getUTCDay();
+
+    const availabilities = await this.prisma.professionalAvailability.findMany({
+      where: {
+        tenantId,
+        professionalId: dto.professionalId,
+        weekday,
+        active: true,
+      },
+      orderBy: { startTime: 'asc' },
+    });
+
+    return {
+      date: dto.date,
+      weekday,
+      totalRules: availabilities.length,
+      rules: availabilities,
+    };
+  }
+}
