@@ -13,7 +13,7 @@
 - Contato: 41997343519
 
 ## 3. Responsável pela decisão final
-- Nome: Renato Pereiora da Silva
+- Nome: Renato Pereira da Silva
 - Contato: 41997343519
 
 ## 4. Evidências mínimas usadas como base
@@ -46,8 +46,6 @@
 - [ ] ABORTADO
 
 ## 8. Ressalvas objetivas, se houver
-- A abertura operacional depende do preenchimento nominal do responsável pela execução
-- A abertura operacional depende do preenchimento nominal do responsável pela decisão final
 - O corte atual é suficiente para piloto controlado, não para ampliação de escopo
 - Qualquer necessidade de mexer em produto, infraestrutura, runtime ou dados extrapola esta rodada documental e deve ser tratada fora desta governança mínima
 
