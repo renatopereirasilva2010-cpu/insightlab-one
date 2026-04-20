@@ -13,3 +13,20 @@ expo-env.d.ts
 .DS_Store
 .vscode
 .idea
+
+# higiene local pos-V47
+.codex
+.codex-runs/
+.normalizacao_docker/
+.turbo/
+services/api/.codex/
+services/api/.turbo/
+services/api/.env.bak_*
+services/api/.smoke-runtime.log
+services/api/rodada_manual_piloto.log
+governance/rodada_atual_piloto.env
+InsightLab_One_Documento_Mestre_V40.txt
+InsightLab_One_Documento_Mestre_V41.txt
+InsightLab_One_Documento_Mestre_V46.txt
+services/api/fluxo_piloto_v44_run_20260417_221734.log
+services/api/retry_fiscal_curto.sh
