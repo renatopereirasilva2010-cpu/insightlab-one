@@ -110,18 +110,40 @@ Tratar com máxima cautela:
 - não reabrir blocos já fechados sem evidência nova
 - não expandir escopo por conveniência
 
-## 11. Comandos oficiais mínimos
+## 11. Comandos oficiais mínimos consolidados
+
+### 11.1 Raiz do workspace
+Executar na raiz quando o objetivo for evidência repo-wide:
 - instalar dependências: pnpm install
-- build: pnpm build
-- testes: pnpm test
-- teste focal: pnpm test -- <arquivo>
-- dev: pnpm start:dev
-- lint: pnpm lint
-- prisma generate: pnpm prisma generate
-- prisma migrate dev: pnpm prisma migrate dev
+- build repo-wide: pnpm build
+- testes repo-wide: pnpm test
+- lint repo-wide: pnpm lint
+
+### 11.2 services/api
+Executar em services/api quando o objetivo for comportamento do serviço real:
+- build da API: pnpm build
+- testes da API: pnpm test
+- lint da API: pnpm lint
+- runtime da API: pnpm start:dev
+- prisma generate: pnpm prisma:generate
+- prisma migrate: pnpm prisma:migrate
 - seed: pnpm prisma:seed
 
-## 12. Formato obrigatório da resposta final do agente
+Regra:
+- não presumir que comandos do services/api existem na raiz
+- quando houver dúvida, inspecionar package.json da raiz e package.json de services/api antes de agir
+
+## 12. Higiene de sessão do Codex
+- Ctrl+L limpa só a tela e mantém a conversa
+- /clear limpa a tela e inicia nova conversa na mesma sessão
+- /new inicia nova conversa na mesma sessão sem limpar a tela
+- /resume retoma conversa salva
+- com 60% ou mais de contexto restante: seguir normalmente
+- entre 60% e 40%: evitar logs longos e preferir resumos/checkpoints
+- entre 40% e 25%: preparar handoff e fechar bloco atual
+- abaixo de 25%: atualizar RUN-SUMMARY e preferir nova conversa em vez de empilhar mais contexto
+
+## 13. Formato obrigatório da resposta final do agente
 Sempre retornar:
 - objetivo
 - o que foi feito
@@ -132,7 +154,7 @@ Sempre retornar:
 - pendências
 - próximo passo
 
-## 13. Definition of Done da frente ativa (R1.11a)
+## 14. Definition of Done da frente ativa (R1.11a)
 - build OK
 - testes executáveis
 - massa mínima funcional definida
@@ -142,6 +164,6 @@ Sempre retornar:
 - rollback mínimo claro
 - pronto para piloto / go-live controlado no corte aprovado
 
-## 14. Regra de ouro
+## 15. Regra de ouro
 Não complique o que precisa ir para produção.
 Entrega > perfeição.

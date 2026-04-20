@@ -1,0 +1,530 @@
+
+===== CHECK 0 | LOGIN FRESCO =====
+{
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW5lejl3YngwMDFrYmIxMHd6N3JiM3FpIiwiZW1haWwiOiJhZG1pbkBtaXgtZGVtby5sb2NhbCIsInRlbmFudElkIjoiY21uZXo5dnlwMDAwZ2JiMTBnN3B3YmdqcyIsImlhdCI6MTc3NjQ3NTgxOSwiZXhwIjoxNzc2NDc2NzE5fQ.cK8stWgH-C-rMcEb24qFtNCD67QcoG_gcUB-J2v-UKg",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW5lejl3YngwMDFrYmIxMHd6N3JiM3FpIiwiZW1haWwiOiJhZG1pbkBtaXgtZGVtby5sb2NhbCIsInRlbmFudElkIjoiY21uZXo5dnlwMDAwZ2JiMTBnN3B3YmdqcyIsImlhdCI6MTc3NjQ3NTgxOSwiZXhwIjoxNzc3MDgwNjE5fQ.Yv6WmRdbJH90ju0cS4BLZR1TBAfPQnOHTcid4i8xApA",
+    "user": {
+        "id": "cmnez9wbx001kbb10wz7rb3qi",
+        "email": "admin@mix-demo.local",
+        "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+        "unitId": "cmnez9vzr000ibb10hg4mrcae",
+        "permissions": [
+            "auth.login",
+            "auth.refresh",
+            "users.read",
+            "users.create",
+            "users.update",
+            "users.block",
+            "roles.read",
+            "roles.assign",
+            "tenants.read",
+            "tenants.update",
+            "units.read",
+            "units.create",
+            "units.update",
+            "settings.read",
+            "settings.update",
+            "audit.read",
+            "clients.read",
+            "clients.create",
+            "professionals.read",
+            "professionals.create",
+            "admin-master.migration.create",
+            "admin-master.migration.import",
+            "admin-master.migration.reconcile",
+            "admin-master.read",
+            "appointments.block",
+            "appointments.cancel",
+            "appointments.create",
+            "appointments.no_show",
+            "appointments.read",
+            "attendances.cancel",
+            "attendances.create",
+            "attendances.finish",
+            "attendances.read",
+            "attendances.start",
+            "cash-register.close",
+            "cash-register.open",
+            "cash-register.read",
+            "commissions.block",
+            "commissions.generate",
+            "commissions.read",
+            "commissions.release",
+            "payments.create",
+            "payments.read",
+            "payments.receive",
+            "products.create",
+            "products.read",
+            "resources.create",
+            "resources.read",
+            "sales.cancel",
+            "sales.checkout",
+            "sales.create",
+            "sales.read",
+            "sales.update",
+            "services.create",
+            "services.read",
+            "supplies.create",
+            "supplies.read",
+            "unit-conversions.create",
+            "unit-conversions.read",
+            "availability.read",
+            "availability.create",
+            "availability.update",
+            "services.update",
+            "fiscal-documents.read",
+            "fiscal-documents.create",
+            "fiscal-documents.update-status"
+        ]
+    }
+}
+
+===== CHECK 1 | CLIENTE =====
+[
+    {
+        "id": "cmnhxehc4000913odngppr0xt",
+        "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+        "unitId": "cmnez9vzr000ibb10hg4mrcae",
+        "name": "Cliente Demo Operacional",
+        "socialName": null,
+        "phone": "41999990001",
+        "email": "cliente.demo@mix-demo.local",
+        "birthDate": null,
+        "gender": null,
+        "document": null,
+        "notes": null,
+        "preferredProfessionalId": null,
+        "source": null,
+        "status": "ACTIVE",
+        "createdAt": "2026-04-02T20:27:11.813Z",
+        "updatedAt": "2026-04-02T20:27:11.813Z"
+    },
+    {
+        "id": "cmng9vnnv000183s6f2ccn4ni",
+        "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+        "unitId": "cmnez9vzr000ibb10hg4mrcae",
+        "name": "Cliente Teste 1",
+        "socialName": null,
+        "phone": "41999990000",
+        "email": "cliente.teste1@mix-demo.local",
+        "birthDate": null,
+        "gender": null,
+        "document": null,
+        "notes": null,
+        "preferredProfessionalId": null,
+        "source": null,
+        "status": "ACTIVE",
+        "createdAt": "2026-04-01T16:40:56.202Z",
+        "updatedAt": "2026-04-01T16:40:56.202Z"
+    }
+]
+
+===== CHECK 2 | PROFISSIONAL =====
+[
+    {
+        "id": "cmnhxehch000b13odigo7v1ps",
+        "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+        "unitId": "cmnez9vzr000ibb10hg4mrcae",
+        "name": "Profissional Demo Operacional",
+        "phone": "41999991112",
+        "email": "profissional.demo@mix-demo.local",
+        "roleTitle": "Cabeleireiro",
+        "bio": null,
+        "status": "ACTIVE",
+        "onlineBookingEnabled": true,
+        "createdAt": "2026-04-02T20:27:11.825Z",
+        "updatedAt": "2026-04-02T20:27:11.825Z"
+    },
+    {
+        "id": "cmngaoxl00001qwf1edgm9sux",
+        "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+        "unitId": "cmnez9vzr000ibb10hg4mrcae",
+        "name": "Profissional Teste 1",
+        "phone": "41999991111",
+        "email": "profissional.teste1@mix-demo.local",
+        "roleTitle": "Cabeleireiro",
+        "bio": null,
+        "status": "ACTIVE",
+        "onlineBookingEnabled": true,
+        "createdAt": "2026-04-01T17:03:42.084Z",
+        "updatedAt": "2026-04-01T17:03:42.084Z"
+    }
+]
+
+===== CHECK 3 | SERVIÇO =====
+[
+    {
+        "id": "cmnjct2zz0001i8fl5j1hcaz5",
+        "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+        "unitId": "cmnez9vzr000ibb10hg4mrcae",
+        "categoryId": null,
+        "name": "Corte Fiscal Teste 1",
+        "description": "Servi\u00e7o de teste com mapeamento fiscal m\u00ednimo",
+        "durationMinutes": 60,
+        "price": "89.9",
+        "cnaeCode": "9602501",
+        "serviceListItemCode": "06.02",
+        "issRate": "4.5",
+        "availableOnline": true,
+        "requiresProfessional": true,
+        "status": "ACTIVE",
+        "createdAt": "2026-04-03T20:26:13.487Z",
+        "updatedAt": "2026-04-03T20:28:27.345Z"
+    },
+    {
+        "id": "cmnhxehcv000d13od3r1klsu9",
+        "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+        "unitId": "cmnez9vzr000ibb10hg4mrcae",
+        "categoryId": "cmnhxehaf000113odrgv56ydk",
+        "name": "Corte Demo Operacional",
+        "description": null,
+        "durationMinutes": 60,
+        "price": "89.9",
+        "cnaeCode": "9602501",
+        "serviceListItemCode": "06.01",
+        "issRate": "5",
+        "availableOnline": true,
+        "requiresProfessional": true,
+        "status": "ACTIVE",
+        "createdAt": "2026-04-02T20:27:11.839Z",
+        "updatedAt": "2026-04-03T20:46:04.324Z"
+    },
+    {
+        "id": "cmngey3lb000114pkvgs17x84",
+        "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+        "unitId": "cmnez9vzr000ibb10hg4mrcae",
+        "categoryId": null,
+        "name": "Corte Teste 1",
+        "description": null,
+        "durationMinutes": 60,
+        "price": "89.9",
+        "cnaeCode": "9602501",
+        "serviceListItemCode": "06.01",
+        "issRate": "5",
+        "availableOnline": true,
+        "requiresProfessional": true,
+        "status": "ACTIVE",
+        "createdAt": "2026-04-01T19:02:48.227Z",
+        "updatedAt": "2026-04-03T23:12:58.973Z"
+    }
+]
+
+===== CHECK 4 | MONTAR JANELA DO APPOINTMENT =====
+START_AT=2026-04-27T22:32:00-03:00
+END_AT=2026-04-27T23:32:00-03:00
+
+===== CHECK 5 | CRIAR APPOINTMENT =====
+{
+    "id": "cmo3nu3sz000atqsbsoy5n3nm",
+    "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+    "unitId": "cmnez9vzr000ibb10hg4mrcae",
+    "clientId": "cmnhxehc4000913odngppr0xt",
+    "professionalId": "cmnhxehch000b13odigo7v1ps",
+    "serviceId": "cmnjct2zz0001i8fl5j1hcaz5",
+    "resourceId": null,
+    "startAt": "2026-04-28T01:32:00.000Z",
+    "endAt": "2026-04-28T02:32:00.000Z",
+    "status": "SCHEDULED",
+    "source": "INTERNAL",
+    "confirmationStatus": "PENDING",
+    "isWalkIn": false,
+    "isOverbook": false,
+    "notes": "Fluxo piloto V44 pilot20260417223019",
+    "canceledAt": null,
+    "canceledReason": null,
+    "noShowAt": null,
+    "createdAt": "2026-04-18T01:30:20.483Z",
+    "updatedAt": "2026-04-18T01:30:20.483Z"
+}
+
+===== CHECK 6 | CRIAR ATTENDANCE =====
+{
+    "id": "cmo3nu40h000ctqsbz8u2v87b",
+    "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+    "unitId": "cmnez9vzr000ibb10hg4mrcae",
+    "appointmentId": "cmo3nu3sz000atqsbsoy5n3nm",
+    "clientId": "cmnhxehc4000913odngppr0xt",
+    "professionalId": "cmnhxehch000b13odigo7v1ps",
+    "serviceId": "cmnjct2zz0001i8fl5j1hcaz5",
+    "status": "OPEN",
+    "startedAt": null,
+    "finishedAt": null,
+    "notes": null,
+    "createdAt": "2026-04-18T01:30:20.754Z",
+    "updatedAt": "2026-04-18T01:30:20.754Z"
+}
+
+===== CHECK 7 | START DO ATTENDANCE =====
+{
+    "id": "cmo3nu40h000ctqsbz8u2v87b",
+    "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+    "unitId": "cmnez9vzr000ibb10hg4mrcae",
+    "appointmentId": "cmo3nu3sz000atqsbsoy5n3nm",
+    "clientId": "cmnhxehc4000913odngppr0xt",
+    "professionalId": "cmnhxehch000b13odigo7v1ps",
+    "serviceId": "cmnjct2zz0001i8fl5j1hcaz5",
+    "status": "IN_PROGRESS",
+    "startedAt": "2026-04-18T01:30:20.948Z",
+    "finishedAt": null,
+    "notes": null,
+    "createdAt": "2026-04-18T01:30:20.754Z",
+    "updatedAt": "2026-04-18T01:30:20.950Z"
+}
+
+===== CHECK 8 | FINISH DO ATTENDANCE =====
+{
+    "id": "cmo3nu40h000ctqsbz8u2v87b",
+    "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+    "unitId": "cmnez9vzr000ibb10hg4mrcae",
+    "appointmentId": "cmo3nu3sz000atqsbsoy5n3nm",
+    "clientId": "cmnhxehc4000913odngppr0xt",
+    "professionalId": "cmnhxehch000b13odigo7v1ps",
+    "serviceId": "cmnjct2zz0001i8fl5j1hcaz5",
+    "status": "FINISHED",
+    "startedAt": "2026-04-18T01:30:20.948Z",
+    "finishedAt": "2026-04-18T01:30:21.096Z",
+    "notes": null,
+    "createdAt": "2026-04-18T01:30:20.754Z",
+    "updatedAt": "2026-04-18T01:30:21.097Z"
+}
+
+===== CHECK 9 | DEFINIR SOURCE_TYPE / SOURCE_ID DO FISCAL =====
+FISCAL_SOURCE_TYPE=MANUAL
+SOURCE_ID=att-cmo3nu40h000ctqsbz8u2v87b
+
+===== CHECK 10 | CRIAR DOCUMENTO FISCAL =====
+{
+    "id": "cmo3nu4fc000etqsbocjn3br7",
+    "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+    "unitId": "cmnez9vzr000ibb10hg4mrcae",
+    "sourceType": "MANUAL",
+    "sourceId": "att-cmo3nu40h000ctqsbz8u2v87b",
+    "documentType": "NFSE",
+    "status": "DRAFT",
+    "provider": "SMOKE_TEST",
+    "referenceNumber": null,
+    "accessKey": null,
+    "errorCode": null,
+    "errorMessage": null,
+    "requestedAt": null,
+    "authorizedAt": null,
+    "canceledAt": null,
+    "createdAt": "2026-04-18T01:30:21.288Z",
+    "updatedAt": "2026-04-18T01:30:21.288Z",
+    "events": [
+        {
+            "id": "cmo3nu4fc000ftqsb6dpbw9i9",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "CREATED",
+            "message": "Documento fiscal registrado no sistema.",
+            "payload": {
+                "mode": "MANUAL",
+                "unitId": "cmnez9vzr000ibb10hg4mrcae",
+                "provider": "SMOKE_TEST",
+                "sourceId": "att-cmo3nu40h000ctqsbz8u2v87b",
+                "sourceType": "MANUAL",
+                "documentType": "NFSE"
+            },
+            "createdAt": "2026-04-18T01:30:21.288Z"
+        }
+    ]
+}
+
+===== CHECK 11 | DRAFT -> REQUESTED =====
+{
+    "id": "cmo3nu4fc000etqsbocjn3br7",
+    "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+    "unitId": "cmnez9vzr000ibb10hg4mrcae",
+    "sourceType": "MANUAL",
+    "sourceId": "att-cmo3nu40h000ctqsbz8u2v87b",
+    "documentType": "NFSE",
+    "status": "REQUESTED",
+    "provider": "SMOKE_TEST",
+    "referenceNumber": null,
+    "accessKey": null,
+    "errorCode": null,
+    "errorMessage": null,
+    "requestedAt": "2026-04-18T01:30:21.498Z",
+    "authorizedAt": null,
+    "canceledAt": null,
+    "createdAt": "2026-04-18T01:30:21.288Z",
+    "updatedAt": "2026-04-18T01:30:21.500Z",
+    "events": [
+        {
+            "id": "cmo3nu4fc000ftqsb6dpbw9i9",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "CREATED",
+            "message": "Documento fiscal registrado no sistema.",
+            "payload": {
+                "mode": "MANUAL",
+                "unitId": "cmnez9vzr000ibb10hg4mrcae",
+                "provider": "SMOKE_TEST",
+                "sourceId": "att-cmo3nu40h000ctqsbz8u2v87b",
+                "sourceType": "MANUAL",
+                "documentType": "NFSE"
+            },
+            "createdAt": "2026-04-18T01:30:21.288Z"
+        },
+        {
+            "id": "cmo3nu4l8000gtqsbxt0147sc",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "REQUESTED",
+            "message": "Solicitacao de emissao enviada ao provedor fiscal no fluxo-piloto.",
+            "payload": {
+                "accessKey": null,
+                "errorCode": null,
+                "nextStatus": "REQUESTED",
+                "errorMessage": null,
+                "previousStatus": "DRAFT",
+                "referenceNumber": null
+            },
+            "createdAt": "2026-04-18T01:30:21.500Z"
+        }
+    ]
+}
+
+===== CHECK 12 | REQUESTED -> AUTHORIZED =====
+{
+    "id": "cmo3nu4fc000etqsbocjn3br7",
+    "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+    "unitId": "cmnez9vzr000ibb10hg4mrcae",
+    "sourceType": "MANUAL",
+    "sourceId": "att-cmo3nu40h000ctqsbz8u2v87b",
+    "documentType": "NFSE",
+    "status": "AUTHORIZED",
+    "provider": "SMOKE_TEST",
+    "referenceNumber": "RPS-pilot20260417223019",
+    "accessKey": "ACCESS-pilot20260417223019",
+    "errorCode": null,
+    "errorMessage": null,
+    "requestedAt": "2026-04-18T01:30:21.498Z",
+    "authorizedAt": "2026-04-18T01:30:21.638Z",
+    "canceledAt": null,
+    "createdAt": "2026-04-18T01:30:21.288Z",
+    "updatedAt": "2026-04-18T01:30:21.640Z",
+    "events": [
+        {
+            "id": "cmo3nu4fc000ftqsb6dpbw9i9",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "CREATED",
+            "message": "Documento fiscal registrado no sistema.",
+            "payload": {
+                "mode": "MANUAL",
+                "unitId": "cmnez9vzr000ibb10hg4mrcae",
+                "provider": "SMOKE_TEST",
+                "sourceId": "att-cmo3nu40h000ctqsbz8u2v87b",
+                "sourceType": "MANUAL",
+                "documentType": "NFSE"
+            },
+            "createdAt": "2026-04-18T01:30:21.288Z"
+        },
+        {
+            "id": "cmo3nu4l8000gtqsbxt0147sc",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "REQUESTED",
+            "message": "Solicitacao de emissao enviada ao provedor fiscal no fluxo-piloto.",
+            "payload": {
+                "accessKey": null,
+                "errorCode": null,
+                "nextStatus": "REQUESTED",
+                "errorMessage": null,
+                "previousStatus": "DRAFT",
+                "referenceNumber": null
+            },
+            "createdAt": "2026-04-18T01:30:21.500Z"
+        },
+        {
+            "id": "cmo3nu4p4000htqsbwninttlv",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "AUTHORIZED",
+            "message": "Documento fiscal autorizado no fluxo-piloto.",
+            "payload": {
+                "accessKey": "ACCESS-pilot20260417223019",
+                "errorCode": null,
+                "nextStatus": "AUTHORIZED",
+                "errorMessage": null,
+                "previousStatus": "REQUESTED",
+                "referenceNumber": "RPS-pilot20260417223019"
+            },
+            "createdAt": "2026-04-18T01:30:21.640Z"
+        }
+    ]
+}
+
+===== CHECK 13 | DETAIL FINAL DO FISCAL =====
+{
+    "id": "cmo3nu4fc000etqsbocjn3br7",
+    "tenantId": "cmnez9vyp000gbb10g7pwbgjs",
+    "unitId": "cmnez9vzr000ibb10hg4mrcae",
+    "sourceType": "MANUAL",
+    "sourceId": "att-cmo3nu40h000ctqsbz8u2v87b",
+    "documentType": "NFSE",
+    "status": "AUTHORIZED",
+    "provider": "SMOKE_TEST",
+    "referenceNumber": "RPS-pilot20260417223019",
+    "accessKey": "ACCESS-pilot20260417223019",
+    "errorCode": null,
+    "errorMessage": null,
+    "requestedAt": "2026-04-18T01:30:21.498Z",
+    "authorizedAt": "2026-04-18T01:30:21.638Z",
+    "canceledAt": null,
+    "createdAt": "2026-04-18T01:30:21.288Z",
+    "updatedAt": "2026-04-18T01:30:21.640Z",
+    "events": [
+        {
+            "id": "cmo3nu4fc000ftqsb6dpbw9i9",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "CREATED",
+            "message": "Documento fiscal registrado no sistema.",
+            "payload": {
+                "mode": "MANUAL",
+                "unitId": "cmnez9vzr000ibb10hg4mrcae",
+                "provider": "SMOKE_TEST",
+                "sourceId": "att-cmo3nu40h000ctqsbz8u2v87b",
+                "sourceType": "MANUAL",
+                "documentType": "NFSE"
+            },
+            "createdAt": "2026-04-18T01:30:21.288Z"
+        },
+        {
+            "id": "cmo3nu4l8000gtqsbxt0147sc",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "REQUESTED",
+            "message": "Solicitacao de emissao enviada ao provedor fiscal no fluxo-piloto.",
+            "payload": {
+                "accessKey": null,
+                "errorCode": null,
+                "nextStatus": "REQUESTED",
+                "errorMessage": null,
+                "previousStatus": "DRAFT",
+                "referenceNumber": null
+            },
+            "createdAt": "2026-04-18T01:30:21.500Z"
+        },
+        {
+            "id": "cmo3nu4p4000htqsbwninttlv",
+            "fiscalDocumentId": "cmo3nu4fc000etqsbocjn3br7",
+            "eventType": "AUTHORIZED",
+            "message": "Documento fiscal autorizado no fluxo-piloto.",
+            "payload": {
+                "accessKey": "ACCESS-pilot20260417223019",
+                "errorCode": null,
+                "nextStatus": "AUTHORIZED",
+                "errorMessage": null,
+                "previousStatus": "REQUESTED",
+                "referenceNumber": "RPS-pilot20260417223019"
+            },
+            "createdAt": "2026-04-18T01:30:21.640Z"
+        }
+    ]
+}
+
+===== RESUMO FINAL DO FLUXO-PILOTO =====
+APPOINTMENT_ID=cmo3nu3sz000atqsbsoy5n3nm
+ATTENDANCE_ID=cmo3nu40h000ctqsbz8u2v87b
+FISCAL_ID=cmo3nu4fc000etqsbocjn3br7
+SOURCE_ID=att-cmo3nu40h000ctqsbz8u2v87b
+REFERENCE_NUMBER=RPS-pilot20260417223019
+ACCESS_KEY=ACCESS-pilot20260417223019
+
+===== FLUXO-PILOTO CONCLUIDO COM SUCESSO =====
