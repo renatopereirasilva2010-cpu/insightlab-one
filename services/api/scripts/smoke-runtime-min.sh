@@ -15,6 +15,8 @@ trap cleanup EXIT
 
 cd "${ROOT_DIR}"
 
+DB_TARGET="$(grep -m1 '^DATABASE_URL=' .env 2>/dev/null | cut -d= -f2- || echo 'DATABASE_URL atual')"
+
 pnpm build >/dev/null
 
 : > "${LOG_FILE}"
@@ -29,9 +31,9 @@ if curl -sS -o /dev/null --max-time 5 http://127.0.0.1:4000/v1/clients; then
   exit 0
 fi
 
-if grep -q "Can't reach database server at \`localhost:5432\`" "${LOG_FILE}"; then
+if grep -q "Can't reach database server at \`" "${LOG_FILE}"; then
   echo "SMOKE_STATUS=FAIL"
-  echo "SMOKE_DETAIL=runtime bloqueado por PostgreSQL indisponivel em localhost:5432"
+  echo "SMOKE_DETAIL=runtime bloqueado por PostgreSQL indisponivel na DATABASE_URL atual (${DB_TARGET})"
   exit 1
 fi
 

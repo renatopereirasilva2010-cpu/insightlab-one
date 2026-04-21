@@ -30,3 +30,6 @@ InsightLab_One_Documento_Mestre_V41.txt
 InsightLab_One_Documento_Mestre_V46.txt
 services/api/fluxo_piloto_v44_run_20260417_221734.log
 services/api/retry_fiscal_curto.sh
+.env.hardening_*.bak
+.env.example.hardening_*.bak
+services/api/.env.runtime_fix_*.bak

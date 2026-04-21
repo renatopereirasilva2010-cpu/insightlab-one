@@ -181,3 +181,10 @@ A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atu
 ### Resultado e corte
 - BLOCO fechado com evidência executável e sem ressalva operacional relevante para o corte atual
 - pronto para piloto/go-live controlado no escopo mínimo aprovado
+
+## Atualizacao operacional local validada em 2026-04-20
+- Runtime local da API validado com `services/api/.env` apontando para `postgresql://insightlab:insightlab123@localhost:5433/insightlab_one?schema=public`
+- Banco local validado para retomada: `pg_old_inspect` publicado na porta `5433`
+- `services/api/scripts/smoke-runtime-min.sh`: `SMOKE_STATUS=PASS`
+- Login em `/v1/auth/login`: OK
+- `GET /v1/clients` autenticado: OK
