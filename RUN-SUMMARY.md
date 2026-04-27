@@ -188,3 +188,18 @@ A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atu
 - `services/api/scripts/smoke-runtime-min.sh`: `SMOKE_STATUS=PASS`
 - Login em `/v1/auth/login`: OK
 - `GET /v1/clients` autenticado: OK
+
+## Atualizacao operacional local validada em 2026-04-27
+- Baseline documental vigente local alinhada para `InsightLab_One_Documento_Mestre_V48.txt`
+- V48 materializada com sucesso em `docs/llm/InsightLab_One_Documento_Mestre_V48.txt`
+- Banco local validado para retomada: `pg_old_inspect` publicado na porta `5433`
+- `services/api/.env` validado com `DATABASE_URL=postgresql://insightlab:insightlab123@localhost:5433/insightlab_one?schema=public`
+- API validada em runtime real na porta `4000`
+- Evidencia objetiva de boot:
+  - `Nest application successfully started`
+- Smoke minimo HTTP validado:
+  - `POST /v1/auth/login` com payload `{}` retornando `400 Bad Request` por validacao de DTO, comportamento esperado do teste
+- Leitura consolidada:
+  - a retomada local deve partir da baseline V48 ou posterior validada
+  - o alvo local correto da API nesta retomada e `pg_old_inspect` na `5433`
+  - referencias historicas anteriores a V40 e `5432` permanecem como registro de execucoes passadas e nao substituem a baseline local vigente atual
