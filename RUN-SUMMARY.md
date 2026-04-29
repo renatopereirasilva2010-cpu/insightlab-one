@@ -203,3 +203,33 @@ A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atu
   - a retomada local deve partir da baseline V48 ou posterior validada
   - o alvo local correto da API nesta retomada e `pg_old_inspect` na `5433`
   - referencias historicas anteriores a V40 e `5432` permanecem como registro de execucoes passadas e nao substituem a baseline local vigente atual
+
+## Apendice curto — R1.10.E3
+- Data: 2026-04-28
+- Frente/etapa: `R1.10 / R1.10.E3`
+- Objetivo: fechar formalmente a etapa de automacao minima dos services `products`, `supplies`, `resources` e `unit-conversions`
+- Evidencia consolidada do corte:
+  - `lint OK`
+  - `teste focal OK`
+  - `4 suites / 12 testes verdes`
+  - `warning Jest` nao bloqueante
+- Leitura objetiva:
+  - os quatro specs da E3 materializam filtro por `tenantId` e persistencia do payload minimo com mock de Prisma
+  - nenhuma ampliacao funcional, de schema ou de runtime foi incorporada nesta formalizacao
+- Decisao:
+  - `R1.10.E3` fechada no corte minimo atual
+
+## Apêndice curto — Congelamento R1.10 no corte MVP
+- Data: 2026-04-28
+- Frente: R1.10
+- Decisão: R1.10 congelada no corte mínimo atual para MVP
+- Evidência considerada:
+  - R1.10.E2 com smoke mínimo aprovado
+  - R1.10.E3 com automação mínima dos quatro services-base
+  - R1.10.E4 com validação pós-Codex, lint OK e teste focal 4 suítes / 12 testes verdes
+- Decisão executiva:
+  - não abrir cenários negativos agora
+  - não ampliar domínio
+  - mover aprofundamentos para R1.1 / R2
+- Próximo passo:
+  - atualizar Documento-Mestre com o fechamento e congelamento da R1.10
