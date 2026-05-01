@@ -85,3 +85,50 @@
 - o evento `EADDRINUSE` deve ser tratado somente como ocorrencia operacional de segunda instancia concorrente na porta `4000`
 - ausencia de responsavel nominal invalida a abertura da janela
 - qualquer desvio que exija mexer em produto, infraestrutura ou dados deve interromper esta trilha de governanca minima
+
+## 11. Atualizacao pos-V50 / R1.11a
+
+### Status
+Baseline pos-V50 validada para continuidade da R1.11a.
+
+### Baseline atual considerada
+- Documento-Mestre: V50
+- Commit de congelamento da R1.10: `8eef769`
+- Readiness pos-V50: `governance/READINESS_POS_V50_R1.11a.md`
+- RUN-SUMMARY atualizado com evidencias pos-V50
+- R1.10 congelada no corte MVP
+
+### Evidencias adicionais pos-V50
+- Git limpo apos V50
+- Suite da API verde: 25 suites / 63 testes
+- Banco operacional ativo na porta `5433`
+- API iniciada com sucesso na porta `4000`
+- Login real validado com usuario demo
+- Rota protegida sem token retornou `401`
+- Rota protegida com token retornou `200`
+- Readiness minimo validado:
+  - `/v1/tenants`: `200`
+  - `/v1/units`: `200`
+  - `/v1/business-settings`: `200`
+  - `/v1/permissions`: `200`
+  - `/v1/fiscal-documents`: `200`
+- Build da API executado com sucesso via `pnpm build`
+- Pos-build com Git limpo
+- Lint/typecheck da API executado com sucesso via `pnpm lint`
+- Gate estatico executado por `tsc --noEmit -p tsconfig.spec.json`
+
+### Commits relacionados
+- `b4ad87d docs(r1.11a): add post-v50 readiness evidence`
+- `fe6b3fe docs(r1.11a): update run summary with post-v50 readiness`
+- `8e8a646 docs(r1.11a): add build readiness evidence`
+- `6da5d55 docs(r1.11a): add static validation evidence`
+- `4b429d2 docs(r1.11a): clean run summary and add readiness gates`
+
+### Decisao pos-V50
+A janela de piloto/go-live controlado permanece apta para preparacao, desde que respeite o corte minimo aprovado e a restricao de nao reabrir a R1.10.
+
+### Restricao reforcada
+Nao reabrir estoque, compras ou suprimentos da R1.10 sem evidencia nova, objetiva e formalmente registrada.
+
+### Observacao operacional
+O banco operacional atual segue acessivel via `pg_old_inspect` na porta `5433`. Apesar do nome historico, esta base contem schema, migrations e dados coerentes com a baseline atual. A normalizacao de nome/porta permanece como divida controlada, nao como bloqueio imediato.
