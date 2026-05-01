@@ -23,9 +23,11 @@ Validado.
   - /v1/business-settings: 200
   - /v1/permissions: 200
   - /v1/fiscal-documents: 200
-  - Build da API executado com sucesso via `pnpm build`
-  - Pós-build com Git limpo
-  - Diretório `services/api/dist` presente sem alteração pendente no Git
+- Build da API executado com sucesso via `pnpm build`
+- Pós-build com Git limpo
+- Diretório `services/api/dist` presente sem alteração pendente no Git
+- Lint/typecheck da API executado com sucesso via `pnpm lint`
+- Gate estático executado por `tsc --noEmit -p tsconfig.spec.json`
 
 ## Decisao
 A baseline pos-V50 esta apta para continuidade da R1.11a.
