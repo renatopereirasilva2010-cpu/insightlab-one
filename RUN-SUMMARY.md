@@ -2,7 +2,38 @@
 
 ## 1. Origem e função deste arquivo
 Este arquivo nasce diretamente do Documento-Mestre do projeto.
-Ele existe para uso exclusivo do Codex e da operação assistida, registrando apenas a trilha mínima relevante da execução.
+Ele existe para uso e## Apêndice curto — Readiness pós-V50 / R1.11a
+
+- Data: 2026-04-30
+- Frente: R1.11a
+- Baseline:
+  - Documento-Mestre V50
+  - commit local `8eef769`
+  - R1.10 congelada no corte MVP
+- Evidência validada:
+  - Git limpo após V50
+  - suíte da API verde: 25 suites / 63 testes
+  - banco operacional ativo na porta `5433`
+  - API iniciada com sucesso na porta `4000`
+  - login real validado com usuário demo
+  - rota protegida sem token retornou `401`
+  - rota protegida com token retornou `200`
+  - readiness mínimo validado:
+    - `/v1/tenants`: `200`
+    - `/v1/units`: `200`
+    - `/v1/business-settings`: `200`
+    - `/v1/permissions`: `200`
+    - `/v1/fiscal-documents`: `200`
+- Registro criado:
+  - `governance/READINESS_POS_V50_R1.11a.md`
+- Commit do registro:
+  - `b4ad87d docs(r1.11a): add post-v50 readiness evidence`
+- Decisão:
+  - baseline pós-V50 apta para continuidade da R1.11a
+  - não reabrir estoque, compras ou suprimentos da R1.10 sem evidência nova e objetiva
+- Observação operacional:
+  - banco atual segue em `pg_old_inspect` na porta `5433`
+  - normalização de nome/porta fica como dívida controlada, não bloqueio imediatoxclusivo do Codex e da operação assistida, registrando apenas a trilha mínima relevante da execução.
 
 ## 2. Execução
 - Data: 2026-04-05
@@ -218,7 +249,8 @@ A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atu
   - nenhuma ampliacao funcional, de schema ou de runtime foi incorporada nesta formalizacao
 - Decisao:
   - `R1.10.E3` fechada no corte minimo atual
-
+- Próximo passo:
+  - atualizar Documento-Mestre com o fechamento e congelamento da R1.10
 ## Apêndice curto — Congelamento R1.10 no corte MVP
 - Data: 2026-04-28
 - Frente: R1.10
@@ -233,3 +265,36 @@ A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atu
   - mover aprofundamentos para R1.1 / R2
 - Próximo passo:
   - atualizar Documento-Mestre com o fechamento e congelamento da R1.10
+
+## Apêndice curto — Readiness pós-V50 / R1.11a
+
+- Data: 2026-04-30
+- Frente: R1.11a
+- Baseline:
+  - Documento-Mestre V50
+  - commit local `8eef769`
+  - R1.10 congelada no corte MVP
+- Evidência validada:
+  - Git limpo após V50
+  - suíte da API verde: 25 suites / 63 testes
+  - banco operacional ativo na porta `5433`
+  - API iniciada com sucesso na porta `4000`
+  - login real validado com usuário demo
+  - rota protegida sem token retornou `401`
+  - rota protegida com token retornou `200`
+  - readiness mínimo validado:
+    - `/v1/tenants`: `200`
+    - `/v1/units`: `200`
+    - `/v1/business-settings`: `200`
+    - `/v1/permissions`: `200`
+    - `/v1/fiscal-documents`: `200`
+- Registro criado:
+  - `governance/READINESS_POS_V50_R1.11a.md`
+- Commit do registro:
+  - `b4ad87d docs(r1.11a): add post-v50 readiness evidence`
+- Decisão:
+  - baseline pós-V50 apta para continuidade da R1.11a
+  - não reabrir estoque, compras ou suprimentos da R1.10 sem evidência nova e objetiva
+- Observação operacional:
+  - banco atual segue em `pg_old_inspect` na porta `5433`
+  - normalização de nome/porta fica como dívida controlada, não bloqueio imediato
