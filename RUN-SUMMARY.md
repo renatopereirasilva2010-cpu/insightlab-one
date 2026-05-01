@@ -2,38 +2,7 @@
 
 ## 1. Origem e função deste arquivo
 Este arquivo nasce diretamente do Documento-Mestre do projeto.
-Ele existe para uso e## Apêndice curto — Readiness pós-V50 / R1.11a
-
-- Data: 2026-04-30
-- Frente: R1.11a
-- Baseline:
-  - Documento-Mestre V50
-  - commit local `8eef769`
-  - R1.10 congelada no corte MVP
-- Evidência validada:
-  - Git limpo após V50
-  - suíte da API verde: 25 suites / 63 testes
-  - banco operacional ativo na porta `5433`
-  - API iniciada com sucesso na porta `4000`
-  - login real validado com usuário demo
-  - rota protegida sem token retornou `401`
-  - rota protegida com token retornou `200`
-  - readiness mínimo validado:
-    - `/v1/tenants`: `200`
-    - `/v1/units`: `200`
-    - `/v1/business-settings`: `200`
-    - `/v1/permissions`: `200`
-    - `/v1/fiscal-documents`: `200`
-- Registro criado:
-  - `governance/READINESS_POS_V50_R1.11a.md`
-- Commit do registro:
-  - `b4ad87d docs(r1.11a): add post-v50 readiness evidence`
-- Decisão:
-  - baseline pós-V50 apta para continuidade da R1.11a
-  - não reabrir estoque, compras ou suprimentos da R1.10 sem evidência nova e objetiva
-- Observação operacional:
-  - banco atual segue em `pg_old_inspect` na porta `5433`
-  - normalização de nome/porta fica como dívida controlada, não bloqueio imediatoxclusivo do Codex e da operação assistida, registrando apenas a trilha mínima relevante da execução.
+Ele existe para uso exclusivo do Codex e da operação assistida, registrando apenas a trilha mínima relevante da execução.
 
 ## 2. Execução
 - Data: 2026-04-05
@@ -147,6 +116,10 @@ Ele existe para uso e## Apêndice curto — Readiness pós-V50 / R1.11a
 - usar este corte para piloto/go-live controlado sem expansão funcional
 - mover hardening adicional não bloqueante para R1.1 / R2
 
+## 12. Regra de retroalimentação
+Este arquivo não substitui o Documento-Mestre.
+A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atualização incremental relevante.
+
 ## 13. Atualização incremental — runtime, smoke e readiness
 - smoke mínimo reproduzível permanece materializado em `services/api/scripts/smoke-runtime-min.sh`
 - no ambiente real atual do WSL, o runtime foi validado por evidência HTTP:
@@ -159,10 +132,6 @@ Ele existe para uso e## Apêndice curto — Readiness pós-V50 / R1.11a
 - o erro anterior de PostgreSQL indisponível deve ser tratado como não reproduzido no ambiente real atual
 - o evento `EADDRINUSE` fica registrado apenas como ocorrência operacional de segunda instância concorrente na porta `4000`
 - massa mínima funcional, readiness verde, corte operacional de piloto/go-live e rollback mínimo ficam consolidados em `READINESS-R1.11a.md`
-
-## 12. Regra de retroalimentação
-Este arquivo não substitui o Documento-Mestre.
-A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atualização incremental relevante.
 
 ## 14. Atualização incremental — fechamento do BLOCO de disponibilização controlada
 - Data: 2026-04-08
@@ -251,6 +220,7 @@ A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atu
   - `R1.10.E3` fechada no corte minimo atual
 - Próximo passo:
   - atualizar Documento-Mestre com o fechamento e congelamento da R1.10
+
 ## Apêndice curto — Congelamento R1.10 no corte MVP
 - Data: 2026-04-28
 - Frente: R1.10
@@ -267,7 +237,6 @@ A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atu
   - atualizar Documento-Mestre com o fechamento e congelamento da R1.10
 
 ## Apêndice curto — Readiness pós-V50 / R1.11a
-
 - Data: 2026-04-30
 - Frente: R1.11a
 - Baseline:
@@ -288,13 +257,18 @@ A síntese desta execução já foi incorporada ao Documento-Mestre V40 como atu
     - `/v1/business-settings`: `200`
     - `/v1/permissions`: `200`
     - `/v1/fiscal-documents`: `200`
+  - build da API executado com sucesso via `pnpm build`
+  - pós-build com Git limpo
+  - lint/typecheck da API executado com sucesso via `pnpm lint`
 - Registro criado:
   - `governance/READINESS_POS_V50_R1.11a.md`
-- Commit do registro:
+- Commits de registro:
   - `b4ad87d docs(r1.11a): add post-v50 readiness evidence`
+  - `8e8a646 docs(r1.11a): add build readiness evidence`
+  - `6da5d55 docs(r1.11a): add static validation evidence`
 - Decisão:
   - baseline pós-V50 apta para continuidade da R1.11a
   - não reabrir estoque, compras ou suprimentos da R1.10 sem evidência nova e objetiva
 - Observação operacional:
   - banco atual segue em `pg_old_inspect` na porta `5433`
-  - normalização de nome/porta fica como dívida controlada, não bloqueio imediato
+  - normalização de nome/porta fica como dívida controlada, não bloqueio imediato.
