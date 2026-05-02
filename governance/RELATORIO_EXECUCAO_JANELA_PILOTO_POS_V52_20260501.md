@@ -139,3 +139,62 @@ Se a rodada falhar:
 - Responsavel pelo registro: Renato Pereira da Silva
 - Data do registro: 2026-05-01
 - Status: relatorio preparado para execucao controlada da janela pos-V52
+
+## 14. Atualizacao operacional real desta sessao
+
+### Escopo efetivamente executado
+- esta sessao ficou restrita ao preflight real de runtime e ao smoke minimo controlado
+- nenhuma criacao de `appointment`, `attendance` ou `fiscal-document` foi executada neste bloco
+- nenhuma alteracao de codigo, schema, migration ou seed foi realizada
+
+### Evidencias objetivas observadas
+- `git status --short --branch` no inicio: `## main`
+- `docker ps`: containers principais UP
+- `pg_old_inspect`: ativo na porta `5433`
+- `pg_isready -U insightlab -d insightlab_one`: aceitando conexoes
+- banco `insightlab_one`: acessivel
+- schema `public`: `37` tabelas
+- a API nao estava ativa em `localhost:4000` no inicio da sessao
+- a API foi iniciada nesta sessao via `pnpm start:dev` em `services/api`
+- boot confirmado por log real: `Nest application successfully started`
+- `GET /v1/clients` sem token: `401 Unauthorized`
+- `POST /v1/auth/login`: `201 Created`
+- emissao de `accessToken`: confirmada
+- emissao de `refreshToken`: confirmada
+- usuario autenticado: `admin@mix-demo.local`
+- `tenantId`: `cmnez9vyp000gbb10g7pwbgjs`
+- `unitId`: `cmnez9vzr000ibb10hg4mrcae`
+- `GET /v1/clients` com Bearer: `200` com `2` registros
+- `GET /v1/professionals`: `200` com `2` registros
+- `GET /v1/services-catalog`: `200` com `3` registros
+- `GET /v1/units`: `200` com `8` registros
+- `GET /v1/fiscal-documents`: `200` com `15` registros
+
+### Decisao deste bloco
+- Status: `APROVADO COM RESSALVAS`
+- Decisao: smoke minimo pos-V52 aprovado; nao avancar para criacao de entidades antes da abertura do proximo bloco operacional controlado
+- Ressalva objetiva: o `git status` final deixa de ficar limpo apenas pela atualizacao deste relatorio de governanca
+
+### Proximo passo objetivo
+- abrir o bloco seguinte para o baseline operacional repetivel completo:
+  - criar `appointment`
+  - criar `attendance`
+  - transicionar `attendance` ate `FINISHED`
+  - criar `fiscal-document`
+  - transicionar fiscal ate `AUTHORIZED`
+
+## 15. Observacao operacional pos-Codex
+
+Apos a execucao do Codex, foi feita validacao manual adicional de listeners locais.
+
+Resultado observado:
+- banco `pg_old_inspect` permaneceu ativo na porta `5433`
+- API em `localhost:4000` nao permaneceu ativa apos o encerramento/retorno da execucao Codex
+
+Interpretacao:
+- o smoke minimo executado pelo Codex permanece valido como evidencia da sessao
+- porem, para demonstracao ao cliente ou execucao do baseline completo, a API deve ser mantida em terminal dedicado ou processo controlado fora da sessao efemera do Codex
+- Codex pode apoiar validacao, smoke e registro de evidencia, mas nao deve ser tratado como host persistente do runtime da API
+
+Decisao:
+- antes de qualquer demonstracao ao cliente ou execucao do fluxo completo, subir a API novamente em terminal dedicado e confirmar `localhost:4000`
