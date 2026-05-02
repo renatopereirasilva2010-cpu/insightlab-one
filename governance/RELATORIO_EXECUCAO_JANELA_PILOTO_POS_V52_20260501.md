@@ -198,3 +198,66 @@ Interpretacao:
 
 Decisao:
 - antes de qualquer demonstracao ao cliente ou execucao do fluxo completo, subir a API novamente em terminal dedicado e confirmar `localhost:4000`
+
+## 16. Execucao operacional completa pos-V52
+
+### Escopo executado
+
+Nesta etapa foi executado o baseline operacional completo da janela piloto/go-live pos-V52, sem alteracao de codigo, schema, migration ou seed.
+
+Fluxo validado:
+
+- criacao de `appointment`
+- criacao de `attendance`
+- transicao `attendance OPEN -> IN_PROGRESS -> FINISHED`
+- criacao de `fiscal-document`
+- transicao fiscal `DRAFT -> REQUESTED -> AUTHORIZED`
+
+### IDs e evidencias principais
+
+- Marcador da rodada: `posv52_20260501_213259`
+- Appointment: `cmonn8u78000113aq28euz1lb`
+- Attendance: `cmonnbga4000313aq9nnsxo29`
+- Fiscal-document: `cmono1x8t000513aqf80tea74`
+- SourceId fiscal: `att-cmonnbga4000313aq9nnsxo29`
+- ReferenceNumber: `RPS-posv52-213259`
+- AccessKey: `ACCESS-posv52-213259`
+
+### Resultado do appointment
+
+- Appointment criado com sucesso
+- Status: `SCHEDULED`
+
+### Resultado do attendance
+
+- Attendance criado com sucesso
+- Status inicial: `OPEN`
+- Status apos start: `IN_PROGRESS`
+- Status final: `FINISHED`
+
+### Resultado fiscal
+
+- Fiscal-document criado com sucesso
+- Status inicial: `DRAFT`
+- Status apos solicitacao: `REQUESTED`
+- Status final: `AUTHORIZED`
+- Eventos fiscais registrados:
+  - `CREATED`
+  - `REQUESTED`
+  - `AUTHORIZED`
+
+### Decisao da rodada
+
+- Status final: `APROVADO`
+- Decisao: baseline operacional pos-V52 aprovado ponta a ponta no ambiente local controlado
+- Ressalva: Codex permaneceu apenas como apoio/auditoria; as acoes mutaveis foram executadas manualmente por scripts controlados no terminal devido ao modo efetivo `approval: never` observado no Codex CLI
+
+### Encerramento operacional
+
+A janela pos-V52 fica aprovada para demonstracao controlada do fluxo minimo ao cliente, desde que antes da demonstracao sejam novamente confirmados:
+
+- Docker ativo
+- banco `pg_old_inspect` ativo na porta `5433`
+- API ativa na porta `4000`
+- login real funcionando
+- rota protegida autenticada retornando dados
