@@ -54,6 +54,7 @@ const permissions = [
   { code: 'payments.create', name: 'Create payments', module: 'payments' },
   { code: 'payments.read', name: 'Read payments', module: 'payments' },
   { code: 'payments.receive', name: 'Receive payments', module: 'payments' },
+  { code: 'payments.update-status', name: 'Update payment status', module: 'payments' },
   { code: 'products.create', name: 'Create products', module: 'products' },
   { code: 'products.read', name: 'Read products', module: 'products' },
   { code: 'resources.create', name: 'Create resources', module: 'resources' },

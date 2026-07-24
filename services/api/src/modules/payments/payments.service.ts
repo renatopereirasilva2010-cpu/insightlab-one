@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { MarkFailedPaymentDto } from './dto/mark-failed-payment.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -134,5 +135,74 @@ export class PaymentsService {
     }
 
     return updated;
+  }
+
+  private async findTerminalCheckedPayment(tenantId: string, paymentId: string) {
+    const payment = await this.prisma.payment.findFirst({
+      where: { id: paymentId, tenantId },
+    });
+
+    if (!payment) {
+      throw new NotFoundException({
+        code: 'PAYMENT_NOT_FOUND',
+        title: 'Pagamento não encontrado',
+        message: 'Não encontramos o pagamento informado.',
+        recommendedAction: 'Atualize a tela e tente novamente.',
+      });
+    }
+
+    if (payment.status === 'PAID') {
+      throw new BadRequestException({
+        code: 'PAYMENT_ALREADY_PAID',
+        title: 'Pagamento já recebido',
+        message: 'Este pagamento já foi marcado como pago.',
+        recommendedAction: 'Atualize a tela antes de tentar novamente.',
+      });
+    }
+
+    if (payment.status === 'CANCELED') {
+      throw new BadRequestException({
+        code: 'PAYMENT_ALREADY_CANCELED',
+        title: 'Pagamento cancelado',
+        message: 'Este pagamento já foi cancelado.',
+        recommendedAction: 'Revise o histórico antes de tentar novamente.',
+      });
+    }
+
+    if (payment.status === 'FAILED') {
+      throw new BadRequestException({
+        code: 'PAYMENT_ALREADY_FAILED',
+        title: 'Pagamento com falha registrada',
+        message: 'Este pagamento já está marcado como falho.',
+        recommendedAction: 'Revise o histórico antes de tentar novamente.',
+      });
+    }
+
+    return payment;
+  }
+
+  async markFailed(tenantId: string, paymentId: string, dto: MarkFailedPaymentDto) {
+    const payment = await this.findTerminalCheckedPayment(tenantId, paymentId);
+
+    return this.prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'FAILED',
+        errorCode: dto.errorCode ?? null,
+        errorMessage: dto.errorMessage ?? null,
+      },
+    });
+  }
+
+  async cancel(tenantId: string, paymentId: string) {
+    const payment = await this.findTerminalCheckedPayment(tenantId, paymentId);
+
+    return this.prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'CANCELED',
+        canceledAt: new Date(),
+      },
+    });
   }
 }
