@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+**/dist
+**/coverage
+.git
+.turbo
+**/.turbo
+.codex
+.codex-runs
+backups
+*.log
+.env
+.env.*
+services/api/.env
