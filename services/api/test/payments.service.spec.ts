@@ -18,11 +18,15 @@ describe('PaymentsService', () => {
   });
 
   function buildPrismaMock(payment: any) {
-    return {
+    const tx = {
       payment: {
         findFirst: jest.fn().mockResolvedValue(payment),
         update: jest.fn().mockImplementation(({ data }) => ({ ...payment, ...data })),
       },
+    };
+    return {
+      ...tx,
+      withTenant: jest.fn((_tenantId: string, fn: (tx: any) => any) => fn(tx)),
     };
   }
 
