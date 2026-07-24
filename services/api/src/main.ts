@@ -4,9 +4,12 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { TraceIdInterceptor } from './common/interceptors/trace-id.interceptor';
+import { StructuredLogger } from './common/logging/structured-logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: new StructuredLogger(),
+  });
   const reflector = app.get(Reflector);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

@@ -1,10 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../database/prisma.service';
+import { setTenantId } from '../../common/logging/request-context';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -29,6 +32,7 @@ export class AuthService {
     });
 
     if (!user) {
+      this.logger.warn(`Login negado: usuário não encontrado para ${email}`);
       throw new UnauthorizedException({
         code: 'AUTH_INVALID_CREDENTIALS',
         title: 'Credenciais inválidas',
@@ -37,8 +41,13 @@ export class AuthService {
       });
     }
 
+    // A partir daqui ja sabemos o tenant - enriquece o contexto de log pra
+    // toda a correlacao seguinte (mesmo em caso de senha errada abaixo).
+    setTenantId(user.tenantId);
+
     const passwordOk = await bcrypt.compare(password, user.passwordHash);
     if (!passwordOk) {
+      this.logger.warn(`Login negado: senha incorreta para ${email}`);
       throw new UnauthorizedException({
         code: 'AUTH_INVALID_CREDENTIALS',
         title: 'Credenciais inválidas',
@@ -46,6 +55,8 @@ export class AuthService {
         recommendedAction: 'Revise as credenciais e tente novamente.',
       });
     }
+
+    this.logger.log(`Login bem-sucedido para ${email}`);
 
     const permissions = Array.from(
       new Set(
