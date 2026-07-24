@@ -1,16 +1,26 @@
 version: "3.9"
 
+# Corrigido em 23/07/2026 (ONDA 0 - higiene de bancos, secao 11 do adendo de governanca):
+# este arquivo declarava usuario/senha/porta que NUNCA bateram com o .env real
+# (.env sempre apontou pra insightlab:insightlab123@localhost:5433/insightlab_one).
+# O banco de fato usado no dia a dia rodava fora do compose, num container avulso
+# (pg_old_inspect), sem restart policy - por isso ele cai toda vez que o Docker
+# Desktop reinicia. Este service agora aponta pro volume real desse container
+# (declarado abaixo como external) em vez de criar um banco vazio novo.
+# Nao rodei `docker compose up -d` pra aplicar isto de fato - so corrigi o arquivo.
+# Rodar `docker compose up -d` aqui recria/adota o container: acao de Zona Vermelha,
+# fica pendente de aprovacao explicita separada.
 services:
   postgres:
-    image: postgres:15
+    image: postgres:16
     container_name: insightlab_one_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: insightlab
+      POSTGRES_PASSWORD: insightlab123
       POSTGRES_DB: insightlab_one
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -23,3 +33,5 @@ services:
 
 volumes:
   postgres_data:
+    external: true
+    name: 6b05ad09e2f4d9aad3fdb60380d1d11e49bcd0bab0f56c584fe4a5405e12947c

@@ -33,3 +33,9 @@ services/api/retry_fiscal_curto.sh
 .env.hardening_*.bak
 .env.example.hardening_*.bak
 services/api/.env.runtime_fix_*.bak
+
+# dumps de seguranca (secao 11 do adendo de governanca) - nunca versionar dado real
+backups/
+
+# permissoes locais do Claude Code - especifico da maquina, nunca versionar
+.claude/settings.local.json
