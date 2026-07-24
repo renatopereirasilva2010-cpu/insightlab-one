@@ -152,6 +152,58 @@ async function main() {
     create: { userId: adminUser.id, roleId: adminRole.id },
   });
 
+  // Papel restrito - para validar 403 com credencial real (gap registrado em
+  // governance/RELATORIO_CODEX_LAB_COMPLEMENTAR_POS_V55.md: só existia admin no Lab).
+  const restrictedPermissionCodes = [
+    'auth.login',
+    'auth.refresh',
+    'clients.read',
+    'appointments.read',
+    'sales.read',
+  ];
+  const restrictedPermissions = await prisma.permission.findMany({
+    where: { code: { in: restrictedPermissionCodes } },
+  });
+
+  const operatorRole = await prisma.role.upsert({
+    where: { tenantId_code: { tenantId: tenant.id, code: 'OPERADOR_RESTRITO' } },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      code: 'OPERADOR_RESTRITO',
+      name: 'Operador Restrito',
+      description: 'Papel de teste com permissões mínimas, para validar 403 em endpoints protegidos',
+    },
+  });
+
+  for (const permission of restrictedPermissions) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: operatorRole.id, permissionId: permission.id } },
+      update: {},
+      create: { roleId: operatorRole.id, permissionId: permission.id },
+    });
+  }
+
+  const operatorPasswordHash = await bcrypt.hash('Operador@12345', 10);
+
+  const operatorUser = await prisma.user.upsert({
+    where: { email: 'operador.restrito@mix-demo.local' },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      unitId: unit.id,
+      name: 'Operador Restrito Demo',
+      email: 'operador.restrito@mix-demo.local',
+      passwordHash: operatorPasswordHash,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId: operatorUser.id, roleId: operatorRole.id } },
+    update: {},
+    create: { userId: operatorUser.id, roleId: operatorRole.id },
+  });
+
   console.log('Seed concluído com sucesso.');
 }
 
