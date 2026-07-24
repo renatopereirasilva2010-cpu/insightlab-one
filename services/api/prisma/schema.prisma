@@ -730,6 +730,9 @@ model Payment {
   externalReference    String?
   notes                String?
   paidAt               DateTime?
+  errorCode            String?
+  errorMessage         String?
+  canceledAt           DateTime?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
@@ -930,6 +933,7 @@ enum PaymentMethod {
 enum PaymentStatus {
   PENDING
   PAID
+  FAILED
   CANCELED
 }
 

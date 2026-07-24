@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../common/guards/permission.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { MarkFailedPaymentDto } from './dto/mark-failed-payment.dto';
 import { PaymentsService } from './payments.service';
 
 @Controller('v1/payments')
@@ -33,5 +34,21 @@ export class PaymentsController {
   @RequiredPermissions('payments.receive')
   markPaid(@CurrentTenant() tenant: { id: string }, @Param('id') id: string) {
     return this.paymentsService.markPaid(tenant.id, id);
+  }
+
+  @Post(':id/mark-failed')
+  @RequiredPermissions('payments.update-status')
+  markFailed(
+    @CurrentTenant() tenant: { id: string },
+    @Param('id') id: string,
+    @Body() dto: MarkFailedPaymentDto,
+  ) {
+    return this.paymentsService.markFailed(tenant.id, id, dto);
+  }
+
+  @Post(':id/cancel')
+  @RequiredPermissions('payments.update-status')
+  cancel(@CurrentTenant() tenant: { id: string }, @Param('id') id: string) {
+    return this.paymentsService.cancel(tenant.id, id);
   }
 }
