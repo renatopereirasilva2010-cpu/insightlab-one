@@ -27,6 +27,14 @@ Aceitar o risco residual por ora. Não forçar upgrade do `tar` via `pnpm.overri
 
 Avaliar migração de `bcrypt` (binding nativo) para `bcryptjs` (implementação pura em JS, mesmo formato de hash, elimina `node-pre-gyp`/`tar` da árvore por completo). Isso remove a cadeia na raiz, mas mexe diretamente no caminho de autenticação — deve ser tratado como rodada dedicada, com teste de login/seed antes de qualquer merge, não como correção reativa de auditoria.
 
-## 6. Classificação final
+## 6. Classificação final (original)
 
 RISCO ACEITO — sem exploração real via rede identificada. Reavaliar a cada checkpoint de segurança (seção 7 do adendo `insightlab-one-onda0-adendo-governanca.md`) ou se `node-pre-gyp`/`bcrypt` publicarem uma versão que resolva a cadeia sem quebrar a instalação nativa.
+
+## 7. RESOLVIDO em 24/07/2026
+
+O encaminhamento futuro da seção 5 foi executado: `bcrypt` (nativo) substituído por `bcryptjs` (pura JS, mesmo algoritmo/formato de hash). Elimina `node-pre-gyp`/`tar` da árvore por completo — a cadeia toda deixou de existir, não é mais risco aceito, é risco eliminado.
+
+Compatibilidade confirmada: `bcryptjs` verifica corretamente hashes já existentes no banco (gerados pelo `bcrypt` nativo antigo) — nenhum usuário precisou re-hashear senha. Login testado ao vivo com `admin@mix-demo.local` (hash antigo) e `operador.restrito@mix-demo.local`, ambos funcionando.
+
+`pnpm audit --prod`: 20 vulnerabilidades (1 crítica) → 8 (0 crítica). As 8 restantes são de dependências transitivas não relacionadas (lodash, qs, file-type, `@nestjs/core`) — registradas como item menor de follow-up, não bloqueante.
