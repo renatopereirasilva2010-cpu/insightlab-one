@@ -1,3 +1,4 @@
+import { UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -40,5 +41,70 @@ describe('AuthService', () => {
     const legacyBcryptHash = '$2b$10$lTK5xsfrWga6wwIeN0Z3lOY6683GkczGbgdfKMYZcmMafmh.mRpgi';
     const ok = await bcrypt.compare('Admin@12345', legacyBcryptHash);
     expect(ok).toBe(true);
+  });
+
+  describe('refresh', () => {
+    function buildUser(overrides: Partial<any> = {}) {
+      return {
+        id: 'user-1',
+        email: 'admin@mix-demo.local',
+        tenantId: 't-1',
+        unitId: 'u-1',
+        status: 'ACTIVE',
+        userRoles: [
+          { role: { rolePermissions: [{ permission: { code: 'payments.read' } }] } },
+        ],
+        ...overrides,
+      };
+    }
+
+    it('issues a new access/refresh token pair for a valid refresh token', async () => {
+      const prisma = { user: { findUnique: jest.fn().mockResolvedValue(buildUser()) } };
+      const jwt = {
+        verifyAsync: jest.fn().mockResolvedValue({ sub: 'user-1' }),
+        signAsync: jest.fn().mockResolvedValue('new-token'),
+      };
+      const service = new AuthService(prisma as any, jwt as any);
+
+      const result = await service.refresh('valid-refresh-token');
+
+      expect(jwt.verifyAsync).toHaveBeenCalledWith('valid-refresh-token', expect.any(Object));
+      expect(result.accessToken).toBe('new-token');
+      expect(result.refreshToken).toBe('new-token');
+      expect(result.user).toEqual({
+        id: 'user-1',
+        email: 'admin@mix-demo.local',
+        tenantId: 't-1',
+        unitId: 'u-1',
+        permissions: ['payments.read'],
+      });
+    });
+
+    it('rejects an invalid/expired refresh token', async () => {
+      const prisma = { user: { findUnique: jest.fn() } };
+      const jwt = { verifyAsync: jest.fn().mockRejectedValue(new Error('expired')) };
+      const service = new AuthService(prisma as any, jwt as any);
+
+      await expect(service.refresh('bad-token')).rejects.toThrow(UnauthorizedException);
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('rejects refresh for a user that no longer exists', async () => {
+      const prisma = { user: { findUnique: jest.fn().mockResolvedValue(null) } };
+      const jwt = { verifyAsync: jest.fn().mockResolvedValue({ sub: 'ghost' }) };
+      const service = new AuthService(prisma as any, jwt as any);
+
+      await expect(service.refresh('token')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('rejects refresh for a blocked/inactive user', async () => {
+      const prisma = {
+        user: { findUnique: jest.fn().mockResolvedValue(buildUser({ status: 'BLOCKED' })) },
+      };
+      const jwt = { verifyAsync: jest.fn().mockResolvedValue({ sub: 'user-1' }) };
+      const service = new AuthService(prisma as any, jwt as any);
+
+      await expect(service.refresh('token')).rejects.toThrow(UnauthorizedException);
+    });
   });
 });
