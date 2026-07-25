@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
+import { AuditLogModule } from './common/audit/audit-log.module';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -34,6 +35,7 @@ import { FiscalDocumentsModule } from './modules/fiscal-documents/fiscal-documen
   controllers: [AppController],
   imports: [
     DatabaseModule,
+    AuditLogModule,
     AuthModule,
     UsersModule,
     RolesModule,
