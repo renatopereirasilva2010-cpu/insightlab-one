@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { AppController } from './app.controller';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -30,6 +31,7 @@ import { FeatureEntitlementsModule } from './modules/feature-entitlements/featur
 import { FiscalDocumentsModule } from './modules/fiscal-documents/fiscal-documents.module';
 
 @Module({
+  controllers: [AppController],
   imports: [
     DatabaseModule,
     AuthModule,
