@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../common/guards/permission.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { BlockCommissionDto } from './dto/block-commission.dto';
+import { CancelCommissionDto } from './dto/cancel-commission.dto';
 import { GenerateCommissionDto } from './dto/generate-commission.dto';
 import { ReleaseCommissionDto } from './dto/release-commission.dto';
 import { CommissionsService } from './commissions.service';
@@ -49,5 +50,15 @@ export class CommissionsController {
     @Body() dto: BlockCommissionDto,
   ) {
     return this.commissionsService.block(tenant.id, id, dto);
+  }
+
+  @Post(':id/cancel')
+  @RequiredPermissions('commissions.cancel')
+  cancel(
+    @CurrentTenant() tenant: { id: string },
+    @Param('id') id: string,
+    @Body() dto: CancelCommissionDto,
+  ) {
+    return this.commissionsService.cancel(tenant.id, id, dto);
   }
 }

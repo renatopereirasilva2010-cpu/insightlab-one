@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { BlockCommissionDto } from './dto/block-commission.dto';
+import { CancelCommissionDto } from './dto/cancel-commission.dto';
 import { GenerateCommissionDto } from './dto/generate-commission.dto';
 import { ReleaseCommissionDto } from './dto/release-commission.dto';
 
@@ -158,6 +159,47 @@ export class CommissionsService {
       data: {
         status: 'BLOCKED',
         notes: dto.notes ? `${commission.notes ?? ''}\n[BLOQUEIO] ${dto.notes}`.trim() : commission.notes,
+      },
+    });
+  }
+
+  async cancel(tenantId: string, commissionId: string, dto: CancelCommissionDto) {
+    const commission = await this.prisma.commission.findFirst({
+      where: { id: commissionId, tenantId },
+    });
+
+    if (!commission) {
+      throw new NotFoundException({
+        code: 'COMMISSION_NOT_FOUND',
+        title: 'Comissão não encontrada',
+        message: 'Não encontramos a comissão informada.',
+        recommendedAction: 'Atualize a tela e tente novamente.',
+      });
+    }
+
+    if (commission.status === 'CANCELED') {
+      throw new BadRequestException({
+        code: 'COMMISSION_ALREADY_CANCELED',
+        title: 'Comissão já cancelada',
+        message: 'Esta comissão já foi cancelada anteriormente.',
+        recommendedAction: 'Atualize a tela antes de tentar novamente.',
+      });
+    }
+
+    if (commission.status === 'RELEASED') {
+      throw new BadRequestException({
+        code: 'COMMISSION_ALREADY_RELEASED',
+        title: 'Comissão já liberada',
+        message: 'Não é possível cancelar uma comissão já liberada. Isso exige estorno financeiro, fora do escopo deste cancelamento.',
+        recommendedAction: 'Trate como estorno financeiro, não como cancelamento simples.',
+      });
+    }
+
+    return this.prisma.commission.update({
+      where: { id: commission.id },
+      data: {
+        status: 'CANCELED',
+        notes: dto.notes ? `${commission.notes ?? ''}\n[CANCELAMENTO] ${dto.notes}`.trim() : commission.notes,
       },
     });
   }

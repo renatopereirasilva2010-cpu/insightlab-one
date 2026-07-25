@@ -48,6 +48,7 @@ const permissions = [
   { code: 'cash-register.open', name: 'Open cash register', module: 'cash-register' },
   { code: 'cash-register.read', name: 'Read cash register', module: 'cash-register' },
   { code: 'commissions.block', name: 'Block commissions', module: 'commissions' },
+  { code: 'commissions.cancel', name: 'Cancel commissions', module: 'commissions' },
   { code: 'commissions.generate', name: 'Generate commissions', module: 'commissions' },
   { code: 'commissions.read', name: 'Read commissions', module: 'commissions' },
   { code: 'commissions.release', name: 'Release commissions', module: 'commissions' },
