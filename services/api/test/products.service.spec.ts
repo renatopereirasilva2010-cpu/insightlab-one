@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { ProductsService } from '../src/modules/products/products.service';
 
 describe('ProductsService', () => {
@@ -5,7 +6,9 @@ describe('ProductsService', () => {
   let prisma: {
     product: {
       findMany: jest.Mock;
+      findFirst: jest.Mock;
       create: jest.Mock;
+      update: jest.Mock;
     };
   };
 
@@ -13,7 +16,9 @@ describe('ProductsService', () => {
     prisma = {
       product: {
         findMany: jest.fn(),
+        findFirst: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
       },
     };
 
@@ -59,6 +64,41 @@ describe('ProductsService', () => {
         sku: dto.sku,
         salePrice: dto.salePrice,
         cost: dto.cost,
+      },
+    });
+  });
+
+  it('update should throw NotFoundException when the product does not belong to the tenant', async () => {
+    prisma.product.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.update('tenant-1', 'product-x', { salePrice: 10 } as any),
+    ).rejects.toThrow(NotFoundException);
+    expect(prisma.product.update).not.toHaveBeenCalled();
+  });
+
+  it('update should persist the changed fields for a product scoped to the tenant', async () => {
+    const existing = { id: 'product-1', tenantId: 'tenant-1', salePrice: 49.9 };
+    const dto = { salePrice: 59.9, stockQuantity: 10, status: 'INACTIVE' };
+    const updated = { ...existing, ...dto };
+
+    prisma.product.findFirst.mockResolvedValue(existing);
+    prisma.product.update.mockResolvedValue(updated);
+
+    await expect(service.update('tenant-1', 'product-1', dto as any)).resolves.toEqual(updated);
+    expect(prisma.product.findFirst).toHaveBeenCalledWith({
+      where: { id: 'product-1', tenantId: 'tenant-1' },
+    });
+    expect(prisma.product.update).toHaveBeenCalledWith({
+      where: { id: 'product-1' },
+      data: {
+        name: undefined,
+        sku: undefined,
+        salePrice: 59.9,
+        cost: undefined,
+        stockQuantity: 10,
+        minStock: undefined,
+        status: 'INACTIVE',
       },
     });
   });

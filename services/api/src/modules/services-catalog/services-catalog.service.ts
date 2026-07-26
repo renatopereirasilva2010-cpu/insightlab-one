@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateServiceDto } from './dto/create-service.dto';
+import { UpdateServiceDto } from './dto/update-service.dto';
 import { UpdateServiceFiscalDto } from './dto/update-service-fiscal.dto';
 
 @Injectable()
@@ -27,6 +28,35 @@ export class ServicesCatalogService {
         serviceListItemCode: dto.serviceListItemCode,
         issRate: dto.issRate,
         availableOnline: dto.availableOnline ?? true,
+      },
+    });
+  }
+
+  async update(tenantId: string, serviceId: string, dto: UpdateServiceDto) {
+    const service = await this.prisma.serviceCatalog.findFirst({
+      where: { id: serviceId, tenantId },
+    });
+
+    if (!service) {
+      throw new NotFoundException({
+        code: 'SERVICE_NOT_FOUND',
+        title: 'Serviço não encontrado',
+        message: 'Não encontramos o serviço informado para este tenant.',
+        recommendedAction: 'Revise o serviço selecionado e tente novamente.',
+      });
+    }
+
+    return this.prisma.serviceCatalog.update({
+      where: { id: service.id },
+      data: {
+        name: dto.name,
+        description: dto.description,
+        durationMinutes: dto.durationMinutes,
+        price: dto.price,
+        availableOnline: dto.availableOnline,
+        requiresProfessional: dto.requiresProfessional,
+        status: dto.status,
+        issRate: dto.issRate,
       },
     });
   }

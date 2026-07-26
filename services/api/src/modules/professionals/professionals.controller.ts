@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RequiredPermissions } from '../../common/decorators/required-permissions.decorator';
@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../common/guards/permission.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { CreateProfessionalDto } from './dto/create-professional.dto';
+import { UpdateProfessionalDto } from './dto/update-professional.dto';
 import { ProfessionalsService } from './professionals.service';
 
 @Controller('v1/professionals')
@@ -27,5 +28,15 @@ export class ProfessionalsController {
     @Body() dto: CreateProfessionalDto,
   ) {
     return this.professionalsService.create(tenant.id, user?.unitId ?? null, dto);
+  }
+
+  @Patch(':id')
+  @RequiredPermissions('professionals.update')
+  update(
+    @CurrentTenant() tenant: { id: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateProfessionalDto,
+  ) {
+    return this.professionalsService.update(tenant.id, id, dto);
   }
 }
