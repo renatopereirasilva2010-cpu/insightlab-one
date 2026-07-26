@@ -4,11 +4,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Calendar,
+  ClipboardList,
   Users,
+  UserRound,
+  Scissors,
+  Package,
   ShoppingCart,
   Wallet,
+  Banknote,
   Percent,
   FileText,
+  Settings,
   LogOut,
 } from "lucide-react";
 import {
@@ -27,11 +33,23 @@ import type { SessionUser } from "@/lib/session";
 
 const navItems = [
   { href: "/", label: "Agenda", icon: Calendar },
-  { href: "/clientes", label: "Clientes", icon: Users },
+  { href: "/atendimentos", label: "Atendimentos", icon: ClipboardList },
   { href: "/vendas", label: "Vendas", icon: ShoppingCart },
   { href: "/pagamentos", label: "Pagamentos", icon: Wallet },
+  { href: "/caixa", label: "Caixa", icon: Banknote },
   { href: "/comissoes", label: "Comissões", icon: Percent },
   { href: "/fiscal", label: "Documentos Fiscais", icon: FileText },
+];
+
+const cadastrosItems = [
+  { href: "/clientes", label: "Clientes", icon: Users },
+  { href: "/profissionais", label: "Profissionais", icon: UserRound },
+  { href: "/servicos", label: "Serviços", icon: Scissors },
+  { href: "/produtos", label: "Produtos", icon: Package },
+];
+
+const configItems = [
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 export function AppSidebar({ user }: { user: SessionUser }) {
@@ -55,6 +73,42 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Cadastros</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {cadastrosItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {configItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>

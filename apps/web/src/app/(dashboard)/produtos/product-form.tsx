@@ -1,0 +1,151 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { createProduct } from "./actions";
+
+const productSchema = z.object({
+  name: z.string().min(1, "Informe o nome.").max(150),
+  sku: z.string().max(80).optional().or(z.literal("")),
+  salePrice: z.coerce.number().min(0, "Preço não pode ser negativo."),
+  cost: z.coerce.number().min(0).optional(),
+});
+
+type ProductInput = z.input<typeof productSchema>;
+type ProductValues = z.output<typeof productSchema>;
+
+export function ProductForm({ onSuccess }: { onSuccess: () => void }) {
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<ProductInput, unknown, ProductValues>({
+    resolver: zodResolver(productSchema),
+    defaultValues: { name: "", sku: "", salePrice: 0, cost: undefined },
+  });
+
+  async function onSubmit(values: ProductValues) {
+    setServerError(null);
+    setIsSubmitting(true);
+    try {
+      const result = await createProduct({
+        name: values.name,
+        sku: values.sku || undefined,
+        salePrice: values.salePrice,
+        cost: values.cost,
+      });
+
+      if (!result.ok) {
+        setServerError(result.message);
+        return;
+      }
+
+      toast.success("Produto cadastrado.");
+      form.reset();
+      router.refresh();
+      onSuccess();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome</FormLabel>
+              <FormControl>
+                <Input placeholder="Nome do produto" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="sku"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>SKU</FormLabel>
+              <FormControl>
+                <Input placeholder="Opcional" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="salePrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preço de venda (R$)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    {...field}
+                    value={(field.value as number | string | undefined) ?? ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="cost"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Custo (R$)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    {...field}
+                    value={(field.value as number | string | undefined) ?? ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {serverError && (
+          <p className="text-destructive text-sm" role="alert">
+            {serverError}
+          </p>
+        )}
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Salvando..." : "Cadastrar produto"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
