@@ -1,12 +1,18 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { FiscalDocumentsService } from '../fiscal-documents/fiscal-documents.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { MarkFailedPaymentDto } from './dto/mark-failed-payment.dto';
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PaymentsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly fiscalDocumentsService: FiscalDocumentsService,
+  ) {}
 
   findAllByTenant(tenantId: string) {
     return this.prisma.withTenant(tenantId, (tx) =>
@@ -83,7 +89,9 @@ export class PaymentsService {
   }
 
   async markPaid(tenantId: string, paymentId: string) {
-    return this.prisma.withTenant(tenantId, async (tx) => {
+    let newFiscalDocumentId: string | null = null;
+
+    const updated = await this.prisma.withTenant(tenantId, async (tx) => {
       const payment = await tx.payment.findFirst({
         where: { id: paymentId, tenantId },
         include: { sale: true },
@@ -116,7 +124,7 @@ export class PaymentsService {
         });
       }
 
-      const updated = await tx.payment.update({
+      const updatedPayment = await tx.payment.update({
         where: { id: payment.id },
         data: {
           status: 'PAID',
@@ -136,10 +144,35 @@ export class PaymentsService {
           where: { id: payment.saleId },
           data: { status: 'COMPLETED' },
         });
+
+        const draft = await this.fiscalDocumentsService.createDraftForCompletedSale(
+          tenantId,
+          payment.saleId,
+          tx,
+        );
+
+        if (draft?.isNew) {
+          newFiscalDocumentId = draft.id;
+        }
       }
 
-      return updated;
+      return updatedPayment;
     });
+
+    if (newFiscalDocumentId) {
+      try {
+        await this.fiscalDocumentsService.advanceDraftEmission(tenantId, newFiscalDocumentId);
+      } catch (error) {
+        // Emissao fiscal e best-effort aqui - o pagamento ja foi confirmado
+        // e nao pode falhar por causa disso (risco documentado na ONDA 4).
+        this.logger.error(
+          `Falha ao tentar avançar o documento fiscal ${newFiscalDocumentId} após o pagamento.`,
+          error instanceof Error ? error.stack : error,
+        );
+      }
+    }
+
+    return updated;
   }
 
   private async findTerminalCheckedPayment(tx: Prisma.TransactionClient, tenantId: string, paymentId: string) {

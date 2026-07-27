@@ -1,14 +1,19 @@
 import { FiscalDocumentEventType, FiscalDocumentSourceType, FiscalDocumentStatus, FiscalDocumentType } from '@prisma/client';
 import { PrismaService } from '../src/database/prisma.service';
 import { FiscalDocumentsService } from '../src/modules/fiscal-documents/fiscal-documents.service';
+import { FiscalProvider } from '../src/modules/fiscal-documents/providers/fiscal-provider.interface';
 
 describe('FiscalDocumentsService', () => {
   let service: FiscalDocumentsService;
+  let fiscalProvider: { requestEmission: jest.Mock };
   let prisma: {
     fiscalDocument: {
       findFirst: jest.Mock;
       create: jest.Mock;
       update: jest.Mock;
+    };
+    fiscalDocumentEvent: {
+      create: jest.Mock;
     };
     sale: {
       findFirst: jest.Mock;
@@ -25,6 +30,9 @@ describe('FiscalDocumentsService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
+      fiscalDocumentEvent: {
+        create: jest.fn(),
+      },
       sale: {
         findFirst: jest.fn(),
       },
@@ -33,7 +41,12 @@ describe('FiscalDocumentsService', () => {
       },
     };
 
-    service = new FiscalDocumentsService(prisma as unknown as PrismaService);
+    fiscalProvider = { requestEmission: jest.fn() };
+
+    service = new FiscalDocumentsService(
+      prisma as unknown as PrismaService,
+      fiscalProvider as unknown as FiscalProvider,
+    );
     jest.useRealTimers();
   });
 
@@ -472,5 +485,145 @@ describe('FiscalDocumentsService', () => {
     });
 
     expect(prisma.fiscalDocument.update).not.toHaveBeenCalled();
+  });
+
+  describe('createDraftForCompletedSale', () => {
+    it('creates a DRAFT NFSE document linked to the sale when none exists yet', async () => {
+      prisma.fiscalDocument.findFirst.mockResolvedValueOnce(null);
+      prisma.sale.findFirst.mockResolvedValueOnce(saleFixture);
+      prisma.fiscalDocument.create.mockResolvedValueOnce({ id: 'fd_auto_1' });
+
+      const result = await service.createDraftForCompletedSale('tenant_1', 'sale-1');
+
+      expect(prisma.fiscalDocument.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            tenantId: 'tenant_1',
+            unitId: 'unit_1',
+            sourceType: FiscalDocumentSourceType.SALE,
+            sourceId: 'sale-1',
+            documentType: FiscalDocumentType.NFSE,
+          }),
+        }),
+      );
+      expect(result).toEqual({ id: 'fd_auto_1', isNew: true });
+    });
+
+    it('is idempotent - does not create a second document for the same sale', async () => {
+      prisma.fiscalDocument.findFirst.mockResolvedValueOnce({ id: 'fd_existing' });
+
+      const result = await service.createDraftForCompletedSale('tenant_1', 'sale-1');
+
+      expect(prisma.fiscalDocument.create).not.toHaveBeenCalled();
+      expect(result).toEqual({ id: 'fd_existing', isNew: false });
+    });
+
+    it('returns null and does not throw when the sale cannot be found', async () => {
+      prisma.fiscalDocument.findFirst.mockResolvedValueOnce(null);
+      prisma.sale.findFirst.mockResolvedValueOnce(null);
+
+      const result = await service.createDraftForCompletedSale('tenant_1', 'missing-sale');
+
+      expect(result).toBeNull();
+      expect(prisma.fiscalDocument.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('advanceDraftEmission', () => {
+    it('does nothing when the fiscal document is not in DRAFT', async () => {
+      prisma.fiscalDocument.findFirst.mockResolvedValueOnce({
+        id: 'fd_1',
+        tenantId: 'tenant_1',
+        status: FiscalDocumentStatus.REQUESTED,
+      });
+
+      await service.advanceDraftEmission('tenant_1', 'fd_1');
+
+      expect(fiscalProvider.requestEmission).not.toHaveBeenCalled();
+    });
+
+    it('leaves the document in DRAFT and logs an event when the provider skips emission', async () => {
+      prisma.fiscalDocument.findFirst.mockResolvedValueOnce({
+        id: 'fd_1',
+        tenantId: 'tenant_1',
+        status: FiscalDocumentStatus.DRAFT,
+      });
+      fiscalProvider.requestEmission.mockResolvedValueOnce({
+        type: 'skipped',
+        reason: 'Nenhum provedor de emissão fiscal configurado ainda.',
+      });
+
+      await service.advanceDraftEmission('tenant_1', 'fd_1');
+
+      expect(prisma.fiscalDocumentEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          fiscalDocumentId: 'fd_1',
+          eventType: FiscalDocumentEventType.CREATED,
+          message: 'Nenhum provedor de emissão fiscal configurado ainda.',
+        }),
+      });
+      expect(prisma.fiscalDocument.update).not.toHaveBeenCalled();
+    });
+
+    it('moves the document to REQUESTED when the provider accepts the emission', async () => {
+      prisma.fiscalDocument.findFirst
+        .mockResolvedValueOnce({ id: 'fd_1', tenantId: 'tenant_1', status: FiscalDocumentStatus.DRAFT })
+        .mockResolvedValueOnce({ id: 'fd_1', tenantId: 'tenant_1', status: FiscalDocumentStatus.DRAFT });
+      fiscalProvider.requestEmission.mockResolvedValueOnce({
+        type: 'requested',
+        referenceNumber: 'NFSE-777',
+        accessKey: 'ACCESS-777',
+      });
+      prisma.fiscalDocument.update.mockResolvedValueOnce({
+        id: 'fd_1',
+        status: FiscalDocumentStatus.REQUESTED,
+        events: [],
+      });
+
+      await service.advanceDraftEmission('tenant_1', 'fd_1');
+
+      expect(prisma.fiscalDocument.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: FiscalDocumentStatus.REQUESTED,
+            referenceNumber: 'NFSE-777',
+            accessKey: 'ACCESS-777',
+          }),
+        }),
+      );
+    });
+
+    it('moves the document through REQUESTED to FAILED when the provider reports a failure', async () => {
+      prisma.fiscalDocument.findFirst
+        .mockResolvedValueOnce({ id: 'fd_1', tenantId: 'tenant_1', status: FiscalDocumentStatus.DRAFT })
+        .mockResolvedValueOnce({ id: 'fd_1', tenantId: 'tenant_1', status: FiscalDocumentStatus.DRAFT })
+        .mockResolvedValueOnce({ id: 'fd_1', tenantId: 'tenant_1', status: FiscalDocumentStatus.REQUESTED });
+      fiscalProvider.requestEmission.mockResolvedValueOnce({
+        type: 'failed',
+        errorCode: 'PROVIDER_ERROR',
+        errorMessage: 'Falha simulada do provedor.',
+      });
+      prisma.fiscalDocument.update
+        .mockResolvedValueOnce({ id: 'fd_1', status: FiscalDocumentStatus.REQUESTED, events: [] })
+        .mockResolvedValueOnce({ id: 'fd_1', status: FiscalDocumentStatus.FAILED, events: [] });
+
+      await service.advanceDraftEmission('tenant_1', 'fd_1');
+
+      expect(prisma.fiscalDocument.update).toHaveBeenCalledTimes(2);
+      expect(prisma.fiscalDocument.update).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ data: expect.objectContaining({ status: FiscalDocumentStatus.REQUESTED }) }),
+      );
+      expect(prisma.fiscalDocument.update).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: FiscalDocumentStatus.FAILED,
+            errorCode: 'PROVIDER_ERROR',
+            errorMessage: 'Falha simulada do provedor.',
+          }),
+        }),
+      );
+    });
   });
 });

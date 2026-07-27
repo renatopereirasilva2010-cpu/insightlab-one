@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -14,6 +16,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { CreateFiscalDocumentDto } from './dto/create-fiscal-document.dto';
 import { QueryFiscalDocumentsDto } from './dto/query-fiscal-documents.dto';
 import { UpdateFiscalDocumentStatusDto } from './dto/update-fiscal-document-status.dto';
+import { FISCAL_PROVIDER, FiscalProvider } from './providers/fiscal-provider.interface';
 
 type SaleSourceRecord = Prisma.SaleGetPayload<{
   include: {
@@ -58,7 +61,12 @@ const FISCAL_DOCUMENT_STATUS_TRANSITIONS: Record<
 
 @Injectable()
 export class FiscalDocumentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(FiscalDocumentsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(FISCAL_PROVIDER) private readonly fiscalProvider: FiscalProvider,
+  ) {}
 
   async list(tenantId: string, query: QueryFiscalDocumentsDto) {
     const where: Prisma.FiscalDocumentWhereInput = {
@@ -210,6 +218,135 @@ export class FiscalDocumentsService {
 
       throw error;
     }
+  }
+
+  /**
+   * Gera o documento fiscal em DRAFT automaticamente quando uma venda é
+   * concluída - sem chamar nenhum provider externo aqui. Aceita um client
+   * de transação para rodar dentro da mesma transação que fecha o
+   * pagamento (é só um insert local, não bloqueia o checkout).
+   *
+   * FASE 1 assume NFSE para toda venda concluída (foco no prazo legal da
+   * NFS-e Nacional); diferenciar por tipo de item (ex.: NFCE para venda
+   * só de produto) fica para uma fase seguinte.
+   */
+  async createDraftForCompletedSale(
+    tenantId: string,
+    saleId: string,
+    tx: Prisma.TransactionClient | PrismaService = this.prisma,
+  ): Promise<{ id: string; isNew: boolean } | null> {
+    const documentType = FiscalDocumentType.NFSE;
+
+    const existing = await tx.fiscalDocument.findFirst({
+      where: {
+        tenantId,
+        sourceType: FiscalDocumentSourceType.SALE,
+        sourceId: saleId,
+        documentType,
+      },
+    });
+
+    if (existing) {
+      return { id: existing.id, isNew: false };
+    }
+
+    const sale = await tx.sale.findFirst({
+      where: { id: saleId, tenantId },
+      include: {
+        unit: true,
+        items: { include: { service: true } },
+      },
+    });
+
+    if (!sale) {
+      this.logger.warn(
+        `Venda ${saleId} não encontrada ao tentar gerar documento fiscal automático.`,
+      );
+      return null;
+    }
+
+    try {
+      const created = await tx.fiscalDocument.create({
+        data: {
+          tenantId,
+          unitId: sale.unitId ?? null,
+          sourceType: FiscalDocumentSourceType.SALE,
+          sourceId: saleId,
+          documentType,
+          events: {
+            create: {
+              eventType: FiscalDocumentEventType.CREATED,
+              message: 'Documento fiscal gerado automaticamente ao concluir a venda.',
+              payload: {
+                sourceType: 'SALE',
+                sourceId: saleId,
+                documentType,
+                sale: this.buildSaleSnapshot(sale),
+                unit: this.buildUnitSnapshot(sale.unit),
+                services: this.buildServiceSnapshots(sale.items),
+              },
+            },
+          },
+        },
+      });
+
+      return { id: created.id, isNew: true };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        // corrida entre tentativas concorrentes - idempotente, não é erro real
+        return null;
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Tenta avançar um documento fiscal de DRAFT para REQUESTED chamando o
+   * provider configurado. Roda depois que a transação de pagamento já
+   * commitou - nunca dentro dela. Com NullFiscalProvider, o documento
+   * fica em DRAFT (emissão pulada, sem chamada externa nenhuma).
+   */
+  async advanceDraftEmission(tenantId: string, fiscalDocumentId: string): Promise<void> {
+    const fiscalDocument = await this.prisma.fiscalDocument.findFirst({
+      where: { id: fiscalDocumentId, tenantId },
+    });
+
+    if (!fiscalDocument || fiscalDocument.status !== FiscalDocumentStatus.DRAFT) {
+      return;
+    }
+
+    const outcome = await this.fiscalProvider.requestEmission(fiscalDocument);
+
+    if (outcome.type === 'skipped') {
+      await this.prisma.fiscalDocumentEvent.create({
+        data: {
+          fiscalDocumentId: fiscalDocument.id,
+          eventType: FiscalDocumentEventType.CREATED,
+          message: outcome.reason,
+        },
+      });
+      return;
+    }
+
+    if (outcome.type === 'requested') {
+      await this.updateStatus(tenantId, fiscalDocument.id, {
+        status: 'REQUESTED',
+        referenceNumber: outcome.referenceNumber,
+        accessKey: outcome.accessKey,
+      });
+      return;
+    }
+
+    await this.updateStatus(tenantId, fiscalDocument.id, { status: 'REQUESTED' });
+    await this.updateStatus(tenantId, fiscalDocument.id, {
+      status: 'FAILED',
+      errorCode: outcome.errorCode,
+      errorMessage: outcome.errorMessage,
+    });
   }
 
   async updateStatus(
