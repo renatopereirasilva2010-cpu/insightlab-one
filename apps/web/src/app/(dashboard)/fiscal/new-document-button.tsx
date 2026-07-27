@@ -18,7 +18,7 @@ export function NewDocumentButton({
   return (
     <EntityDialog
       title="Novo documento fiscal"
-      description="Emita uma nota a partir de uma venda, pagamento ou referência manual."
+      description="Emita uma nota a partir de uma venda ou pagamento real."
       trigger={
         <Button>
           <Plus />
