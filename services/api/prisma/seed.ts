@@ -53,6 +53,7 @@ const permissions = [
   { code: 'commissions.cancel', name: 'Cancel commissions', module: 'commissions' },
   { code: 'commissions.generate', name: 'Generate commissions', module: 'commissions' },
   { code: 'commissions.read', name: 'Read commissions', module: 'commissions' },
+  { code: 'commissions.read-own', name: 'Read own commissions', module: 'commissions' },
   { code: 'commissions.release', name: 'Release commissions', module: 'commissions' },
   { code: 'payments.create', name: 'Create payments', module: 'payments' },
   { code: 'payments.read', name: 'Read payments', module: 'payments' },
@@ -206,6 +207,66 @@ async function main() {
     where: { userId_roleId: { userId: operatorUser.id, roleId: operatorRole.id } },
     update: {},
     create: { userId: operatorUser.id, roleId: operatorRole.id },
+  });
+
+  // Papel profissional - login somente-leitura escopado à própria comissão
+  // (governance/insightlab-one-onda3-benchmark-revisao-backlog.md, ONDA 3 FASE 1).
+  const professionalPermissionCodes = ['auth.login', 'auth.refresh', 'commissions.read-own'];
+  const professionalPermissions = await prisma.permission.findMany({
+    where: { code: { in: professionalPermissionCodes } },
+  });
+
+  const professionalRole = await prisma.role.upsert({
+    where: { tenantId_code: { tenantId: tenant.id, code: 'PROFISSIONAL' } },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      code: 'PROFISSIONAL',
+      name: 'Profissional',
+      description: 'Login do profissional - só enxerga o próprio extrato de comissão',
+    },
+  });
+
+  for (const permission of professionalPermissions) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: professionalRole.id, permissionId: permission.id } },
+      update: {},
+      create: { roleId: professionalRole.id, permissionId: permission.id },
+    });
+  }
+
+  const demoProfessional = await prisma.professional.upsert({
+    where: { id: 'seed-professional-demo' },
+    update: {},
+    create: {
+      id: 'seed-professional-demo',
+      tenantId: tenant.id,
+      unitId: unit.id,
+      name: 'Profissional Demo (Seed)',
+      roleTitle: 'Cabeleireiro(a)',
+      commissionRate: 35,
+    },
+  });
+
+  const professionalPasswordHash = await bcrypt.hash('Profissional@12345', 10);
+
+  const professionalUser = await prisma.user.upsert({
+    where: { email: 'profissional.demo.login@mix-demo.local' },
+    update: { professionalId: demoProfessional.id },
+    create: {
+      tenantId: tenant.id,
+      unitId: unit.id,
+      name: demoProfessional.name,
+      email: 'profissional.demo.login@mix-demo.local',
+      passwordHash: professionalPasswordHash,
+      professionalId: demoProfessional.id,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId: professionalUser.id, roleId: professionalRole.id } },
+    update: {},
+    create: { userId: professionalUser.id, roleId: professionalRole.id },
   });
 
   console.log('Seed concluído com sucesso.');

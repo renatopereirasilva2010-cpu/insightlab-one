@@ -12,6 +12,9 @@ describe('UsersService', () => {
       create: jest.Mock;
       update: jest.Mock;
     };
+    professional: {
+      findFirst: jest.Mock;
+    };
   };
 
   beforeEach(() => {
@@ -21,6 +24,9 @@ describe('UsersService', () => {
         findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+      },
+      professional: {
+        findFirst: jest.fn(),
       },
     };
 
@@ -46,6 +52,7 @@ describe('UsersService', () => {
         email: true,
         status: true,
         unitId: true,
+        professionalId: true,
         createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -73,6 +80,7 @@ describe('UsersService', () => {
       email: true,
       status: true,
       unitId: true,
+      professionalId: true,
       createdAt: true,
     });
   });
@@ -117,6 +125,7 @@ describe('UsersService', () => {
         phone: undefined,
         unitId: undefined,
         status: 'INACTIVE',
+        professionalId: undefined,
       },
       select: {
         id: true,
@@ -124,8 +133,46 @@ describe('UsersService', () => {
         email: true,
         status: true,
         unitId: true,
+        professionalId: true,
         createdAt: true,
       },
+    });
+  });
+
+  it('update should throw NotFoundException when professionalId does not belong to the tenant', async () => {
+    prisma.user.findFirst.mockResolvedValue({ id: 'user-1', tenantId: 'tenant-1' });
+    prisma.professional.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.update('tenant-1', 'user-1', { professionalId: 'prof-x' } as any),
+    ).rejects.toThrow(NotFoundException);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('update should reject linking a professional already linked to another user', async () => {
+    prisma.user.findFirst.mockResolvedValue({ id: 'user-1', tenantId: 'tenant-1' });
+    prisma.professional.findFirst.mockResolvedValue({ id: 'prof-1', tenantId: 'tenant-1' });
+    const prismaError = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: '5.0.0',
+    });
+    prisma.user.update.mockRejectedValue(prismaError);
+
+    await expect(
+      service.update('tenant-1', 'user-1', { professionalId: 'prof-1' } as any),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('update should link a valid professional to the user', async () => {
+    prisma.user.findFirst.mockResolvedValue({ id: 'user-1', tenantId: 'tenant-1' });
+    prisma.professional.findFirst.mockResolvedValue({ id: 'prof-1', tenantId: 'tenant-1' });
+    prisma.user.update.mockResolvedValue({ id: 'user-1', professionalId: 'prof-1' });
+
+    await expect(
+      service.update('tenant-1', 'user-1', { professionalId: 'prof-1' } as any),
+    ).resolves.toEqual({ id: 'user-1', professionalId: 'prof-1' });
+    expect(prisma.professional.findFirst).toHaveBeenCalledWith({
+      where: { id: 'prof-1', tenantId: 'tenant-1' },
     });
   });
 
@@ -153,6 +200,7 @@ describe('UsersService', () => {
         email: true,
         status: true,
         unitId: true,
+        professionalId: true,
         createdAt: true,
       },
     });

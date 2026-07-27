@@ -17,6 +17,23 @@ export class CommissionsService {
     });
   }
 
+  async findOwnByUser(tenantId: string, professionalId: string | null) {
+    if (!professionalId) {
+      throw new BadRequestException({
+        code: 'USER_WITHOUT_LINKED_PROFESSIONAL',
+        title: 'Conta sem profissional vinculado',
+        message: 'Sua conta de acesso não está vinculada a um cadastro de profissional.',
+        recommendedAction: 'Peça para um administrador vincular sua conta a um profissional em Usuários.',
+      });
+    }
+
+    return this.prisma.commission.findMany({
+      where: { tenantId, professionalId },
+      include: { sale: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async generate(tenantId: string, unitId: string | null, dto: GenerateCommissionDto) {
     const item = await this.prisma.saleItem.findFirst({
       where: { id: dto.saleItemId, tenantId },

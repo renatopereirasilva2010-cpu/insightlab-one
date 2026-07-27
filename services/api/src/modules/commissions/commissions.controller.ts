@@ -22,6 +22,15 @@ export class CommissionsController {
     return this.commissionsService.findAllByTenant(tenant.id);
   }
 
+  @Get('me')
+  @RequiredPermissions('commissions.read-own')
+  findOwn(
+    @CurrentTenant() tenant: { id: string },
+    @CurrentUser() user: { professionalId?: string | null },
+  ) {
+    return this.commissionsService.findOwnByUser(tenant.id, user?.professionalId ?? null);
+  }
+
   @Post('generate')
   @RequiredPermissions('commissions.generate')
   generate(

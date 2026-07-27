@@ -3,12 +3,19 @@ import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
 import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/components/status-badge";
 import { formatDate } from "@/lib/format";
-import type { Professional } from "@/lib/api-types";
+import type { Professional, UserListItem } from "@/lib/api-types";
 import { NewProfessionalButton } from "./new-professional-button";
+import { LinkAccountButton } from "./link-account-button";
 
 export default async function ProfissionaisPage() {
   const user = await verifySession();
-  const { items: professionals, error } = await safeList<Professional>("/v1/professionals");
+  const [{ items: professionals, error }, { items: users }] = await Promise.all([
+    safeList<Professional>("/v1/professionals"),
+    safeList<UserListItem>("/v1/users"),
+  ]);
+  const userByProfessionalId = new Map(
+    users.filter((u) => u.professionalId).map((u) => [u.professionalId as string, u]),
+  );
 
   return (
     <div className="space-y-6">
@@ -48,6 +55,21 @@ export default async function ProfissionaisPage() {
             ),
           },
           { header: "Cadastrado em", cell: (p) => formatDate(p.createdAt) },
+          {
+            header: "Conta de acesso",
+            cell: (p) =>
+              userByProfessionalId.get(p.id)?.email ?? (
+                <span className="text-muted-foreground">Não vinculada</span>
+              ),
+          },
+          {
+            header: "",
+            className: "text-right",
+            cell: (p) =>
+              hasPermission(user, "users.update") ? (
+                <LinkAccountButton professional={p} users={users} />
+              ) : null,
+          },
         ]}
       />
     </div>

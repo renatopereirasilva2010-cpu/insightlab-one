@@ -11,6 +11,7 @@ const userSelect = {
   email: true,
   status: true,
   unitId: true,
+  professionalId: true,
   createdAt: true,
 };
 
@@ -68,16 +69,45 @@ export class UsersService {
       });
     }
 
-    return this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        name: dto.name,
-        phone: dto.phone,
-        unitId: dto.unitId,
-        status: dto.status,
-      },
-      select: userSelect,
-    });
+    if (dto.professionalId) {
+      const professional = await this.prisma.professional.findFirst({
+        where: { id: dto.professionalId, tenantId },
+      });
+
+      if (!professional) {
+        throw new NotFoundException({
+          code: 'PROFESSIONAL_NOT_FOUND',
+          title: 'Profissional não encontrado',
+          message: 'Não encontramos o profissional informado para este tenant.',
+          recommendedAction: 'Revise o profissional selecionado e tente novamente.',
+        });
+      }
+    }
+
+    try {
+      return await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          name: dto.name,
+          phone: dto.phone,
+          unitId: dto.unitId,
+          status: dto.status,
+          professionalId: dto.professionalId,
+        },
+        select: userSelect,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new BadRequestException({
+          code: 'PROFESSIONAL_ALREADY_LINKED',
+          title: 'Profissional já vinculado a outra conta',
+          message: 'Este profissional já está vinculado a outro usuário do sistema.',
+          recommendedAction: 'Desvincule a conta anterior antes de vincular este profissional aqui.',
+        });
+      }
+
+      throw error;
+    }
   }
 
   async block(tenantId: string, userId: string) {

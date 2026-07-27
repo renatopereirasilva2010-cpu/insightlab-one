@@ -9,6 +9,7 @@ type UserWithRoles = {
   email: string;
   tenantId: string;
   unitId: string | null;
+  professionalId: string | null;
   status: string;
   userRoles: {
     role: { rolePermissions: { permission: { code: string } }[] };
@@ -67,6 +68,7 @@ export class AuthService {
         email: user.email,
         tenantId: user.tenantId,
         unitId: user.unitId,
+        professionalId: user.professionalId,
         permissions,
       },
     };

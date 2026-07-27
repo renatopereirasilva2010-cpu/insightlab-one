@@ -313,6 +313,7 @@ export interface UserListItem {
   email: string;
   status: UserStatus;
   unitId: string | null;
+  professionalId: string | null;
   createdAt: string;
 }
 

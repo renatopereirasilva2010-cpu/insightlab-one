@@ -200,22 +200,24 @@ model Unit {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  tenantId     String
-  unitId       String?
-  name         String
-  email        String     @unique
-  phone        String?
-  passwordHash String
-  status       UserStatus @default(ACTIVE)
-  lastLoginAt  DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id             String     @id @default(cuid())
+  tenantId       String
+  unitId         String?
+  name           String
+  email          String     @unique
+  phone          String?
+  passwordHash   String
+  status         UserStatus @default(ACTIVE)
+  lastLoginAt    DateTime?
+  professionalId String?    @unique
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
-  tenant    Tenant     @relation(fields: [tenantId], references: [id])
-  unit      Unit?      @relation(fields: [unitId], references: [id])
-  userRoles UserRole[]
-  auditLogs AuditLog[]
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  unit         Unit?         @relation(fields: [unitId], references: [id])
+  professional Professional? @relation(fields: [professionalId], references: [id])
+  userRoles    UserRole[]
+  auditLogs    AuditLog[]
 
   @@index([tenantId])
   @@index([unitId])
@@ -365,6 +367,7 @@ model Professional {
   sales          Sale[]
   saleItems      SaleItem[]
   commissions    Commission[]
+  user           User?
 
   @@index([tenantId])
   @@index([unitId])

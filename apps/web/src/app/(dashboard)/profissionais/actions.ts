@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { apiFetch } from "@/lib/api";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import type { Professional } from "@/lib/api-types";
+import type { Professional, UserListItem } from "@/lib/api-types";
 
 export interface CreateProfessionalInput {
   name: string;
@@ -20,6 +20,21 @@ export async function createProfessional(
     apiFetch<Professional>("/v1/professionals", {
       method: "POST",
       body: JSON.stringify(input),
+    }),
+  );
+
+  if (result.ok) revalidatePath("/profissionais");
+  return result;
+}
+
+export async function linkProfessionalAccount(
+  userId: string,
+  professionalId: string,
+): Promise<ActionResult<UserListItem>> {
+  const result = await runAction(() =>
+    apiFetch<UserListItem>(`/v1/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ professionalId }),
     }),
   );
 

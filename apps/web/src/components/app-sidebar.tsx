@@ -16,6 +16,7 @@ import {
   FileText,
   Settings,
   LogOut,
+  Receipt,
 } from "lucide-react";
 import {
   Sidebar,
@@ -56,6 +57,10 @@ export function AppSidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const operacaoItems = user.permissions.includes("commissions.read-own")
+    ? [...navItems, { href: "/minhas-comissoes", label: "Minhas Comissões", icon: Receipt }]
+    : navItems;
+
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
@@ -72,7 +77,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <SidebarGroupLabel>Operação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {operacaoItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>

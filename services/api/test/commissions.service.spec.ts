@@ -248,4 +248,26 @@ describe('CommissionsService', () => {
       expect(prisma.commission.update).not.toHaveBeenCalled();
     });
   });
+
+  describe('findOwnByUser', () => {
+    it('throws BadRequestException when the user has no linked professional', async () => {
+      const service = new CommissionsService({} as any);
+
+      await expect(service.findOwnByUser('t-1', null)).rejects.toThrow(BadRequestException);
+    });
+
+    it('scopes the query to the linked professionalId only', async () => {
+      const findMany = jest.fn().mockResolvedValue([{ id: 'com-1', professionalId: 'prof-1' }]);
+      const service = new CommissionsService({ commission: { findMany } } as any);
+
+      const result = await service.findOwnByUser('t-1', 'prof-1');
+
+      expect(findMany).toHaveBeenCalledWith({
+        where: { tenantId: 't-1', professionalId: 'prof-1' },
+        include: { sale: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(result).toEqual([{ id: 'com-1', professionalId: 'prof-1' }]);
+    });
+  });
 });

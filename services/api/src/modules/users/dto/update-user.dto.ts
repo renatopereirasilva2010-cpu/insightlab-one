@@ -24,4 +24,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(UpdateUserStatus)
   status?: UpdateUserStatus;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  professionalId?: string;
 }
