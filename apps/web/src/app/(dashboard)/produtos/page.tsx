@@ -30,6 +30,7 @@ export default async function ProdutosPage() {
         rows={products}
         rowKey={(p) => p.id}
         emptyMessage="Nenhum produto cadastrado ainda."
+        emptyAction={hasPermission(user, "products.create") ? <NewProductButton /> : undefined}
         columns={[
           { header: "Nome", cell: (p) => p.name },
           { header: "SKU", cell: (p) => p.sku ?? "—" },

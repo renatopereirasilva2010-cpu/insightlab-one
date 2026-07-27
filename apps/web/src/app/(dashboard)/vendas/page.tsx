@@ -46,6 +46,11 @@ export default async function VendasPage() {
         rows={sales}
         rowKey={(s) => s.id}
         emptyMessage="Nenhuma venda ainda."
+        emptyAction={
+          hasPermission(user, "sales.create") ? (
+            <NewSaleButton clients={clients} professionals={professionals} />
+          ) : undefined
+        }
         columns={[
           { header: "Cliente", cell: (s) => (s.clientId ? clientById.get(s.clientId)?.name ?? "—" : "—") },
           {

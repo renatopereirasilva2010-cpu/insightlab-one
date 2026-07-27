@@ -35,6 +35,7 @@ export default async function CaixaPage() {
         rows={registers}
         rowKey={(r) => r.id}
         emptyMessage="Nenhum caixa aberto ainda."
+        emptyAction={hasPermission(user, "cash-register.open") ? <OpenRegisterButton /> : undefined}
         columns={[
           { header: "Nome", cell: (r) => r.name },
           {

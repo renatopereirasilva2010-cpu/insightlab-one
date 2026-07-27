@@ -65,6 +65,16 @@ export default async function AtendimentosPage() {
         rows={attendances}
         rowKey={(a) => a.id}
         emptyMessage="Nenhum atendimento ainda."
+        emptyAction={
+          hasPermission(user, "attendances.create") ? (
+            <NewAttendanceButton
+              clients={clients}
+              professionals={professionals}
+              services={services}
+              appointments={linkableAppointments}
+            />
+          ) : undefined
+        }
         columns={[
           { header: "Cliente", cell: (a) => clientById.get(a.clientId)?.name ?? "—" },
           { header: "Serviço", cell: (a) => serviceById.get(a.serviceId)?.name ?? "—" },

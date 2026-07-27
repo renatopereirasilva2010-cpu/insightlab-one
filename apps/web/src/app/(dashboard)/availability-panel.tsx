@@ -109,6 +109,12 @@ export function AvailabilityPanel({ professionals }: { professionals: Profession
             rows={rules}
             rowKey={(r) => r.id}
             emptyMessage="Nenhuma regra cadastrada para este dia."
+            emptyAction={
+              <Button variant="outline" size="sm" onClick={() => setNewRuleOpen(true)}>
+                <Plus />
+                Nova regra
+              </Button>
+            }
             columns={[
               { header: "Início", cell: (r) => r.startTime },
               { header: "Término", cell: (r) => r.endTime },

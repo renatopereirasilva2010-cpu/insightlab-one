@@ -135,6 +135,16 @@ export default async function SaleDetailPage({
           rows={sale.items}
           rowKey={(i) => i.id}
           emptyMessage="Nenhum item adicionado ainda."
+          emptyAction={
+            hasPermission(user, "sales.update") && sale.status === "OPEN" ? (
+              <AddItemButton
+                saleId={sale.id}
+                services={services}
+                products={products}
+                professionals={professionals}
+              />
+            ) : undefined
+          }
           columns={[
             {
               header: "Item",
@@ -180,6 +190,16 @@ export default async function SaleDetailPage({
           rows={salePayments}
           rowKey={(p) => p.id}
           emptyMessage="Nenhum pagamento registrado ainda."
+          emptyAction={
+            hasPermission(user, "payments.create") &&
+            (sale.status === "OPEN" || sale.status === "READY_FOR_CHECKOUT") ? (
+              <NewPaymentButton
+                saleId={sale.id}
+                defaultAmount={remaining || Number(sale.totalAmount)}
+                openRegisters={openRegisters}
+              />
+            ) : undefined
+          }
           columns={[
             { header: "Método", cell: (p) => paymentMethodLabels[p.method] ?? p.method },
             { header: "Valor", cell: (p) => formatCurrency(p.amount) },

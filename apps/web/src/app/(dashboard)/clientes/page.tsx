@@ -32,6 +32,7 @@ export default async function ClientesPage() {
         rows={clients}
         rowKey={(c) => c.id}
         emptyMessage="Nenhum cliente cadastrado ainda."
+        emptyAction={hasPermission(user, "clients.create") ? <NewClientButton /> : undefined}
         columns={[
           { header: "Nome", cell: (c) => c.name },
           { header: "Nome social", cell: (c) => c.socialName ?? "—" },

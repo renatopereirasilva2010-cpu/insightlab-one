@@ -63,6 +63,15 @@ export default async function PagamentosPage() {
         rows={sorted}
         rowKey={(p) => p.id}
         emptyMessage="Nenhum pagamento ainda."
+        emptyAction={
+          hasPermission(user, "payments.create") ? (
+            <NewPaymentButton
+              eligibleSales={eligibleSales}
+              clients={clients}
+              openRegisters={openRegisters}
+            />
+          ) : undefined
+        }
         columns={[
           {
             header: "Venda",

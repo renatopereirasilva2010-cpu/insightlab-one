@@ -56,6 +56,11 @@ export default async function FiscalDocumentsPage() {
         rows={sorted}
         rowKey={(d) => d.id}
         emptyMessage="Nenhum documento fiscal ainda."
+        emptyAction={
+          hasPermission(user, "fiscal-documents.create") ? (
+            <NewDocumentButton sales={sales} payments={payments} clients={clients} />
+          ) : undefined
+        }
         columns={[
           { header: "Tipo", cell: (d) => DOCUMENT_TYPE_LABELS[d.documentType] ?? d.documentType },
           { header: "Origem", cell: (d) => d.sourceType },

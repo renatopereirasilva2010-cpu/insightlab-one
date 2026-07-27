@@ -39,6 +39,7 @@ export default async function ProfissionaisPage() {
         rows={professionals}
         rowKey={(p) => p.id}
         emptyMessage="Nenhum profissional cadastrado ainda."
+        emptyAction={hasPermission(user, "professionals.create") ? <NewProfessionalButton /> : undefined}
         columns={[
           { header: "Nome", cell: (p) => p.name },
           { header: "Função", cell: (p) => p.roleTitle ?? "—" },

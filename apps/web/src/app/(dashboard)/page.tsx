@@ -91,6 +91,11 @@ export default async function AgendaPage() {
             rows={blocks}
             rowKey={(b) => b.id}
             emptyMessage="Nenhum bloqueio ativo."
+            emptyAction={
+              hasPermission(user, "appointments.block") ? (
+                <NewBlockButton professionals={professionals} resources={resources} />
+              ) : undefined
+            }
             columns={[
               {
                 header: "Profissional",
@@ -120,6 +125,7 @@ export default async function AgendaPage() {
             rows={resources}
             rowKey={(r) => r.id}
             emptyMessage="Nenhum recurso cadastrado."
+            emptyAction={hasPermission(user, "resources.create") ? <NewResourceButton /> : undefined}
             columns={[
               { header: "Nome", cell: (r) => r.name },
               { header: "Tipo", cell: (r) => r.type },

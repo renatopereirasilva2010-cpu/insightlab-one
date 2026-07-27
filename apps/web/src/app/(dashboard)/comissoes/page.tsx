@@ -69,6 +69,17 @@ export default async function ComissoesPage() {
         rows={commissions}
         rowKey={(c) => c.id}
         emptyMessage="Nenhuma comissão gerada ainda."
+        emptyAction={
+          hasPermission(user, "commissions.generate") ? (
+            <NewCommissionButton
+              sales={sales}
+              professionals={professionals}
+              clients={clients}
+              services={services}
+              products={products}
+            />
+          ) : undefined
+        }
         columns={[
           {
             header: "Profissional",

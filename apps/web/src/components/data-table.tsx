@@ -18,16 +18,19 @@ export function DataTable<T>({
   rows,
   rowKey,
   emptyMessage = "Nenhum registro encontrado.",
+  emptyAction,
 }: {
   columns: DataTableColumn<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   emptyMessage?: string;
+  emptyAction?: React.ReactNode;
 }) {
   if (rows.length === 0) {
     return (
-      <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-        {emptyMessage}
+      <div className="flex flex-col items-center gap-3 rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
+        <p>{emptyMessage}</p>
+        {emptyAction}
       </div>
     );
   }

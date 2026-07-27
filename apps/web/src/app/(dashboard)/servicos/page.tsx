@@ -33,6 +33,7 @@ export default async function ServicosPage() {
         rows={services}
         rowKey={(s) => s.id}
         emptyMessage="Nenhum serviço cadastrado ainda."
+        emptyAction={hasPermission(user, "services.create") ? <NewServiceButton /> : undefined}
         columns={[
           { header: "Nome", cell: (s) => s.name },
           { header: "Duração", cell: (s) => `${s.durationMinutes} min` },

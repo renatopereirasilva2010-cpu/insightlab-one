@@ -149,6 +149,16 @@ export function AppointmentsPanel({
           rows={filtered}
           rowKey={(a) => a.id}
           emptyMessage="Nenhum agendamento encontrado para os filtros selecionados."
+          emptyAction={
+            canCreate ? (
+              <NewAppointmentButton
+                clients={clients}
+                professionals={professionals}
+                services={services}
+                resources={resources}
+              />
+            ) : undefined
+          }
           columns={[
             { header: "Cliente", cell: (a) => clientById.get(a.clientId)?.name ?? "—" },
             { header: "Serviço", cell: (a) => serviceById.get(a.serviceId)?.name ?? "—" },
