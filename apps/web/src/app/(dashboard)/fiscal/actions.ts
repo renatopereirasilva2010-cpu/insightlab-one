@@ -6,9 +6,9 @@ import { runAction, type ActionResult } from "@/lib/action-result";
 import type { FiscalDocument } from "@/lib/api-types";
 
 export interface CreateFiscalDocumentInput {
-  sourceType: "SALE" | "PAYMENT" | "MANUAL";
+  sourceType: "SALE" | "PAYMENT";
   sourceId: string;
-  documentType: "NFSE" | "NFE" | "NFCE" | "OTHER";
+  documentType: "NFSE" | "NFE" | "NFCE";
   provider?: string;
 }
 

@@ -28,9 +28,9 @@ import type { Sale, Payment, Client } from "@/lib/api-types";
 import { createFiscalDocument } from "./actions";
 
 const schema = z.object({
-  sourceType: z.enum(["SALE", "PAYMENT", "MANUAL"]),
+  sourceType: z.enum(["SALE", "PAYMENT"]),
   sourceId: z.string().min(1, "Selecione a origem."),
-  documentType: z.enum(["NFSE", "NFE", "NFCE", "OTHER"]),
+  documentType: z.enum(["NFSE", "NFE", "NFCE"]),
   provider: z.string().max(50).optional().or(z.literal("")),
 });
 
@@ -108,7 +108,6 @@ export function CreateFiscalDocumentForm({
                 <SelectContent>
                   <SelectItem value="SALE">Venda</SelectItem>
                   <SelectItem value="PAYMENT">Pagamento</SelectItem>
-                  <SelectItem value="MANUAL">Manual</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -171,22 +170,6 @@ export function CreateFiscalDocumentForm({
           />
         )}
 
-        {sourceType === "MANUAL" && (
-          <FormField
-            control={form.control}
-            name="sourceId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Referência da origem</FormLabel>
-                <FormControl>
-                  <Input placeholder="Identificador livre" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
         <FormField
           control={form.control}
           name="documentType"
@@ -203,7 +186,6 @@ export function CreateFiscalDocumentForm({
                   <SelectItem value="NFSE">NFS-e</SelectItem>
                   <SelectItem value="NFE">NF-e</SelectItem>
                   <SelectItem value="NFCE">NFC-e</SelectItem>
-                  <SelectItem value="OTHER">Outro</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

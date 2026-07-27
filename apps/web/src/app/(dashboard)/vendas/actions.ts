@@ -7,7 +7,7 @@ import type { Sale, SaleItem, Payment } from "@/lib/api-types";
 
 export interface CreateSaleInput {
   attendanceId?: string;
-  clientId?: string;
+  clientId: string;
   professionalId?: string;
   notes?: string;
 }
@@ -24,6 +24,7 @@ export interface AddSaleItemInput {
   itemType: "SERVICE" | "PRODUCT";
   serviceId?: string;
   productId?: string;
+  professionalId?: string;
   description?: string;
   quantity: number;
   unitPrice: number;
@@ -75,7 +76,7 @@ export interface CreatePaymentInput {
   saleId: string;
   method: "CASH" | "PIX" | "CREDIT_CARD" | "DEBIT_CARD" | "BANK_TRANSFER" | "DEFERRED";
   amount: number;
-  cashRegisterId?: string;
+  cashRegisterId: string;
   isDeferred?: boolean;
   deferredDueDate?: string;
   externalReference?: string;

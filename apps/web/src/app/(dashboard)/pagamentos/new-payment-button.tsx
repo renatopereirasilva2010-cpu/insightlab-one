@@ -4,14 +4,16 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EntityDialog } from "@/components/entity-dialog";
 import { CreatePaymentForm } from "./create-payment-form";
-import type { Sale, Client } from "@/lib/api-types";
+import type { Sale, Client, CashRegister } from "@/lib/api-types";
 
 export function NewPaymentButton({
   eligibleSales,
   clients,
+  openRegisters,
 }: {
   eligibleSales: Sale[];
   clients: Client[];
+  openRegisters: CashRegister[];
 }) {
   return (
     <EntityDialog
@@ -25,7 +27,12 @@ export function NewPaymentButton({
       }
     >
       {({ close }) => (
-        <CreatePaymentForm eligibleSales={eligibleSales} clients={clients} onSuccess={close} />
+        <CreatePaymentForm
+          eligibleSales={eligibleSales}
+          clients={clients}
+          openRegisters={openRegisters}
+          onSuccess={close}
+        />
       )}
     </EntityDialog>
   );

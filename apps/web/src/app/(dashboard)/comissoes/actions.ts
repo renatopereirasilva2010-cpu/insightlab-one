@@ -6,10 +6,8 @@ import { runAction, type ActionResult } from "@/lib/action-result";
 import type { Commission } from "@/lib/api-types";
 
 export interface GenerateCommissionInput {
-  saleId: string;
-  professionalId: string;
+  saleItemId: string;
   baseAmount: number;
-  commissionAmount: number;
   notes?: string;
 }
 

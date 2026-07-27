@@ -10,6 +10,7 @@ export interface CreateProfessionalInput {
   phone?: string;
   email?: string;
   roleTitle?: string;
+  commissionRate?: number;
 }
 
 export async function createProfessional(

@@ -28,20 +28,18 @@ import { paymentMethodLabels } from "@/components/status-badge";
 import type { CashRegister } from "@/lib/api-types";
 import { createPayment } from "../actions";
 
-const NONE = "__none__";
-
 const paymentSchema = z
   .object({
     method: z.enum(["CASH", "PIX", "CREDIT_CARD", "DEBIT_CARD", "BANK_TRANSFER", "DEFERRED"]),
     amount: z.coerce.number().min(0.01, "Informe um valor válido."),
-    cashRegisterId: z.string(),
+    cashRegisterId: z.string().min(1, "Selecione um caixa aberto."),
     isDeferred: z.boolean(),
     deferredDueDate: z.string().optional().or(z.literal("")),
     externalReference: z.string().max(120).optional().or(z.literal("")),
     notes: z.string().max(500).optional().or(z.literal("")),
   })
   .refine((v) => !(v.isDeferred && !v.deferredDueDate), {
-    message: "Informe a data de vencimento para pagamento diferido.",
+    message: "Informe a data de vencimento para pagamento a prazo.",
     path: ["deferredDueDate"],
   });
 
@@ -68,7 +66,7 @@ export function PaymentForm({
     defaultValues: {
       method: "CASH",
       amount: defaultAmount,
-      cashRegisterId: NONE,
+      cashRegisterId: openRegisters[0]?.id ?? "",
       isDeferred: false,
       deferredDueDate: "",
       externalReference: "",
@@ -86,7 +84,7 @@ export function PaymentForm({
         saleId,
         method: values.method,
         amount: values.amount,
-        cashRegisterId: values.cashRegisterId === NONE ? undefined : values.cashRegisterId,
+        cashRegisterId: values.cashRegisterId,
         isDeferred: values.isDeferred || values.method === "DEFERRED",
         deferredDueDate: values.deferredDueDate || undefined,
         externalReference: values.externalReference || undefined,
@@ -164,11 +162,10 @@ export function PaymentForm({
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Nenhum" />
+                    <SelectValue placeholder="Selecione um caixa aberto" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value={NONE}>Nenhum</SelectItem>
                   {openRegisters.map((r) => (
                     <SelectItem key={r.id} value={r.id}>
                       {r.name}
@@ -176,6 +173,11 @@ export function PaymentForm({
                   ))}
                 </SelectContent>
               </Select>
+              {openRegisters.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  Nenhum caixa aberto. Abra um caixa antes de registrar o pagamento.
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -190,7 +192,7 @@ export function PaymentForm({
                 <FormControl>
                   <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
-                <FormLabel className="font-normal">Pagamento diferido</FormLabel>
+                <FormLabel className="font-normal">Pagamento a prazo (fiado)</FormLabel>
               </FormItem>
             )}
           />
@@ -232,7 +234,7 @@ export function PaymentForm({
           </p>
         )}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || openRegisters.length === 0}>
           {isSubmitting ? "Salvando..." : "Registrar pagamento"}
         </Button>
       </form>

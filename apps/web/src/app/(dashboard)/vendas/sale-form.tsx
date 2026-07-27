@@ -29,7 +29,7 @@ import { createSale } from "./actions";
 const NONE = "__none__";
 
 const saleSchema = z.object({
-  clientId: z.string(),
+  clientId: z.string().min(1, "Selecione o cliente."),
   professionalId: z.string(),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
@@ -51,7 +51,7 @@ export function SaleForm({
 
   const form = useForm<SaleValues>({
     resolver: zodResolver(saleSchema),
-    defaultValues: { clientId: NONE, professionalId: NONE, notes: "" },
+    defaultValues: { clientId: "", professionalId: NONE, notes: "" },
   });
 
   async function onSubmit(values: SaleValues) {
@@ -59,7 +59,7 @@ export function SaleForm({
     setIsSubmitting(true);
     try {
       const result = await createSale({
-        clientId: values.clientId === NONE ? undefined : values.clientId,
+        clientId: values.clientId,
         professionalId: values.professionalId === NONE ? undefined : values.professionalId,
         notes: values.notes || undefined,
       });
@@ -89,11 +89,10 @@ export function SaleForm({
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Sem cliente definido" />
+                    <SelectValue placeholder="Selecione o cliente" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value={NONE}>Sem cliente definido</SelectItem>
                   {clients.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}

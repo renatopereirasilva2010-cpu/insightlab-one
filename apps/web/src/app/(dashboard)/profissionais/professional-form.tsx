@@ -23,18 +23,20 @@ const professionalSchema = z.object({
   roleTitle: z.string().max(100).optional().or(z.literal("")),
   phone: z.string().max(30).optional().or(z.literal("")),
   email: z.string().email("E-mail inválido.").max(150).optional().or(z.literal("")),
+  commissionRate: z.coerce.number().min(0).max(100).optional(),
 });
 
-type ProfessionalValues = z.infer<typeof professionalSchema>;
+type ProfessionalInput = z.input<typeof professionalSchema>;
+type ProfessionalValues = z.output<typeof professionalSchema>;
 
 export function ProfessionalForm({ onSuccess }: { onSuccess: () => void }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<ProfessionalValues>({
+  const form = useForm<ProfessionalInput, unknown, ProfessionalValues>({
     resolver: zodResolver(professionalSchema),
-    defaultValues: { name: "", roleTitle: "", phone: "", email: "" },
+    defaultValues: { name: "", roleTitle: "", phone: "", email: "", commissionRate: undefined },
   });
 
   async function onSubmit(values: ProfessionalValues) {
@@ -46,6 +48,7 @@ export function ProfessionalForm({ onSuccess }: { onSuccess: () => void }) {
         roleTitle: values.roleTitle || undefined,
         phone: values.phone || undefined,
         email: values.email || undefined,
+        commissionRate: values.commissionRate,
       });
 
       if (!result.ok) {
@@ -122,6 +125,28 @@ export function ProfessionalForm({ onSuccess }: { onSuccess: () => void }) {
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="commissionRate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Percentual de comissão (%)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="0.01"
+                  placeholder="Ex.: 30"
+                  {...field}
+                  value={(field.value as number | string | undefined) ?? ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {serverError && (
           <p className="text-destructive text-sm" role="alert">

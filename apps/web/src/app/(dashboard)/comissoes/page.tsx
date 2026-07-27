@@ -7,7 +7,14 @@ import {
   commissionStatusVariants,
 } from "@/components/status-badge";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import type { Commission, Sale, Professional, Client } from "@/lib/api-types";
+import type {
+  Commission,
+  Sale,
+  Professional,
+  Client,
+  ServiceCatalogItem,
+  Product,
+} from "@/lib/api-types";
 import { NewCommissionButton } from "./new-commission-button";
 import { CommissionRowActions } from "./commission-row-actions";
 
@@ -19,11 +26,15 @@ export default async function ComissoesPage() {
     { items: sales },
     { items: professionals },
     { items: clients },
+    { items: services },
+    { items: products },
   ] = await Promise.all([
     safeList<Commission>("/v1/commissions"),
     safeList<Sale>("/v1/sales"),
     safeList<Professional>("/v1/professionals"),
     safeList<Client>("/v1/clients"),
+    safeList<ServiceCatalogItem>("/v1/services-catalog"),
+    safeList<Product>("/v1/products"),
   ]);
 
   const professionalById = new Map(professionals.map((p) => [p.id, p]));
@@ -38,7 +49,13 @@ export default async function ComissoesPage() {
           <p className="text-muted-foreground">Comissões de profissionais geradas por venda.</p>
         </div>
         {hasPermission(user, "commissions.generate") && (
-          <NewCommissionButton sales={sales} professionals={professionals} clients={clients} />
+          <NewCommissionButton
+            sales={sales}
+            professionals={professionals}
+            clients={clients}
+            services={services}
+            products={products}
+          />
         )}
       </div>
 

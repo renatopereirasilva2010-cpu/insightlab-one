@@ -23,13 +23,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import type { ServiceCatalogItem, Product } from "@/lib/api-types";
+import type { ServiceCatalogItem, Product, Professional } from "@/lib/api-types";
 import { addSaleItem } from "../actions";
+
+const NONE = "__none__";
 
 const itemSchema = z
   .object({
     itemType: z.enum(["SERVICE", "PRODUCT"]),
     itemId: z.string().min(1, "Selecione um item."),
+    professionalId: z.string(),
     description: z.string().max(300).optional().or(z.literal("")),
     quantity: z.coerce.number().min(0.001, "Quantidade deve ser maior que zero."),
     unitPrice: z.coerce.number().min(0, "Preço não pode ser negativo."),
@@ -42,11 +45,13 @@ export function SaleItemForm({
   saleId,
   services,
   products,
+  professionals,
   onSuccess,
 }: {
   saleId: string;
   services: ServiceCatalogItem[];
   products: Product[];
+  professionals: Professional[];
   onSuccess: () => void;
 }) {
   const router = useRouter();
@@ -55,7 +60,14 @@ export function SaleItemForm({
 
   const form = useForm<ItemInput, unknown, ItemValues>({
     resolver: zodResolver(itemSchema),
-    defaultValues: { itemType: "SERVICE", itemId: "", description: "", quantity: 1, unitPrice: 0 },
+    defaultValues: {
+      itemType: "SERVICE",
+      itemId: "",
+      professionalId: NONE,
+      description: "",
+      quantity: 1,
+      unitPrice: 0,
+    },
   });
 
   const itemType = form.watch("itemType");
@@ -69,6 +81,7 @@ export function SaleItemForm({
         itemType: values.itemType,
         serviceId: values.itemType === "SERVICE" ? values.itemId : undefined,
         productId: values.itemType === "PRODUCT" ? values.itemId : undefined,
+        professionalId: values.professionalId === NONE ? undefined : values.professionalId,
         description: values.description || undefined,
         quantity: values.quantity,
         unitPrice: values.unitPrice,
@@ -152,6 +165,37 @@ export function SaleItemForm({
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="professionalId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Profissional responsável</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Sem profissional definido" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={NONE}>Sem profissional definido</SelectItem>
+                  {professionals.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {itemType === "SERVICE" && (
+                <p className="text-muted-foreground text-sm">
+                  Obrigatório para enviar a venda a checkout e para gerar comissão deste item.
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}

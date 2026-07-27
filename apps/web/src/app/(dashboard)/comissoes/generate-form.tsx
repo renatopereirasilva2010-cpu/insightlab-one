@@ -24,14 +24,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { formatCurrency } from "@/lib/format";
-import type { Sale, Professional, Client } from "@/lib/api-types";
+import type { Sale, Professional, Client, ServiceCatalogItem, Product } from "@/lib/api-types";
 import { generateCommission } from "./actions";
 
 const schema = z.object({
-  saleId: z.string().min(1, "Selecione a venda."),
-  professionalId: z.string().min(1, "Selecione o profissional."),
+  saleItemId: z.string().min(1, "Selecione o item da venda."),
   baseAmount: z.coerce.number().min(0),
-  commissionAmount: z.coerce.number().min(0),
 });
 
 type Input = z.input<typeof schema>;
@@ -41,22 +39,48 @@ export function GenerateCommissionForm({
   sales,
   professionals,
   clients,
+  services,
+  products,
   onSuccess,
 }: {
   sales: Sale[];
   professionals: Professional[];
   clients: Client[];
+  services: ServiceCatalogItem[];
+  products: Product[];
   onSuccess: () => void;
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const clientById = new Map(clients.map((c) => [c.id, c]));
+  const professionalById = new Map(professionals.map((p) => [p.id, p]));
+  const serviceById = new Map(services.map((s) => [s.id, s]));
+  const productById = new Map(products.map((p) => [p.id, p]));
+
+  const commissionableItems = sales.flatMap((sale) =>
+    sale.items
+      .filter((item) => item.professionalId)
+      .map((item) => ({ sale, item })),
+  );
 
   const form = useForm<Input, unknown, Values>({
     resolver: zodResolver(schema),
-    defaultValues: { saleId: "", professionalId: "", baseAmount: 0, commissionAmount: 0 },
+    defaultValues: { saleItemId: "", baseAmount: 0 },
   });
+
+  const selected = commissionableItems.find((c) => c.item.id === form.watch("saleItemId"));
+  const selectedProfessional = selected ? professionalById.get(selected.item.professionalId!) : undefined;
+  const baseAmount = Number(form.watch("baseAmount")) || 0;
+  const commissionRate = selectedProfessional?.commissionRate ?? null;
+  const estimatedCommission =
+    commissionRate !== null ? Math.round(baseAmount * commissionRate) / 100 : null;
+
+  function describeItem(item: (typeof commissionableItems)[number]["item"]) {
+    if (item.description) return item.description;
+    if (item.itemType === "SERVICE") return serviceById.get(item.serviceId ?? "")?.name ?? "Serviço";
+    return productById.get(item.productId ?? "")?.name ?? "Produto";
+  }
 
   async function onSubmit(values: Values) {
     setServerError(null);
@@ -83,57 +107,40 @@ export function GenerateCommissionForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="saleId"
+          name="saleItemId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Venda</FormLabel>
+              <FormLabel>Item da venda</FormLabel>
               <Select
                 value={field.value}
                 onValueChange={(value) => {
                   field.onChange(value);
-                  const sale = sales.find((s) => s.id === value);
-                  if (sale) form.setValue("baseAmount", Number(sale.totalAmount));
+                  const entry = commissionableItems.find((c) => c.item.id === value);
+                  if (entry) form.setValue("baseAmount", Number(entry.item.totalPrice));
                 }}
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione a venda" />
+                    <SelectValue placeholder="Selecione o item" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {sales.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {(s.clientId && clientById.get(s.clientId)?.name) || "Sem cliente"} -{" "}
-                      {formatCurrency(s.totalAmount)}
+                  {commissionableItems.map(({ sale, item }) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {(sale.clientId && clientById.get(sale.clientId)?.name) || "Sem cliente"} ·{" "}
+                      {describeItem(item)} ·{" "}
+                      {professionalById.get(item.professionalId!)?.name} ·{" "}
+                      {formatCurrency(item.totalPrice)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="professionalId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Profissional</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o profissional" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {professionals.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {commissionableItems.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  Nenhum item de venda com profissional responsável definido ainda. Defina o
+                  profissional no item da venda antes de gerar a comissão.
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -160,25 +167,16 @@ export function GenerateCommissionForm({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="commissionAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Valor da comissão (R$)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    {...field}
-                    value={(field.value as number | string | undefined) ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <FormItem>
+            <FormLabel>Valor da comissão (calculado)</FormLabel>
+            <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm">
+              {selected === undefined
+                ? "Selecione o item"
+                : commissionRate === null
+                  ? "Profissional sem percentual configurado"
+                  : `${formatCurrency(estimatedCommission ?? 0)} (${commissionRate}%)`}
+            </div>
+          </FormItem>
         </div>
 
         {serverError && (
@@ -187,7 +185,11 @@ export function GenerateCommissionForm({
           </p>
         )}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting || (selected !== undefined && commissionRate === null)}
+        >
           {isSubmitting ? "Salvando..." : "Gerar comissão"}
         </Button>
       </form>

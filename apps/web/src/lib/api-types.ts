@@ -93,6 +93,7 @@ export interface SaleItem {
   itemType: SaleItemType;
   serviceId: string | null;
   productId: string | null;
+  professionalId: string | null;
   description: string | null;
   quantity: number;
   unitPrice: number;
@@ -177,6 +178,7 @@ export interface Commission {
   tenantId: string;
   unitId: string | null;
   saleId: string;
+  saleItemId: string;
   professionalId: string;
   baseAmount: number;
   commissionAmount: number;
@@ -217,6 +219,7 @@ export interface Professional {
   phone: string | null;
   email: string | null;
   roleTitle: string | null;
+  commissionRate: number | null;
   status: ProfessionalStatus;
   onlineBookingEnabled: boolean;
   createdAt: string;
@@ -262,7 +265,7 @@ export interface Product {
 }
 
 export type FiscalDocumentSourceType = "SALE" | "PAYMENT" | "MANUAL";
-export type FiscalDocumentType = "NFSE" | "NFE" | "NFCE" | "OTHER";
+export type FiscalDocumentType = "NFSE" | "NFE" | "NFCE";
 export type FiscalDocumentStatus = "DRAFT" | "REQUESTED" | "AUTHORIZED" | "CANCELED" | "FAILED";
 export type FiscalDocumentEventType =
   | "CREATED"

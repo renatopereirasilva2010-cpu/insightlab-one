@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
@@ -11,6 +13,7 @@ import {
   paymentMethodLabels,
 } from "@/components/status-badge";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type {
   Sale,
@@ -69,6 +72,13 @@ export default async function SaleDetailPage({
 
   return (
     <div className="space-y-6">
+      <Button asChild variant="ghost" size="sm" className="-ml-2">
+        <Link href="/vendas">
+          <ArrowLeft />
+          Voltar para Vendas
+        </Link>
+      </Button>
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Venda</h1>
@@ -112,7 +122,12 @@ export default async function SaleDetailPage({
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium">Itens</h2>
           {hasPermission(user, "sales.update") && sale.status === "OPEN" && (
-            <AddItemButton saleId={sale.id} services={services} products={products} />
+            <AddItemButton
+              saleId={sale.id}
+              services={services}
+              products={products}
+              professionals={professionals}
+            />
           )}
         </div>
 
@@ -131,6 +146,11 @@ export default async function SaleDetailPage({
                 "—",
             },
             { header: "Tipo", cell: (i) => (i.itemType === "SERVICE" ? "Serviço" : "Produto") },
+            {
+              header: "Profissional",
+              cell: (i) =>
+                i.professionalId ? professionalById.get(i.professionalId)?.name ?? "—" : "—",
+            },
             { header: "Qtd.", cell: (i) => i.quantity },
             { header: "Preço unit.", cell: (i) => formatCurrency(i.unitPrice) },
             { header: "Total", cell: (i) => formatCurrency(i.totalPrice) },

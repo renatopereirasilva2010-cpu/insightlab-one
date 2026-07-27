@@ -25,13 +25,14 @@ import {
 } from "@/components/ui/form";
 import { paymentMethodLabels } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/format";
-import type { Sale, Client } from "@/lib/api-types";
+import type { Sale, Client, CashRegister } from "@/lib/api-types";
 import { createPayment } from "../vendas/actions";
 
 const paymentSchema = z.object({
   saleId: z.string().min(1, "Selecione a venda."),
   method: z.enum(["CASH", "PIX", "CREDIT_CARD", "DEBIT_CARD", "BANK_TRANSFER", "DEFERRED"]),
   amount: z.coerce.number().min(0.01, "Informe um valor válido."),
+  cashRegisterId: z.string().min(1, "Selecione um caixa aberto."),
 });
 
 type PaymentInput = z.input<typeof paymentSchema>;
@@ -40,10 +41,12 @@ type PaymentValues = z.output<typeof paymentSchema>;
 export function CreatePaymentForm({
   eligibleSales,
   clients,
+  openRegisters,
   onSuccess,
 }: {
   eligibleSales: Sale[];
   clients: Client[];
+  openRegisters: CashRegister[];
   onSuccess: () => void;
 }) {
   const router = useRouter();
@@ -53,7 +56,7 @@ export function CreatePaymentForm({
 
   const form = useForm<PaymentInput, unknown, PaymentValues>({
     resolver: zodResolver(paymentSchema),
-    defaultValues: { saleId: "", method: "CASH", amount: 0 },
+    defaultValues: { saleId: "", method: "CASH", amount: 0, cashRegisterId: openRegisters[0]?.id ?? "" },
   });
 
   async function onSubmit(values: PaymentValues) {
@@ -64,6 +67,7 @@ export function CreatePaymentForm({
         saleId: values.saleId,
         method: values.method,
         amount: values.amount,
+        cashRegisterId: values.cashRegisterId,
       });
 
       if (!result.ok) {
@@ -161,13 +165,43 @@ export function CreatePaymentForm({
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="cashRegisterId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Caixa</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione um caixa aberto" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {openRegisters.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {openRegisters.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  Nenhum caixa aberto. Abra um caixa antes de registrar o pagamento.
+                </p>
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         {serverError && (
           <p className="text-destructive text-sm" role="alert">
             {serverError}
           </p>
         )}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || openRegisters.length === 0}>
           {isSubmitting ? "Salvando..." : "Registrar pagamento"}
         </Button>
       </form>

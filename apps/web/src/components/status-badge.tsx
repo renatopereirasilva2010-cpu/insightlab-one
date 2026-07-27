@@ -134,5 +134,5 @@ export const paymentMethodLabels: Record<string, string> = {
   CREDIT_CARD: "Cartão de crédito",
   DEBIT_CARD: "Cartão de débito",
   BANK_TRANSFER: "Transferência",
-  DEFERRED: "Diferido",
+  DEFERRED: "A prazo",
 };

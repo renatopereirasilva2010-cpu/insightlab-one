@@ -1,11 +1,6 @@
 import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
-import {
-  StatusBadge,
-  appointmentStatusLabels,
-  appointmentStatusVariants,
-} from "@/components/status-badge";
 import { formatDateTime } from "@/lib/format";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
@@ -16,11 +11,10 @@ import type {
   ServiceCatalogItem,
   OperationalResource,
 } from "@/lib/api-types";
-import { NewAppointmentButton } from "./new-appointment-button";
 import { NewBlockButton } from "./new-block-button";
 import { NewResourceButton } from "./new-resource-button";
-import { AppointmentRowActions } from "./appointment-row-actions";
 import { AvailabilityPanel } from "./availability-panel";
+import { AppointmentsPanel } from "./appointments-panel";
 
 export default async function AgendaPage() {
   const user = await verifySession();
@@ -41,9 +35,7 @@ export default async function AgendaPage() {
     safeList<OperationalResource>("/v1/resources"),
   ]);
 
-  const clientById = new Map(clients.map((c) => [c.id, c]));
   const professionalById = new Map(professionals.map((p) => [p.id, p]));
-  const serviceById = new Map(services.map((s) => [s.id, s]));
   const resourceById = new Map(resources.map((r) => [r.id, r]));
 
   const sortedAppointments = [...appointments].sort(
@@ -64,60 +56,21 @@ export default async function AgendaPage() {
           <TabsTrigger value="appointments">Agendamentos</TabsTrigger>
           <TabsTrigger value="blocks">Bloqueios</TabsTrigger>
           <TabsTrigger value="availability">Disponibilidade</TabsTrigger>
-          <TabsTrigger value="resources">Recursos</TabsTrigger>
+          <TabsTrigger value="resources">Salas e Equipamentos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="appointments" className="space-y-4">
-          <div className="flex justify-end">
-            {hasPermission(user, "appointments.create") && (
-              <NewAppointmentButton
-                clients={clients}
-                professionals={professionals}
-                services={services}
-                resources={resources}
-              />
-            )}
-          </div>
-
-          {appointmentsError && (
-            <p className="text-sm text-muted-foreground" role="alert">
-              {appointmentsError}
-            </p>
-          )}
-
-          <DataTable<Appointment>
-            rows={sortedAppointments}
-            rowKey={(a) => a.id}
-            emptyMessage="Nenhum agendamento ainda."
-            columns={[
-              { header: "Cliente", cell: (a) => clientById.get(a.clientId)?.name ?? "—" },
-              { header: "Serviço", cell: (a) => serviceById.get(a.serviceId)?.name ?? "—" },
-              {
-                header: "Profissional",
-                cell: (a) => (a.professionalId ? professionalById.get(a.professionalId)?.name ?? "—" : "—"),
-              },
-              { header: "Início", cell: (a) => formatDateTime(a.startAt) },
-              { header: "Término", cell: (a) => formatDateTime(a.endAt) },
-              {
-                header: "Status",
-                cell: (a) => (
-                  <StatusBadge
-                    status={a.status}
-                    labels={appointmentStatusLabels}
-                    variants={appointmentStatusVariants}
-                  />
-                ),
-              },
-              {
-                header: "",
-                className: "text-right",
-                cell: (a) =>
-                  hasPermission(user, "appointments.cancel") ||
-                  hasPermission(user, "appointments.no_show") ? (
-                    <AppointmentRowActions appointment={a} />
-                  ) : null,
-              },
-            ]}
+          <AppointmentsPanel
+            appointments={sortedAppointments}
+            clients={clients}
+            professionals={professionals}
+            services={services}
+            resources={resources}
+            appointmentsError={appointmentsError}
+            canCreate={hasPermission(user, "appointments.create")}
+            canManage={
+              hasPermission(user, "appointments.cancel") || hasPermission(user, "appointments.no_show")
+            }
           />
         </TabsContent>
 

@@ -4,16 +4,18 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EntityDialog } from "@/components/entity-dialog";
 import { SaleItemForm } from "./sale-item-form";
-import type { ServiceCatalogItem, Product } from "@/lib/api-types";
+import type { ServiceCatalogItem, Product, Professional } from "@/lib/api-types";
 
 export function AddItemButton({
   saleId,
   services,
   products,
+  professionals,
 }: {
   saleId: string;
   services: ServiceCatalogItem[];
   products: Product[];
+  professionals: Professional[];
 }) {
   return (
     <EntityDialog
@@ -27,7 +29,13 @@ export function AddItemButton({
       }
     >
       {({ close }) => (
-        <SaleItemForm saleId={saleId} services={services} products={products} onSuccess={close} />
+        <SaleItemForm
+          saleId={saleId}
+          services={services}
+          products={products}
+          professionals={professionals}
+          onSuccess={close}
+        />
       )}
     </EntityDialog>
   );
