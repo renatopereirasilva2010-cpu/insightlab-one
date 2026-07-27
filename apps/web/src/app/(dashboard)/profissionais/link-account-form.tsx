@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormItem, FormLabel } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import type { Professional, UserListItem } from "@/lib/api-types";
 import { linkProfessionalAccount } from "./actions";
 
@@ -59,8 +59,8 @@ export function LinkAccountForm({
         extrato de comissão em &ldquo;Minhas Comissões&rdquo;.
       </p>
 
-      <FormItem>
-        <FormLabel>Conta de acesso</FormLabel>
+      <div className="space-y-2">
+        <Label>Conta de acesso</Label>
         <Select value={userId} onValueChange={setUserId}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecione uma conta" />
@@ -78,7 +78,7 @@ export function LinkAccountForm({
             Nenhuma conta de acesso disponível para vincular.
           </p>
         )}
-      </FormItem>
+      </div>
 
       {serverError && (
         <p className="text-destructive text-sm" role="alert">
