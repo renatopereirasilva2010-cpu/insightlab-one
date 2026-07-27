@@ -39,3 +39,4 @@ backups/
 
 # permissoes locais do Claude Code - especifico da maquina, nunca versionar
 .claude/settings.local.json
+.playwright-mcp/
