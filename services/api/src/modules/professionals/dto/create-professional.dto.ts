@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEmail, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
 export class CreateProfessionalDto {
   @IsString()
@@ -19,4 +19,10 @@ export class CreateProfessionalDto {
   @IsString()
   @MaxLength(100)
   roleTitle?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  commissionRate?: number;
 }

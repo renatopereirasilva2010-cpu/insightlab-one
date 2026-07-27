@@ -17,7 +17,6 @@ export class AvailabilityService {
         tenantId,
         professionalId: dto.professionalId,
         weekday,
-        active: true,
       },
       orderBy: { startTime: 'asc' },
     });

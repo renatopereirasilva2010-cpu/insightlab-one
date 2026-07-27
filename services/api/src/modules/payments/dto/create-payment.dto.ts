@@ -21,10 +21,9 @@ export class CreatePaymentDto {
   @Min(0.01)
   amount!: number;
 
-  @IsOptional()
   @IsString()
   @MaxLength(50)
-  cashRegisterId?: string;
+  cashRegisterId!: string;
 
   @IsOptional()
   @IsBoolean()

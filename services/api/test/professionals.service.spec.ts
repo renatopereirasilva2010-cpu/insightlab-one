@@ -45,7 +45,13 @@ describe('ProfessionalsService', () => {
   it('create should persist the professional payload', async () => {
     const tenantId = 'tenant-1';
     const unitId = 'unit-1';
-    const dto = { name: 'Joana', phone: undefined, email: undefined, roleTitle: 'Cabeleireira' };
+    const dto = {
+      name: 'Joana',
+      phone: undefined,
+      email: undefined,
+      roleTitle: 'Cabeleireira',
+      commissionRate: 30,
+    };
     const created = { id: 'prof-1', ...dto, tenantId, unitId };
 
     prisma.professional.create.mockResolvedValue(created);
@@ -59,6 +65,7 @@ describe('ProfessionalsService', () => {
         phone: dto.phone,
         email: dto.email,
         roleTitle: dto.roleTitle,
+        commissionRate: dto.commissionRate,
       },
     });
   });
@@ -74,7 +81,7 @@ describe('ProfessionalsService', () => {
 
   it('update should persist the changed fields for a professional scoped to the tenant', async () => {
     const existing = { id: 'prof-1', tenantId: 'tenant-1', name: 'Joana' };
-    const dto = { status: 'INACTIVE', onlineBookingEnabled: false };
+    const dto = { status: 'INACTIVE', onlineBookingEnabled: false, commissionRate: 25 };
     const updated = { ...existing, ...dto };
 
     prisma.professional.findFirst.mockResolvedValue(existing);
@@ -91,6 +98,7 @@ describe('ProfessionalsService', () => {
         phone: undefined,
         email: undefined,
         roleTitle: undefined,
+        commissionRate: 25,
         status: 'INACTIVE',
         onlineBookingEnabled: false,
       },

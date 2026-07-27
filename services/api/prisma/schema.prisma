@@ -350,6 +350,7 @@ model Professional {
   email                String?
   roleTitle            String?
   bio                  String?
+  commissionRate       Decimal?           @db.Decimal(5, 2)
   status               ProfessionalStatus @default(ACTIVE)
   onlineBookingEnabled Boolean            @default(true)
   createdAt            DateTime           @default(now())
@@ -362,6 +363,7 @@ model Professional {
   blocks         AppointmentBlock[]
   attendances    Attendance[]
   sales          Sale[]
+  saleItems      SaleItem[]
   commissions    Commission[]
 
   @@index([tenantId])
@@ -692,8 +694,9 @@ model SaleItem {
   unitId      String?
   saleId      String
   itemType    SaleItemType
-  serviceId   String?
-  productId   String?
+  serviceId      String?
+  productId      String?
+  professionalId String?
   description String?
   quantity    Decimal      @default(1) @db.Decimal(10, 3)
   unitPrice   Decimal      @db.Decimal(10, 2)
@@ -701,17 +704,20 @@ model SaleItem {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  tenant  Tenant          @relation(fields: [tenantId], references: [id])
-  unit    Unit?           @relation(fields: [unitId], references: [id])
-  sale    Sale            @relation(fields: [saleId], references: [id])
-  service ServiceCatalog? @relation(fields: [serviceId], references: [id])
-  product Product?        @relation(fields: [productId], references: [id])
+  tenant       Tenant          @relation(fields: [tenantId], references: [id])
+  unit         Unit?           @relation(fields: [unitId], references: [id])
+  sale         Sale            @relation(fields: [saleId], references: [id])
+  service      ServiceCatalog? @relation(fields: [serviceId], references: [id])
+  product      Product?        @relation(fields: [productId], references: [id])
+  professional Professional?   @relation(fields: [professionalId], references: [id])
+  commission   Commission?
 
   @@index([tenantId])
   @@index([unitId])
   @@index([saleId])
   @@index([serviceId])
   @@index([productId])
+  @@index([professionalId])
 }
 
 model Payment {
@@ -777,6 +783,7 @@ model Commission {
   tenantId         String
   unitId           String?
   saleId           String
+  saleItemId       String?               @unique
   professionalId   String
   baseAmount       Decimal               @db.Decimal(10, 2)
   commissionAmount Decimal               @db.Decimal(10, 2)
@@ -791,6 +798,7 @@ model Commission {
   tenant       Tenant       @relation(fields: [tenantId], references: [id])
   unit         Unit?        @relation(fields: [unitId], references: [id])
   sale         Sale         @relation(fields: [saleId], references: [id])
+  saleItem     SaleItem?    @relation(fields: [saleItemId], references: [id])
   professional Professional @relation(fields: [professionalId], references: [id])
 
   @@index([tenantId])
@@ -1013,7 +1021,6 @@ enum FiscalDocumentType {
   NFSE
   NFE
   NFCE
-  OTHER
 }
 
 enum FiscalDocumentStatus {

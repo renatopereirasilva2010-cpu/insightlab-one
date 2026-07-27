@@ -52,19 +52,17 @@ export class PaymentsService {
         });
       }
 
-      if (dto.cashRegisterId) {
-        const cashRegister = await tx.cashRegister.findFirst({
-          where: { id: dto.cashRegisterId, tenantId },
-        });
+      const cashRegister = await tx.cashRegister.findFirst({
+        where: { id: dto.cashRegisterId, tenantId },
+      });
 
-        if (!cashRegister || cashRegister.status !== 'OPEN') {
-          throw new BadRequestException({
-            code: 'CASH_REGISTER_INVALID',
-            title: 'Caixa inválido',
-            message: 'O caixa informado não está aberto ou não existe.',
-            recommendedAction: 'Abra um caixa válido antes de receber o pagamento.',
-          });
-        }
+      if (!cashRegister || cashRegister.status !== 'OPEN') {
+        throw new BadRequestException({
+          code: 'CASH_REGISTER_INVALID',
+          title: 'Caixa inválido',
+          message: 'O caixa informado não está aberto ou não existe.',
+          recommendedAction: 'Abra um caixa válido antes de receber o pagamento.',
+        });
       }
 
       return tx.payment.create({

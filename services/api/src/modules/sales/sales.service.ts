@@ -69,6 +69,21 @@ export class SalesService {
       });
     }
 
+    if (dto.professionalId) {
+      const professional = await this.prisma.professional.findFirst({
+        where: { id: dto.professionalId, tenantId },
+      });
+
+      if (!professional) {
+        throw new NotFoundException({
+          code: 'PROFESSIONAL_NOT_FOUND',
+          title: 'Profissional não encontrado',
+          message: 'Não encontramos o profissional informado para este tenant.',
+          recommendedAction: 'Revise o profissional selecionado e tente novamente.',
+        });
+      }
+    }
+
     const totalPrice = Number(dto.quantity) * Number(dto.unitPrice);
 
     const item = await this.prisma.saleItem.create({
@@ -79,6 +94,7 @@ export class SalesService {
         itemType: dto.itemType as any,
         serviceId: dto.serviceId,
         productId: dto.productId,
+        professionalId: dto.professionalId,
         description: dto.description,
         quantity: dto.quantity,
         unitPrice: dto.unitPrice,
@@ -139,6 +155,20 @@ export class SalesService {
         title: 'Venda sem itens',
         message: 'Não é possível enviar para checkout uma venda sem itens.',
         recommendedAction: 'Adicione pelo menos um item antes de continuar.',
+      });
+    }
+
+    const serviceItemWithoutProfessional = sale.items.find(
+      (item) => item.itemType === 'SERVICE' && !item.professionalId,
+    );
+
+    if (serviceItemWithoutProfessional) {
+      throw new BadRequestException({
+        code: 'SALE_ITEM_MISSING_PROFESSIONAL',
+        title: 'Item de serviço sem profissional',
+        message:
+          'Todo item de serviço precisa de um profissional responsável antes do checkout.',
+        recommendedAction: 'Defina o profissional em cada item de serviço e tente novamente.',
       });
     }
 

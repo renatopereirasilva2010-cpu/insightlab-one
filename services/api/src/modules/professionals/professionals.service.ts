@@ -23,6 +23,7 @@ export class ProfessionalsService {
         phone: dto.phone,
         email: dto.email,
         roleTitle: dto.roleTitle,
+        commissionRate: dto.commissionRate,
       },
     });
   }
@@ -48,6 +49,7 @@ export class ProfessionalsService {
         phone: dto.phone,
         email: dto.email,
         roleTitle: dto.roleTitle,
+        commissionRate: dto.commissionRate,
         status: dto.status,
         onlineBookingEnabled: dto.onlineBookingEnabled,
       },

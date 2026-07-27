@@ -6,10 +6,9 @@ export class CreateSaleDto {
   @MaxLength(50)
   attendanceId?: string;
 
-  @IsOptional()
   @IsString()
   @MaxLength(50)
-  clientId?: string;
+  clientId!: string;
 
   @IsOptional()
   @IsString()

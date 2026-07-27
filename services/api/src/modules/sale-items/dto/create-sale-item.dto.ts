@@ -21,6 +21,11 @@ export class CreateSaleItemDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(50)
+  professionalId?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(300)
   description?: string;
 

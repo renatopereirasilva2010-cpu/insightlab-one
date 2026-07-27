@@ -130,6 +130,16 @@ export class FiscalDocumentsService {
     userUnitId: string | null,
     dto: CreateFiscalDocumentDto,
   ) {
+    if (dto.sourceType === 'MANUAL') {
+      throw new BadRequestException({
+        code: 'FISCAL_DOCUMENT_MANUAL_SOURCE_NOT_ALLOWED',
+        title: 'Origem manual não permitida',
+        message:
+          'Documentos fiscais devem estar vinculados a uma venda ou pagamento real — lançamento manual sem origem não é permitido.',
+        recommendedAction: 'Selecione a venda ou o pagamento de origem do documento fiscal.',
+      });
+    }
+
     const sourceType = this.parseSourceType(dto.sourceType);
     const documentType = this.parseDocumentType(dto.documentType);
 
@@ -306,24 +316,11 @@ export class FiscalDocumentsService {
       case FiscalDocumentSourceType.PAYMENT:
         return this.resolvePaymentCreateContext(tenantId, dto);
 
-      case FiscalDocumentSourceType.MANUAL:
-        return {
-          unitId: userUnitId,
-          payload: {
-            sourceType: dto.sourceType,
-            sourceId: dto.sourceId,
-            documentType: dto.documentType,
-            provider: dto.provider ?? null,
-            mode: 'MANUAL',
-            unitId: userUnitId,
-          },
-        };
-
       default:
         throw new BadRequestException({
           code: 'FISCAL_DOCUMENT_INVALID_SOURCE_TYPE',
           title: 'sourceType inválido',
-          message: 'sourceType deve ser SALE, PAYMENT ou MANUAL.',
+          message: 'sourceType deve ser SALE ou PAYMENT.',
           recommendedAction:
             'Revise o tipo de origem do documento fiscal e tente novamente.',
         });
@@ -563,13 +560,11 @@ export class FiscalDocumentsService {
         return FiscalDocumentType.NFE;
       case 'NFCE':
         return FiscalDocumentType.NFCE;
-      case 'OTHER':
-        return FiscalDocumentType.OTHER;
       default:
         throw new BadRequestException({
           code: 'FISCAL_DOCUMENT_INVALID_DOCUMENT_TYPE',
           title: 'documentType inválido',
-          message: 'documentType deve ser NFSE, NFE, NFCE ou OTHER.',
+          message: 'documentType deve ser NFSE, NFE ou NFCE.',
           recommendedAction:
             'Revise o tipo de documento fiscal e tente novamente.',
         });

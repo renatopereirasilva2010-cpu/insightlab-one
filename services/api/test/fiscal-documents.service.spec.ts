@@ -37,15 +37,32 @@ describe('FiscalDocumentsService', () => {
     jest.useRealTimers();
   });
 
-  it('creates a manual fiscal document in DRAFT with CREATED event', async () => {
+  const saleFixture = {
+    id: 'sale-1',
+    unitId: 'unit_1',
+    status: 'COMPLETED',
+    attendanceId: null,
+    clientId: 'client-1',
+    professionalId: 'prof-1',
+    subtotal: 100,
+    discountAmount: 0,
+    totalAmount: 100,
+    notes: null,
+    createdAt: new Date('2026-04-04T12:00:00.000Z'),
+    unit: null,
+    items: [],
+  };
+
+  it('creates a fiscal document linked to a sale in DRAFT with CREATED event', async () => {
     prisma.fiscalDocument.findFirst.mockResolvedValueOnce(null);
+    prisma.sale.findFirst.mockResolvedValueOnce(saleFixture);
 
     prisma.fiscalDocument.create.mockImplementation(async (args) => ({
       id: 'fd_1',
       tenantId: 'tenant_1',
       unitId: 'unit_1',
-      sourceType: FiscalDocumentSourceType.MANUAL,
-      sourceId: 'manual-1',
+      sourceType: FiscalDocumentSourceType.SALE,
+      sourceId: 'sale-1',
       documentType: FiscalDocumentType.NFSE,
       status: FiscalDocumentStatus.DRAFT,
       provider: 'SMOKE_TEST',
@@ -71,8 +88,8 @@ describe('FiscalDocumentsService', () => {
     }));
 
     const result = await service.create('tenant_1', 'unit_1', {
-      sourceType: 'MANUAL',
-      sourceId: 'manual-1',
+      sourceType: 'SALE',
+      sourceId: 'sale-1',
       documentType: 'NFSE',
       provider: 'SMOKE_TEST',
     });
@@ -82,22 +99,14 @@ describe('FiscalDocumentsService', () => {
         data: expect.objectContaining({
           tenantId: 'tenant_1',
           unitId: 'unit_1',
-          sourceType: FiscalDocumentSourceType.MANUAL,
-          sourceId: 'manual-1',
+          sourceType: FiscalDocumentSourceType.SALE,
+          sourceId: 'sale-1',
           documentType: FiscalDocumentType.NFSE,
           provider: 'SMOKE_TEST',
           events: {
             create: expect.objectContaining({
               eventType: FiscalDocumentEventType.CREATED,
               message: 'Documento fiscal registrado no sistema.',
-              payload: expect.objectContaining({
-                sourceType: 'MANUAL',
-                sourceId: 'manual-1',
-                documentType: 'NFSE',
-                provider: 'SMOKE_TEST',
-                mode: 'MANUAL',
-                unitId: 'unit_1',
-              }),
             }),
           },
         }),
@@ -118,7 +127,24 @@ describe('FiscalDocumentsService', () => {
     prisma.fiscalDocument.findFirst.mockResolvedValueOnce({
       id: 'fd_existing',
     });
+    prisma.sale.findFirst.mockResolvedValueOnce(saleFixture);
 
+    await expect(
+      service.create('tenant_1', 'unit_1', {
+        sourceType: 'SALE',
+        sourceId: 'sale-1',
+        documentType: 'NFSE',
+      }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        code: 'FISCAL_DOCUMENT_DUPLICATE',
+      }),
+    });
+
+    expect(prisma.fiscalDocument.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects MANUAL sourceType on create - fiscal documents must be linked to a real sale or payment', async () => {
     await expect(
       service.create('tenant_1', 'unit_1', {
         sourceType: 'MANUAL',
@@ -127,7 +153,26 @@ describe('FiscalDocumentsService', () => {
       }),
     ).rejects.toMatchObject({
       response: expect.objectContaining({
-        code: 'FISCAL_DOCUMENT_DUPLICATE',
+        code: 'FISCAL_DOCUMENT_MANUAL_SOURCE_NOT_ALLOWED',
+      }),
+    });
+
+    expect(prisma.fiscalDocument.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects OTHER as an invalid documentType', async () => {
+    prisma.fiscalDocument.findFirst.mockResolvedValueOnce(null);
+    prisma.sale.findFirst.mockResolvedValueOnce(saleFixture);
+
+    await expect(
+      service.create('tenant_1', 'unit_1', {
+        sourceType: 'SALE',
+        sourceId: 'sale-1',
+        documentType: 'OTHER',
+      }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        code: 'FISCAL_DOCUMENT_INVALID_DOCUMENT_TYPE',
       }),
     });
 

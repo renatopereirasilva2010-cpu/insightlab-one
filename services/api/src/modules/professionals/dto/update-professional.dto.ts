@@ -1,4 +1,14 @@
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export enum UpdateProfessionalStatus {
   ACTIVE = 'ACTIVE',
@@ -25,6 +35,12 @@ export class UpdateProfessionalDto {
   @IsString()
   @MaxLength(100)
   roleTitle?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  commissionRate?: number;
 
   @IsOptional()
   @IsEnum(UpdateProfessionalStatus)

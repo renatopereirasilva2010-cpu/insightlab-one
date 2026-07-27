@@ -26,6 +26,183 @@ describe('CommissionsService', () => {
     };
   }
 
+  describe('generate', () => {
+    function buildGeneratePrismaMock(overrides: {
+      item?: any;
+      professional?: any;
+      settings?: any;
+      existingCommission?: any;
+    }) {
+      const item =
+        overrides.item === undefined
+          ? {
+              id: 'item-1',
+              tenantId: 't-1',
+              saleId: 'sale-1',
+              professionalId: 'prof-1',
+              totalPrice: 100,
+              sale: { id: 'sale-1', tenantId: 't-1', payments: [] },
+            }
+          : overrides.item;
+      const professional =
+        overrides.professional === undefined
+          ? { id: 'prof-1', tenantId: 't-1', commissionRate: 30 }
+          : overrides.professional;
+
+      return {
+        saleItem: { findFirst: jest.fn().mockResolvedValue(item) },
+        professional: { findFirst: jest.fn().mockResolvedValue(professional) },
+        businessSettings: {
+          findUnique: jest.fn().mockResolvedValue(overrides.settings ?? null),
+        },
+        commission: {
+          findFirst: jest.fn().mockResolvedValue(overrides.existingCommission ?? null),
+          create: jest.fn().mockImplementation(({ data }) => data),
+        },
+      };
+    }
+
+    it('throws NotFoundException when the sale item does not exist', async () => {
+      const prisma = buildGeneratePrismaMock({ item: null });
+      const service = new CommissionsService(prisma as any);
+
+      await expect(
+        service.generate('t-1', null, {
+          saleItemId: 'item-x',
+          baseAmount: 50,
+        } as any),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException when the sale item has no professional assigned', async () => {
+      const prisma = buildGeneratePrismaMock({
+        item: {
+          id: 'item-1',
+          tenantId: 't-1',
+          saleId: 'sale-1',
+          professionalId: null,
+          totalPrice: 100,
+          sale: { id: 'sale-1', tenantId: 't-1', payments: [] },
+        },
+      });
+      const service = new CommissionsService(prisma as any);
+
+      await expect(
+        service.generate('t-1', null, {
+          saleItemId: 'item-1',
+          baseAmount: 50,
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.commission.create).not.toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when baseAmount exceeds the item total', async () => {
+      const prisma = buildGeneratePrismaMock({});
+      const service = new CommissionsService(prisma as any);
+
+      await expect(
+        service.generate('t-1', null, {
+          saleItemId: 'item-1',
+          baseAmount: 500,
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.commission.create).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the professional does not exist', async () => {
+      const prisma = buildGeneratePrismaMock({ professional: null });
+      const service = new CommissionsService(prisma as any);
+
+      await expect(
+        service.generate('t-1', null, {
+          saleItemId: 'item-1',
+          baseAmount: 50,
+        } as any),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException when the professional has no commissionRate configured', async () => {
+      const prisma = buildGeneratePrismaMock({
+        professional: { id: 'prof-1', tenantId: 't-1', commissionRate: null },
+      });
+      const service = new CommissionsService(prisma as any);
+
+      await expect(
+        service.generate('t-1', null, {
+          saleItemId: 'item-1',
+          baseAmount: 50,
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.commission.create).not.toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when a commission already exists for the sale item', async () => {
+      const prisma = buildGeneratePrismaMock({ existingCommission: { id: 'com-1' } });
+      const service = new CommissionsService(prisma as any);
+
+      await expect(
+        service.generate('t-1', null, {
+          saleItemId: 'item-1',
+          baseAmount: 50,
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.commission.create).not.toHaveBeenCalled();
+    });
+
+    it('computes commissionAmount from the professional commissionRate and stays PENDING without a paid payment', async () => {
+      const prisma = buildGeneratePrismaMock({});
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.generate('t-1', 'unit-1', {
+        saleItemId: 'item-1',
+        baseAmount: 100,
+      } as any);
+
+      expect(result.commissionAmount).toBe(30);
+      expect(result.status).toBe('PENDING');
+      expect(result.releasedAt).toBeNull();
+      expect(result.saleItemId).toBe('item-1');
+      expect(result.saleId).toBe('sale-1');
+      expect(result.professionalId).toBe('prof-1');
+    });
+
+    it('releases immediately when the sale already has a paid payment under ON_PAYMENT mode', async () => {
+      const prisma = buildGeneratePrismaMock({
+        item: {
+          id: 'item-1',
+          tenantId: 't-1',
+          saleId: 'sale-1',
+          professionalId: 'prof-1',
+          totalPrice: 100,
+          sale: { id: 'sale-1', tenantId: 't-1', payments: [{ status: 'PAID' }] },
+        },
+      });
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.generate('t-1', null, {
+        saleItemId: 'item-1',
+        baseAmount: 100,
+      } as any);
+
+      expect(result.status).toBe('RELEASED');
+      expect(result.commissionAmount).toBe(30);
+    });
+
+    it('releases immediately regardless of payment status under IMMEDIATE mode', async () => {
+      const prisma = buildGeneratePrismaMock({
+        settings: { commissionReleaseMode: 'IMMEDIATE' },
+      });
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.generate('t-1', null, {
+        saleItemId: 'item-1',
+        baseAmount: 100,
+      } as any);
+
+      expect(result.status).toBe('RELEASED');
+    });
+  });
+
   describe('cancel', () => {
     it('moves a PENDING commission to CANCELED', async () => {
       const prisma = buildPrismaMock({ id: 'com-1', tenantId: 't-1', status: 'PENDING', notes: null });

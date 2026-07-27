@@ -18,17 +18,58 @@ export class CommissionsService {
   }
 
   async generate(tenantId: string, unitId: string | null, dto: GenerateCommissionDto) {
-    const sale = await this.prisma.sale.findFirst({
-      where: { id: dto.saleId, tenantId },
-      include: { payments: true },
+    const item = await this.prisma.saleItem.findFirst({
+      where: { id: dto.saleItemId, tenantId },
+      include: { sale: { include: { payments: true } } },
     });
 
-    if (!sale) {
+    if (!item) {
       throw new NotFoundException({
-        code: 'SALE_NOT_FOUND',
-        title: 'Venda não encontrada',
-        message: 'Não encontramos a venda informada.',
+        code: 'SALE_ITEM_NOT_FOUND',
+        title: 'Item de venda não encontrado',
+        message: 'Não encontramos o item de venda informado.',
         recommendedAction: 'Atualize a tela e tente novamente.',
+      });
+    }
+
+    if (!item.professionalId) {
+      throw new BadRequestException({
+        code: 'SALE_ITEM_WITHOUT_PROFESSIONAL',
+        title: 'Item sem profissional responsável',
+        message:
+          'Este item de venda não tem um profissional responsável definido, então não é possível gerar comissão avulsa para ele.',
+        recommendedAction: 'Defina o profissional responsável no item da venda antes de gerar a comissão.',
+      });
+    }
+
+    if (dto.baseAmount > Number(item.totalPrice)) {
+      throw new BadRequestException({
+        code: 'COMMISSION_BASE_EXCEEDS_ITEM',
+        title: 'Base de cálculo excede o valor do item',
+        message: 'A base de cálculo da comissão não pode ser maior que o valor total do item da venda.',
+        recommendedAction: 'Revise o valor informado e tente novamente.',
+      });
+    }
+
+    const professional = await this.prisma.professional.findFirst({
+      where: { id: item.professionalId, tenantId },
+    });
+
+    if (!professional) {
+      throw new NotFoundException({
+        code: 'PROFESSIONAL_NOT_FOUND',
+        title: 'Profissional não encontrado',
+        message: 'Não encontramos o profissional informado para este tenant.',
+        recommendedAction: 'Revise o profissional selecionado e tente novamente.',
+      });
+    }
+
+    if (professional.commissionRate === null) {
+      throw new BadRequestException({
+        code: 'PROFESSIONAL_COMMISSION_RATE_NOT_SET',
+        title: 'Percentual de comissão não configurado',
+        message: 'Este profissional ainda não tem um percentual de comissão configurado no cadastro.',
+        recommendedAction: 'Configure o percentual de comissão do profissional antes de gerar comissões.',
       });
     }
 
@@ -37,19 +78,22 @@ export class CommissionsService {
     });
 
     const existing = await this.prisma.commission.findFirst({
-      where: { tenantId, saleId: dto.saleId, professionalId: dto.professionalId },
+      where: { tenantId, saleItemId: dto.saleItemId },
     });
 
     if (existing) {
       throw new BadRequestException({
         code: 'COMMISSION_ALREADY_EXISTS',
         title: 'Comissão já existente',
-        message: 'Já existe comissão para esta venda e profissional.',
+        message: 'Já existe comissão para este item de venda.',
         recommendedAction: 'Atualize a tela antes de tentar novamente.',
       });
     }
 
-    const hasPaidPayment = sale.payments.some((p) => p.status === 'PAID');
+    const commissionAmount =
+      Math.round(dto.baseAmount * Number(professional.commissionRate)) / 100;
+
+    const hasPaidPayment = item.sale.payments.some((p) => p.status === 'PAID');
     const releaseMode = settings?.commissionReleaseMode ?? 'ON_PAYMENT';
 
     let status: 'PENDING' | 'RELEASED' | 'BLOCKED' = 'PENDING';
@@ -67,10 +111,11 @@ export class CommissionsService {
       data: {
         tenantId,
         unitId,
-        saleId: dto.saleId,
-        professionalId: dto.professionalId,
+        saleId: item.saleId,
+        saleItemId: item.id,
+        professionalId: item.professionalId,
         baseAmount: dto.baseAmount,
-        commissionAmount: dto.commissionAmount,
+        commissionAmount,
         releaseMode: releaseMode as any,
         status: status as any,
         releasedAt,
