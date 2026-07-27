@@ -1,6 +1,6 @@
 # InsightLab One — ONDA 4: Automação Fiscal (Compliance NFS-e Nacional 2026)
 
-**Status:** Proposto por Claude a pedido de Renato — pendente de confirmação da FASE 1 antes de abrir branch de execução.
+**Status:** FASE 1 confirmada por Renato e executada em 27/07/2026 — mergeada em `onda-2/backend-crud-completo` (fast-forward). Verificada end-to-end em dev via Playwright: pagamento completado gera o documento fiscal automaticamente, em DRAFT, sem ação manual, sem chamada externa. FASE 2 (Focus NFe real) segue bloqueada até a conta existir.
 **Referência:** `governance/insightlab-one-onda3-benchmark-revisao-backlog.md` (seção 4, proposta original; seção 7, pesquisa de fornecedor e prazo legal).
 **Ponto de partida:** núcleo transacional fechado (ONDA 3 FASE 1 + FASE 2, mergeadas em `onda-2/backend-crud-completo` em 27/07/2026).
 
