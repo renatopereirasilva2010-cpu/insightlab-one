@@ -91,11 +91,33 @@ O backlog de 25/07 já apontava a lacuna estratégica certa — ausência de sup
 
 ## 6. Checklist de decisão pendente com Renato
 
-- [ ] Confirmar FASE 1 (extrato de comissão) como próximo bloco de execução, branch dedicada
-- [ ] Corrigir o gap de permissão `professionals.update` no seed do papel admin (pré-requisito da FASE 1)
-- [ ] Priorizar FASE 2 (UX/calendário) em relação à onda de automação fiscal — qual vem primeiro
-- [ ] Escolher fornecedor de emissão fiscal a avaliar (NFS-e nacional direto vs. eNotas/Focus NFe/similar) antes de abrir a onda de automação fiscal
+- [x] Confirmar FASE 1 (extrato de comissão) como próximo bloco de execução, branch dedicada — executado e mergeado em `onda-2/backend-crud-completo` em 27/07/2026
+- [x] Corrigir o gap de permissão `professionals.update` no seed do papel admin (pré-requisito da FASE 1) — corrigido em 27/07/2026
+- [x] FASE 2 (UX/calendário) executada em 27/07/2026 — calendário dia/semana na Agenda, estados vazios com ação clara em 14 telas, correção de overflow horizontal mobile/tablet no shell do dashboard. Mergeada em `onda-2/backend-crud-completo` (fast-forward). **`main` segue intocado, sem push a remoto.**
+- [x] Pesquisa de fornecedor de emissão fiscal concluída em 27/07/2026 — ver seção 7. **Recomendação: Focus NFe.**
 - [ ] Confirmar que split de pagamento com adquirente fica mesmo pós-piloto, sem reabrir agora
+
+---
+
+## 7. Pesquisa de fornecedor de emissão fiscal (27/07/2026)
+
+**Achado crítico que muda a urgência do prazo, não só a prioridade de backlog:** a partir de **01/09/2026**, a emissão de NFS-e padrão nacional passa a ser **obrigatória** para MEs/EPPs do Simples Nacional prestadoras de serviço, exclusivamente via Emissor Nacional (web ou API) — Mix Concept Hair provavelmente se enquadra nesse perfil. Isso não é mais só benchmark de mercado (seção 1-3): é prazo legal, e faltam ~5 semanas a partir de hoje. **Recomendo revisitar a priorização FASE 2 vs. automação fiscal registrada no item acima com essa informação nova** — decisão de Renato, não decisão técnica.
+
+Também a partir de 01/01/2026 todo município deve estar integrado ao Ambiente Nacional (pode manter sistema próprio, desde que siga leiaute/webservices padronizados) e compartilhar dado de NFS-e emitida num repositório nacional único.
+
+**Opções avaliadas:**
+
+| Opção | Prós | Contras |
+|---|---|---|
+| **Integração direta com o Ambiente Nacional / prefeituras** | Sem custo de terceiro | Cada prefeitura pode manter sistema próprio conforme ao padrão nacional — complexidade de integração municipal a município não desaparece só porque existe um "padrão"; carga de manutenção cai inteira sobre o InsightLab One, ruim para premissa multi-tenant (tenants em cidades diferentes) |
+| **eNotas** (R$137-347/mês por faixa de volume) | Preço competitivo, garantia 30 dias | Integrações nativas voltadas a produto digital/e-commerce (Hotmart, Kiwify, PagSeguro) — não é o perfil de um salão de serviço |
+| **Focus NFe** (a partir de R$109/mês + R$0,65/documento excedente) | Sem taxa de setup, sem fidelidade, +3.000 municípios já integrados para NFS-e, garantia de integração de município novo em 15 dias úteis por R$199 fixo | Custo por documento em alto volume precisa ser monitorado |
+
+**Recomendação: Focus NFe.** Cobertura municipal ampla e um único contrato/API abstraem exatamente a variação entre prefeituras que quebraria a premissa de multi-tenancy (tenants futuros em cidades diferentes = cada prefeitura com seu próprio sistema local, mesmo dentro do padrão nacional). Sem taxa de setup nem fidelidade reduz o risco de errar a escolha agora.
+
+**O que isso NÃO é:** não é abertura da ONDA de automação fiscal (seção 4) — essa segue exigindo proposta formal ONDA\|FASE\|ETAPA própria, orçamento aprovado e branch dedicada antes de qualquer código, conforme já registrado. Isto é só a pesquisa que destrava a decisão de fornecedor pendente no checklist.
+
+*Fontes consultadas em 27/07/2026: ajuda.omie.com.br (Ambiente Nacional da NFS-e), blog.tecnospeed.com.br (API NFSe Nacional, NFS-e Nacional prazos), contabeis.com.br (obrigatoriedade NFS-e Nacional), enotas.com.br/enotass.com.br (planos e preços), focusnfe.com.br (preços e cobertura municipal).*
 
 ---
 
