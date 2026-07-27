@@ -8,6 +8,7 @@ import {
   appointmentStatusVariants,
 } from "@/components/status-badge";
 import { formatDateTime } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,6 +19,7 @@ import {
 import type { Appointment, Client, Professional, ServiceCatalogItem } from "@/lib/api-types";
 import { NewAppointmentButton } from "./new-appointment-button";
 import { AppointmentRowActions } from "./appointment-row-actions";
+import { AgendaCalendar } from "./agenda-calendar";
 import type { OperationalResource } from "@/lib/api-types";
 
 const ALL = "__all__";
@@ -41,6 +43,7 @@ export function AppointmentsPanel({
   canCreate: boolean;
   canManage: boolean;
 }) {
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [professionalFilter, setProfessionalFilter] = useState(ALL);
   const [statusFilter, setStatusFilter] = useState(ALL);
 
@@ -66,37 +69,56 @@ export function AppointmentsPanel({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          <Select value={professionalFilter} onValueChange={setProfessionalFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Todos os profissionais" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos os profissionais</SelectItem>
-              {professionals.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder="Todos os status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos os status</SelectItem>
-              {Object.entries(appointmentStatusLabels).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex rounded-md border p-0.5">
+          <Button
+            variant={viewMode === "calendar" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("calendar")}
+          >
+            Calendário
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+          >
+            Lista
+          </Button>
         </div>
 
-        {canCreate && (
+        {viewMode === "list" && (
+          <div className="flex flex-wrap gap-2">
+            <Select value={professionalFilter} onValueChange={setProfessionalFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Todos os profissionais" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todos os profissionais</SelectItem>
+                {professionals.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="Todos os status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todos os status</SelectItem>
+                {Object.entries(appointmentStatusLabels).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {viewMode === "list" && canCreate && (
           <NewAppointmentButton
             clients={clients}
             professionals={professionals}
@@ -112,36 +134,49 @@ export function AppointmentsPanel({
         </p>
       )}
 
-      <DataTable<Appointment>
-        rows={filtered}
-        rowKey={(a) => a.id}
-        emptyMessage="Nenhum agendamento encontrado para os filtros selecionados."
-        columns={[
-          { header: "Cliente", cell: (a) => clientById.get(a.clientId)?.name ?? "—" },
-          { header: "Serviço", cell: (a) => serviceById.get(a.serviceId)?.name ?? "—" },
-          {
-            header: "Profissional",
-            cell: (a) => (a.professionalId ? professionalById.get(a.professionalId)?.name ?? "—" : "—"),
-          },
-          { header: "Início", cell: (a) => formatDateTime(a.startAt) },
-          { header: "Término", cell: (a) => formatDateTime(a.endAt) },
-          {
-            header: "Status",
-            cell: (a) => (
-              <StatusBadge
-                status={a.status}
-                labels={appointmentStatusLabels}
-                variants={appointmentStatusVariants}
-              />
-            ),
-          },
-          {
-            header: "",
-            className: "text-right",
-            cell: (a) => (canManage ? <AppointmentRowActions appointment={a} /> : null),
-          },
-        ]}
-      />
+      {viewMode === "calendar" ? (
+        <AgendaCalendar
+          appointments={sorted}
+          clients={clients}
+          professionals={professionals}
+          services={services}
+          resources={resources}
+          canManage={canManage}
+          canCreate={canCreate}
+        />
+      ) : (
+        <DataTable<Appointment>
+          rows={filtered}
+          rowKey={(a) => a.id}
+          emptyMessage="Nenhum agendamento encontrado para os filtros selecionados."
+          columns={[
+            { header: "Cliente", cell: (a) => clientById.get(a.clientId)?.name ?? "—" },
+            { header: "Serviço", cell: (a) => serviceById.get(a.serviceId)?.name ?? "—" },
+            {
+              header: "Profissional",
+              cell: (a) =>
+                a.professionalId ? professionalById.get(a.professionalId)?.name ?? "—" : "—",
+            },
+            { header: "Início", cell: (a) => formatDateTime(a.startAt) },
+            { header: "Término", cell: (a) => formatDateTime(a.endAt) },
+            {
+              header: "Status",
+              cell: (a) => (
+                <StatusBadge
+                  status={a.status}
+                  labels={appointmentStatusLabels}
+                  variants={appointmentStatusVariants}
+                />
+              ),
+            },
+            {
+              header: "",
+              className: "text-right",
+              cell: (a) => (canManage ? <AppointmentRowActions appointment={a} /> : null),
+            },
+          ]}
+        />
+      )}
     </div>
   );
 }
