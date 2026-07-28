@@ -1,4 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AuditLogModule } from './common/audit/audit-log.module';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
@@ -30,10 +32,14 @@ import { AdminMasterModule } from './modules/admin-master/admin-master.module';
 import { BillingAdminModule } from './modules/billing-admin/billing-admin.module';
 import { FeatureEntitlementsModule } from './modules/feature-entitlements/feature-entitlements.module';
 import { FiscalDocumentsModule } from './modules/fiscal-documents/fiscal-documents.module';
+import { PublicBookingModule } from './modules/public-booking/public-booking.module';
 
 @Module({
   controllers: [AppController],
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [{ limit: 200, ttl: 60000 }],
+    }),
     DatabaseModule,
     AuditLogModule,
     AuthModule,
@@ -63,7 +69,9 @@ import { FiscalDocumentsModule } from './modules/fiscal-documents/fiscal-documen
     BillingAdminModule,
     FeatureEntitlementsModule,
     FiscalDocumentsModule,
+    PublicBookingModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

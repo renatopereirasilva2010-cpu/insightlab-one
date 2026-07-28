@@ -2,18 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Next.js 16 renomeou middleware -> proxy. Checagem otimista (só lê o
 // cookie) - a autorização de verdade sempre acontece na API NestJS.
-const PUBLIC_ROUTES = ["/login"];
+//
+// "Sem sessão" (login) e "sempre pública, com ou sem sessão" (agendamento
+// online, visitante nunca loga) são coisas diferentes - só a primeira
+// expulsa quem já está logado de volta pro dashboard.
+const LOGGED_OUT_ONLY_ROUTES = ["/login"];
+const ALWAYS_PUBLIC_PREFIXES = ["/agendar/"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  const isLoggedOutOnlyRoute = LOGGED_OUT_ONLY_ROUTES.includes(pathname);
+  const isAlwaysPublicRoute = ALWAYS_PUBLIC_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
   const hasSession = request.cookies.has("il_access_token");
 
-  if (!isPublicRoute && !hasSession) {
+  if (isAlwaysPublicRoute) {
+    return NextResponse.next();
+  }
+
+  if (!isLoggedOutOnlyRoute && !hasSession) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (isPublicRoute && hasSession) {
+  if (isLoggedOutOnlyRoute && hasSession) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

@@ -108,7 +108,12 @@ export class AppointmentsService {
     });
   }
 
-  async create(tenantId: string, unitId: string | null, dto: CreateAppointmentDto) {
+  async create(
+    tenantId: string,
+    unitId: string | null,
+    dto: CreateAppointmentDto,
+    source: 'INTERNAL' | 'ONLINE_BOOKING' | 'MANUAL' = 'INTERNAL',
+  ) {
     const clientId = dto.clientId?.trim();
     const serviceId = dto.serviceId?.trim();
     const professionalId = dto.professionalId?.trim() || undefined;
@@ -279,6 +284,7 @@ export class AppointmentsService {
         isWalkIn: dto.isWalkIn ?? false,
         isOverbook: dto.isOverbook ?? false,
         notes: dto.notes,
+        source,
       },
     });
   }
