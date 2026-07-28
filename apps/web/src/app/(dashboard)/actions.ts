@@ -87,6 +87,17 @@ export async function queryAvailability(
   );
 }
 
+export async function suggestAppointmentSlots(
+  professionalId: string,
+  serviceId: string,
+): Promise<ActionResult<{ suggestions: { startAt: string; endAt: string }[] }>> {
+  return runAction(() =>
+    apiFetch(
+      `/v1/availability/suggestions?professionalId=${professionalId}&serviceId=${serviceId}`,
+    ),
+  );
+}
+
 export interface CreateAvailabilityInput {
   professionalId: string;
   weekday: number;

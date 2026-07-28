@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,9 +26,26 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { Client, Professional, ServiceCatalogItem, OperationalResource } from "@/lib/api-types";
-import { createAppointment } from "./actions";
+import { createAppointment, suggestAppointmentSlots } from "./actions";
 
 const NONE = "__none__";
+
+/** Converte um ISO (UTC) pro formato local que o input datetime-local espera (YYYY-MM-DDTHH:mm). */
+function toDatetimeLocalValue(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatSlotLabel(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 const appointmentSchema = z
   .object({
@@ -65,6 +82,7 @@ export function AppointmentForm({
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ startAt: string; endAt: string }[]>([]);
 
   const form = useForm<AppointmentValues>({
     resolver: zodResolver(appointmentSchema),
@@ -80,6 +98,31 @@ export function AppointmentForm({
       notes: "",
     },
   });
+
+  const serviceId = form.watch("serviceId");
+  const professionalId = form.watch("professionalId");
+
+  useEffect(() => {
+    if (!serviceId || professionalId === NONE) {
+      setSuggestions([]);
+      return;
+    }
+
+    let cancelled = false;
+    suggestAppointmentSlots(professionalId, serviceId).then((result) => {
+      if (cancelled) return;
+      setSuggestions(result.ok ? result.data.suggestions : []);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [serviceId, professionalId]);
+
+  function applySuggestion(slot: { startAt: string; endAt: string }) {
+    form.setValue("startAt", toDatetimeLocalValue(slot.startAt), { shouldValidate: true });
+    form.setValue("endAt", toDatetimeLocalValue(slot.endAt), { shouldValidate: true });
+  }
 
   async function onSubmit(values: AppointmentValues) {
     setServerError(null);
@@ -215,6 +258,25 @@ export function AppointmentForm({
             </FormItem>
           )}
         />
+
+        {suggestions.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium">Sugestões de horário</p>
+            <div className="flex flex-wrap gap-1.5">
+              {suggestions.map((slot) => (
+                <Button
+                  key={slot.startAt}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => applySuggestion(slot)}
+                >
+                  {formatSlotLabel(slot.startAt)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField

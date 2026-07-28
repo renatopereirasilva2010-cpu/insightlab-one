@@ -7,6 +7,7 @@ import { PermissionGuard } from '../../common/guards/permission.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
 import { QueryAvailabilityDto } from './dto/query-availability.dto';
+import { SuggestSlotsDto } from './dto/suggest-slots.dto';
 import { UpdateAvailabilityDto } from './dto/update-availability.dto';
 import { AvailabilityService } from './availability.service';
 
@@ -22,6 +23,15 @@ export class AvailabilityController {
     @Query() dto: QueryAvailabilityDto,
   ) {
     return this.availabilityService.query(tenant.id, dto);
+  }
+
+  @Get('suggestions')
+  @RequiredPermissions('availability.read')
+  suggestSlots(
+    @CurrentTenant() tenant: { id: string },
+    @Query() dto: SuggestSlotsDto,
+  ) {
+    return this.availabilityService.suggestSlots(tenant.id, dto);
   }
 
   @Post()
