@@ -88,6 +88,16 @@ Dois fatos mudaram desde que a automação fiscal era só "melhoria futura" no b
 - [x] Fornecedor escolhido (Focus NFe) — confirmado em 27/07/2026.
 - [x] Reprorização (automação fiscal à frente de UX discricionária) — aceita em 27/07/2026.
 
+## 9. FASE 2 reprorizada para o final da fila (28/07/2026)
+
+Decisão de Renato: a integração real com Focus NFe (FASE 2) sai da posição "próximo passo lógico" e vai para o **final** do backlog geral — não por perder importância técnica, mas por três bloqueios de negócio que são dele resolver, não código:
+
+1. **Custo real.** Focus NFe cobra a partir de R$109/mês mesmo com período de teste — não é decisão que se toma só tecnicamente.
+2. **CNPJ do InsightLab One ainda não existe.** A conta no fornecedor de emissão fiscal precisa de CNPJ — pré-requisito que nem chegou a abrir ainda.
+3. **Modelo de cobrança do serviço em aberto.** Ainda não está decidido como o InsightLab One (produto/empresa) vai tratar esse custo com os tenants: absorver, repassar, ou cobrar como add-on "padrão" — inclusive para o piloto (Mix Concept Hair), que hoje não paga nada pelo InsightLab One.
+
+**O que isso muda na prática:** FASE 1 (já entregue, sem custo, sem chamada externa) continua funcionando normalmente — documento fiscal nasce em `DRAFT` a cada venda concluída. FASE 2 só entra na fila de execução depois que essas três pendências de negócio estiverem resolvidas, e mesmo assim como uma decisão explícita de reabrir a onda, não automática.
+
 ---
 
 *Documento gerado por Claude a pedido de Renato, a partir da pesquisa de fornecedor e do achado de prazo legal registrados em `insightlab-one-onda3-benchmark-revisao-backlog.md` seção 7. FASE 1 (infraestrutura de disparo, sem custo, sem chamada externa) pode abrir branch assim que confirmada; FASE 2 (integração real com Focus NFe) fica bloqueada até a conta existir.*
