@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
@@ -34,7 +35,14 @@ export default async function ClientesPage() {
         emptyMessage="Nenhum cliente cadastrado ainda."
         emptyAction={hasPermission(user, "clients.create") ? <NewClientButton /> : undefined}
         columns={[
-          { header: "Nome", cell: (c) => c.name },
+          {
+            header: "Nome",
+            cell: (c) => (
+              <Link href={`/clientes/${c.id}`} className="underline underline-offset-2">
+                {c.name}
+              </Link>
+            ),
+          },
           { header: "Nome social", cell: (c) => c.socialName ?? "—" },
           { header: "Telefone", cell: (c) => c.phone ?? "—" },
           { header: "E-mail", cell: (c) => c.email ?? "—" },

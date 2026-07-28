@@ -17,6 +17,7 @@ import {
   Settings,
   LogOut,
   Receipt,
+  LayoutDashboard,
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,6 +34,7 @@ import {
 import type { SessionUser } from "@/lib/session";
 
 const navItems = [
+  { href: "/painel", label: "Painel", icon: LayoutDashboard },
   { href: "/", label: "Agenda", icon: Calendar },
   { href: "/atendimentos", label: "Atendimentos", icon: ClipboardList },
   { href: "/vendas", label: "Vendas", icon: ShoppingCart },
