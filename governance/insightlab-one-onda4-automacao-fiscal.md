@@ -98,6 +98,24 @@ Decisão de Renato: a integração real com Focus NFe (FASE 2) sai da posição 
 
 **O que isso muda na prática:** FASE 1 (já entregue, sem custo, sem chamada externa) continua funcionando normalmente — documento fiscal nasce em `DRAFT` a cada venda concluída. FASE 2 só entra na fila de execução depois que essas três pendências de negócio estiverem resolvidas, e mesmo assim como uma decisão explícita de reabrir a onda, não automática.
 
+## 10. Racional — por que Focus NFe é a melhor opção disponível hoje (28/07/2026)
+
+Pesquisa complementar, comparando as opções reais do mercado brasileiro pra emissão fiscal via API:
+
+| Critério | Integração direta c/ Ambiente Nacional | eNotas | Focus NFe |
+|---|---|---|---|
+| Cobertura municipal | Cada prefeitura pode manter sistema próprio conforme ao padrão nacional — complexidade municipal não desaparece só por existir "padrão" | Não divulga número de municípios como diferencial — foco é produto digital | **+1.200 a 3.000 municípios já integrados** (fontes divergem no número exato, mas convergem em "maior cobertura do mercado"), com garantia de integrar município novo em até 15 dias úteis por taxa fixa (R$199) |
+| Tipos de documento | Só NFS-e (é o que o Ambiente Nacional cobre) | NFS-e como carro-chefe; NF-e como extra nos planos Plus/Pro | **NF-e, NFS-e, NFC-e, CT-e, MDF-e** — cobre não só o piloto atual (serviço), mas também um cenário futuro de venda de produto (NFC-e) sem trocar de fornecedor |
+| Perfil de integração nativa | N/A (é o próprio governo, sem "produto") | Hotmart, Kiwify, Monetizze, PagSeguro — perfil de infoproduto/e-commerce, não bate com salão de beleza | Genérico via API REST — não amarra a um nicho, serve qualquer perfil de negócio |
+| Custo | Zero de fornecedor, mas custo de engenharia pra tratar N sistemas municipais diferentes cresce com cada tenant em cidade nova (justamente o que quebra a premissa de multi-tenancy) | R$137–347/mês por faixa de volume | A partir de R$109/mês + R$0,65/documento excedente |
+| Taxa de setup / fidelidade | N/A | Não informado como diferencial | **Sem taxa de setup, sem fidelidade** — pode cancelar/trocar quando quiser, reduz o risco de errar a escolha agora sem CNPJ nem modelo de cobrança definidos |
+| Resiliência | Depende de cada prefeitura individualmente | Não é o foco do produto | Contingência automática com o "tempo de resposta mais rápido do mercado" (failover automático quando o webservice da prefeitura cai) |
+| Suporte | Não aplicável | Suporte humano | Chat, WhatsApp e e-mail |
+
+**Conclusão do racional:** a integração direta com o Ambiente Nacional parece "gratuita" à primeira vista, mas na prática transfere pro InsightLab One o trabalho que uma prefeitura por prefeitura dá — o oposto do que faz sentido pra um produto que tem multi-tenancy como premissa arquitetural (seção 2.1 do adendo original). O eNotas é competente, mas seu produto e integrações nativas miram infoproduto/e-commerce, não salão/clínica. **Focus NFe vence em cobertura municipal, abrangência de tipo de documento (cobre produto e serviço, não só o piloto de hoje) e ausência de fidelidade/setup — o que importa mais nesta fase do que economizar uns reais no plano de entrada.** Continua sendo a recomendação, sem mudança em relação à seção 7 do `insightlab-one-onda3-benchmark-revisao-backlog.md`.
+
+*Fontes adicionais consultadas em 28/07/2026: notaas.com.br (comparativo de APIs NFSe 2025/2026), focusnfe.com.br.*
+
 ---
 
 *Documento gerado por Claude a pedido de Renato, a partir da pesquisa de fornecedor e do achado de prazo legal registrados em `insightlab-one-onda3-benchmark-revisao-backlog.md` seção 7. FASE 1 (infraestrutura de disparo, sem custo, sem chamada externa) pode abrir branch assim que confirmada; FASE 2 (integração real com Focus NFe) fica bloqueada até a conta existir.*
