@@ -24,6 +24,7 @@
 | Alerta de "cliente sumiu" (filtro 30/45/60/90 dias sem aparecer) | Frontend | Fechado 28/07/2026 |
 | Widget de agendamento público (`/agendar/[tenantSlug]`) — cliente final agenda sozinho, sem login, com rate limit e reaproveitando a validação de conflito já existente | Backend + Frontend | Fechado 28/07/2026 |
 | Bug real corrigido: `proxy.ts` (middleware do Next 16) redirecionava qualquer rota sem sessão pro login, inclusive rotas públicas novas | Frontend | Fechado 28/07/2026 |
+| Sugestão de horário ótimo — heurística de próximos horários livres, integrada ao formulário de novo agendamento | Backend + Frontend | Fechado 28/07/2026 |
 
 ---
 
@@ -50,8 +51,8 @@
 ### 2.4 Inteligência operacional
 - ~~Painel financeiro do dono~~ — fechado 28/07/2026 (seção 1).
 - ~~Alerta de "cliente sumiu"~~ — fechado 28/07/2026 (seção 1).
-- Sugestão de horário ótimo na agenda (heurística simples resolve a maior parte, sem precisar de IA pesada no início).
-**Status:** só falta a sugestão de horário — não iniciado, sem bloqueio externo, é só priorização (baixo impacto estratégico, deixar por último).
+- ~~Sugestão de horário ótimo na agenda~~ — fechado 28/07/2026 (seção 1).
+**Status:** ONDA 5 (itens sem bloqueio de decisão/fornecedor externo) fechada por completo.
 
 ### 2.3.1 Identidade visual e redes sociais do cliente final (novo, 28/07/2026)
 **Status:** não mapeado até agora — Renato pediu que fosse incluído explicitamente no backlog em 28/07/2026.
