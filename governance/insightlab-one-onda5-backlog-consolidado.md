@@ -22,6 +22,8 @@
 | Histórico do cliente (agendamentos/atendimentos/vendas, resumo de gasto e última visita) | Frontend | Fechado 28/07/2026 |
 | Painel — resumo diário (faturamento, comissão, caixa, faturamento por profissional/serviço) | Frontend | Fechado 28/07/2026 |
 | Alerta de "cliente sumiu" (filtro 30/45/60/90 dias sem aparecer) | Frontend | Fechado 28/07/2026 |
+| Widget de agendamento público (`/agendar/[tenantSlug]`) — cliente final agenda sozinho, sem login, com rate limit e reaproveitando a validação de conflito já existente | Backend + Frontend | Fechado 28/07/2026 |
+| Bug real corrigido: `proxy.ts` (middleware do Next 16) redirecionava qualquer rota sem sessão pro login, inclusive rotas públicas novas | Frontend | Fechado 28/07/2026 |
 
 ---
 
@@ -37,7 +39,7 @@
 **Nada foi implementado ainda** — é decisão de arquitetura de produto, não código pronto pra revisar.
 
 ### 2.3 Superfície pro cliente final (agendamento self-service, WhatsApp, Pix)
-**Status:** identificado como "maior lacuna estratégica" desde 25/07 (`BACKLOG_PRODUTO_E_DIFERENCIACAO.md` seção 2). Histórico do cliente já saiu daqui — fechado em 28/07/2026 (seção 1). O restante segue não iniciado; pesquisa de fornecedor concluída em 28/07/2026 (ver seção 3.1 e 3.2 abaixo).
+**Status:** identificado como "maior lacuna estratégica" desde 25/07 (`BACKLOG_PRODUTO_E_DIFERENCIACAO.md` seção 2). Histórico do cliente e **widget de agendamento público** (`/agendar/[tenantSlug]`) já saíram daqui — fechados em 28/07/2026 (seção 1). WhatsApp/Pix seguem não iniciados; pesquisa de fornecedor concluída em 28/07/2026 (seções 4 e 5).
 **O que envolve:**
 - Link/widget de agendamento público embutível (reaproveita API de `availability`/`services-catalog` já pronta) — próximo item viável a implementar, sem bloqueio de fornecedor.
 - Confirmação e lembrete via WhatsApp — pesquisa de fornecedor concluída (seção 3.2), recomendação: Meta Cloud API direto. Decisão de contratar/implementar é sua.
