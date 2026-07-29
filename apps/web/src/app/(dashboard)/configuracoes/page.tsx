@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BusinessSettings, UserListItem, Role } from "@/lib/api-types";
+import { EditSettingsButton } from "./edit-settings-button";
 
 const RELEASE_MODE_LABELS: Record<string, string> = {
   ON_PAYMENT: "Ao pagamento",
@@ -36,9 +37,7 @@ export default async function ConfiguracoesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Configurações</h1>
-        <p className="text-muted-foreground">
-          Parâmetros do negócio, usuários e papéis. Somente leitura nesta versão.
-        </p>
+        <p className="text-muted-foreground">Parâmetros do negócio, usuários e papéis.</p>
       </div>
 
       <Tabs defaultValue="business">
@@ -54,7 +53,13 @@ export default async function ConfiguracoesPage() {
               Nenhuma configuração encontrada para este negócio.
             </p>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <>
+              {hasPermission(user, "settings.update") && (
+                <div className="flex justify-end">
+                  <EditSettingsButton settings={settings} />
+                </div>
+              )}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader>
                   <CardDescription>Fuso horário</CardDescription>
@@ -103,7 +108,8 @@ export default async function ConfiguracoesPage() {
                   </CardTitle>
                 </CardHeader>
               </Card>
-            </div>
+              </div>
+            </>
           )}
         </TabsContent>
 
