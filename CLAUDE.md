@@ -31,12 +31,17 @@ SaaS multi-tenant de agenda/gestão para salões de beleza e clínicas de estét
 
 Ao pedir permissão: diga o comando exato, o que ele muda, e o rollback se der errado. Espere um "sim" explícito — silêncio ou ambiguidade não é aprovação. "Autonomia" nunca significa pular a Zona Vermelha.
 
+## Um quarto tipo, ortogonal às 3 zonas: decisão de governança
+Escolher entre aceitar um risco ou corrigi-lo (ex.: dependência com vulnerabilidade `high`), confirmar se algo tratado como "fechado" num documento está mesmo fechado, ou mudar postura oficial do projeto — isso é sempre do Renato, não importa a zona técnica da ação em si. Nesses casos: **verifique o que der pra verificar sozinho (Zona Verde — ex.: consultar o banco real em vez de confiar em documento), rascunhe a decisão como `DECISAO_*.md` seguindo o padrão já usado no projeto, e aguarde aprovação.** Não decida por conta própria só porque teria autonomia técnica pra executar.
+
+**Higiene de documentação (qualquer pasta, não só `governance/`) é sempre proposta, nunca execução autônoma.** Um arquivo que parece redundante pode ser a única fonte de um detalhe que um resumo mais novo errou — já aconteceu de verdade neste projeto (RLS, 29/07/2026: resumo dizia "fechado", registro antigo e mais específico dizia "POC numa tabela só" — o antigo é que estava certo). Inventariar e classificar como sugestão (manter / arquivar / revisar com Renato) é Zona Verde. Mover pra uma subpasta de arquivo é aprovação simples. Apagar definitivamente, nunca — arquivar em vez de apagar preserva a informação sem custo real.
+
 ## Ordem de trabalho ao iniciar a sessão
 1. Diagnóstico completo — repositório (git, branch, migrations) e Docker (containers, volumes, bancos lógicos). Reportar tudo antes de propor qualquer ação.
-2. Classificar os bancos encontrados JUNTO com Renato — a origem de cada um é julgamento dele, não seu.
-3. Depois da classificação confirmada: dump de tudo (Zona Amarela) → proposta ONDA|FASE|ETAPA formal pra remoção do que for redundante (Zona Vermelha, aprovação item a item).
-4. Confirmar com Renato o corte de MVP e as duas decisões de stack pendentes (padrão de multi-tenancy, alvo de deploy de produção) antes de reabrir qualquer bloco de código.
-5. Só então propor a retomada do Bloco 27 (transições REQUESTED→FAILED e AUTHORIZED→CANCELED, campos errorCode/errorMessage/canceledAt, eventos ERROR/CANCELED), numa branch dedicada, formato ONDA|FASE|ETAPA.
+2. **Checar por trabalho não commitado imediatamente** — se houver algo parado na working tree, sinalizar como prioridade antes de qualquer outra coisa, independente do que mais estiver pendente.
+3. Classificar bancos ou documentos encontrados JUNTO com Renato quando a origem não for óbvia pelo próprio conteúdo — não decidir sozinho o que é descartável.
+4. Corte de MVP (adendo seção 2) e padrão de multi-tenancy/alvo de deploy (`DECISAO_MULTITENANCY_E_DEPLOY_R1.md`, confirmada 24/07) já estão travados — não reabrir sem evidência nova.
+5. Bloco 27 (transições REQUESTED→FAILED e AUTHORIZED→CANCELED, campos errorCode/errorMessage/canceledAt, eventos ERROR/CANCELED) e demais blocos seguem em branch dedicada, formato ONDA|FASE|ETAPA, dentro das zonas acima — sem precisar confirmar cada um deles fora desta sessão.
 
 ## Uma coisa a evitar
 Não "ajude" corrigindo algo fora do escopo do passo atual, por mais óbvio que pareça. Reporte e pergunte antes de expandir escopo.

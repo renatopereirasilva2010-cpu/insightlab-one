@@ -1,29 +1,25 @@
 # Guia de Retomada de Sessão — InsightLab One
 
-**Última atualização:** 26/07/2026, ao fechar o bloco de CRUD do backend (`onda-2/backend-crud-completo`).
-**Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero.
-
-**Nota 26/07/2026:** esta sessão caiu de fato — os 3 containers Docker (Postgres, Redis) pararam sozinhos (~2h sem atividade, provável queda da integração WSL↔Docker Desktop) e o processo `nest start --watch` não estava mais rodando. Nada foi perdido (working tree intacta); religuei com `docker compose up -d` + `pnpm start:dev` e confirmei a API respondendo. Se isso se repetir, rode a seção 2 (diagnóstico) e a 3.1/3.2 (subir do zero) abaixo — é rotina, não incidente.
+**Última atualização:** 29/07/2026, ao fechar `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` (correções de CRUD, resiliência de processo via systemd, primeira aplicação real da marca).
+**Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero. **Leia isto antes de subir API/frontend manualmente — desde 29/07/2026 eles rodam supervisionados por `systemd --user`, não é mais `pnpm start:dev` direto no terminal.**
 
 ---
 
 ## 1. Estado exato no momento em que este guia foi escrito
 
-- **Branch ativa:** `onda-2/backend-crud-completo` (backend CRUD; a `onda-2/frontend-mvp-screens` com as telas do MVP segue intacta e separada, não tocada nesta sessão)
-- **Working tree:** com mudanças **não commitadas** — todo o trabalho de CRUD desta seção (ver 4.1) está na working tree, ainda não há commit criado nem push feito
-- **`main`:** parada em `5acced3` (scaffold do frontend)
-- Merge, commit e push ficam pra aprovação explícita (Zona Vermelha) — nada disso foi feito ainda
+- **Branch ativa:** `onda-2/backend-crud-completo`
+- **Working tree:** com mudanças **não commitadas** desta sessão (29/07) — ver seção 4. Commit pendente de execução (Zona Amarela, sem push/merge); push/merge continuam Zona Vermelha.
+- **`main`:** não tocado nesta sessão.
 
-### O que já está rodando (nesta máquina, agora)
+### O que já está rodando (nesta máquina, agora) — via systemd, não mais processo solto
 | Serviço | Como está rodando | Porta | Observação |
 |---|---|---|---|
-| Postgres (dev real) | Docker, `insightlab_one_postgres` | 5433 | `restart: unless-stopped` — sobrevive a restart do Docker Desktop |
-| Postgres (Codex Lab) | Docker, `insightlab_pg_clean` | 5434 | Ambiente isolado, não usado no dia a dia |
-| Redis | Docker, `insightlab_one_redis` | 6379 | |
-| API NestJS | `nest start --watch` rodando direto no processo (fora do Docker) | 4000 | PID pode mudar a cada boot da máquina; religada nesta sessão após queda |
-| Frontend Next.js | **não está rodando nesta sessão** (trabalho atual é 100% backend) | 3000 | Suba com `pnpm dev` em `apps/web` só se for testar a UI |
+| Postgres (dev real) | Docker, `insightlab_one_postgres` | 5433 | `restart: unless-stopped`. **Se a API não conectar mesmo com o container "Up", veja seção 2.1 — é um bug conhecido do proxy de porta WSL2↔Docker Desktop, não falta de container.** |
+| Redis | Docker, `insightlab_one_redis` | 6379 | mesmo padrão acima |
+| API NestJS | **`systemd --user` — `insightlab-api.service`**, roda a build de produção (`dist/src/main.js`), com `Restart=always` | 4000 | Sobrevive a crash sozinho. Ver seção 2.2 pra comandos de gestão. |
+| Frontend Next.js | **`systemd --user` — `insightlab-web.service`**, roda `pnpm start` (build de produção) | 3000 | Mesmo padrão acima |
 
-Se você abrir uma sessão nova e Postgres/Redis/API ainda estiverem de pé, **não precisa reiniciar nada** — só confirme com os comandos da seção 2. Se estiverem parados (como aconteceu nesta sessão), use a seção 3.
+**Mudança de código não aparece sozinha nesses dois serviços** (eles rodam build, não watch) — depois de editar código, rode `pnpm build` na pasta certa e `systemctl --user restart insightlab-api` (ou `insightlab-web`). Pra desenvolvimento ativo com hot-reload, pare o serviço systemd correspondente (`systemctl --user stop insightlab-api`) e rode `pnpm start:dev`/`pnpm dev` manualmente no terminal como sempre — só lembre de religar o serviço systemd depois, ou a próxima queda não vai se auto-recuperar.
 
 ---
 
@@ -38,90 +34,106 @@ git log --oneline -5
 
 docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
 
+systemctl --user status insightlab-api insightlab-web --no-pager
+
 curl -s -o /dev/null -w "API: %{http_code}\n" http://localhost:4000/
 curl -s -o /dev/null -w "Web: %{http_code}\n" http://localhost:3000/
 ```
 
 Se a branch não for `onda-2/backend-crud-completo`, rode `git checkout onda-2/backend-crud-completo`.
 
+### 2.1 Se a API não conecta no banco mesmo com Postgres "Up"
+Isso já aconteceu de verdade nesta sessão (29/07/2026) — três vezes seguidas, com o container mostrando "Up" e `pg_isready` OK. Causa real: o **proxy de porta do Docker Desktop↔WSL2 aceita o handshake TCP sem repassar os dados pro container** — `pg_isready` via `docker exec` não pega isso porque testa o socket Unix interno, não a porta publicada. Sintoma: `docker logs insightlab_one_postgres --since 3m` fica **vazio** mesmo com a API tentando conectar.
+
+```bash
+docker logs insightlab_one_postgres --since 3m   # vazio = confirma o proxy quebrado
+docker restart insightlab_one_postgres           # corrige na prática
+docker restart insightlab_one_redis              # por precaução, mesmo padrão
+systemctl --user restart insightlab-api          # o Restart=always eventualmente pegaria sozinho, mas isso é mais rápido
+```
+
+Detalhe completo do diagnóstico em `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` seção 4.
+
+### 2.2 Comandos de gestão dos serviços systemd
+```bash
+systemctl --user status insightlab-api insightlab-web    # estado atual
+systemctl --user restart insightlab-api insightlab-web   # depois de pnpm build
+journalctl --user -u insightlab-api -n 50                # log via journal
+tail -f ~/projects/insightlab-one/workspace/.run/api.log # log direto (mesmo conteúdo)
+```
+
 ---
 
-## 3. Como subir cada peça do zero (se algo caiu)
+## 3. Como subir cada peça do zero (se `systemctl --user status` mostrar `inactive`/`failed`, ou numa máquina nova)
 
 ### 3.1 Docker (Postgres + Redis)
 ```bash
 cd ~/projects/insightlab-one/workspace/infra/docker
 docker compose up -d
 ```
-Isso é seguro rodar mesmo com os containers já de pé — o compose reconhece que já existem e não recria nada. `postgres_data` é um volume **externo** (`6b05ad09e2f4d9aad3fdb60380d1d11e49bcd0bab0f56c584fe4a5405e12947c`) que já contém os dados reais — não é criado do zero.
+Seguro rodar mesmo com os containers já de pé. `postgres_data` é um volume **externo** com os dados reais.
 
-### 3.2 API NestJS
+### 3.2 Registrar os serviços systemd (só necessário numa máquina/usuário novo — nesta máquina já está feito)
 ```bash
-cd ~/projects/insightlab-one/workspace/services/api
-pnpm start:dev
+mkdir -p ~/.config/systemd/user
+# copiar insightlab-api.service e insightlab-web.service pra ~/.config/systemd/user/
+# (conteúdo completo documentado em governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md seção 4.3)
+loginctl enable-linger $USER
+systemctl --user daemon-reload
+systemctl --user enable --now insightlab-api insightlab-web
 ```
-Sobe em `http://localhost:4000`, lê `.env` (`DATABASE_URL` aponta pro Postgres acima, porta 5433).
 
-### 3.3 Frontend Next.js
+### 3.3 Build manual (se mudou código e quer atualizar os serviços)
 ```bash
-cd ~/projects/insightlab-one/workspace/apps/web
-pnpm dev
+cd ~/projects/insightlab-one/workspace/services/api && pnpm build
+cd ~/projects/insightlab-one/workspace/apps/web && pnpm build
+systemctl --user restart insightlab-api insightlab-web
 ```
-Sobe em `http://localhost:3000`. Lê `apps/web/.env.local` (`API_URL=http://localhost:4000`).
 
-### 3.4 Login pra testar manualmente
+### 3.4 Modo dev com hot-reload (pra codar ativamente, não pra deixar sempre-ativo)
+```bash
+systemctl --user stop insightlab-api    # evita conflito de porta 4000
+cd ~/projects/insightlab-one/workspace/services/api && pnpm start:dev
+
+systemctl --user stop insightlab-web    # evita conflito de porta 3000
+cd ~/projects/insightlab-one/workspace/apps/web && pnpm dev
+```
+**Lembre de `systemctl --user start insightlab-api insightlab-web` ao terminar**, senão a resiliência sempre-ativa fica desligada até a próxima sessão perceber.
+
+### 3.5 Login pra testar manualmente
 - URL: `http://localhost:3000/login`
-- Usuário admin (seed): `admin@mix-demo.local` / `Admin@12345`
-- Usuário operador restrito (seed, permissões limitadas): `operador.restrito@mix-demo.local` / `Operador@12345`
+- Admin (seed): `admin@mix-demo.local` / `Admin@12345`
+- Operador restrito (seed, permissões mínimas): `operador.restrito@mix-demo.local` / `Operador@12345`
+- Profissional vinculado (seed, pra testar isolamento de "Minhas Comissões"): `profissional.demo.login@mix-demo.local` / `Profissional@12345`
 
 ---
 
-## 4. O que foi entregue
+## 4. O que foi entregue nesta sessão (29/07/2026)
 
-### 4.1 Backend CRUD (26/07/2026, branch `onda-2/backend-crud-completo`, ainda não commitado)
+Detalhe completo em `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md`. Resumo:
 
-Os 4 gaps de CRUD mapeados na seção 5 (versão anterior deste guia) foram todos fechados, cada um com teste Jest:
-
-- `PATCH /v1/services-catalog/:id` (nome/descrição/duração/preço/status — complementa o `/fiscal` que já existia)
-- `POST /v1/users`, `PATCH /v1/users/:id`, `POST /v1/users/:id/block`
-- `POST /v1/roles`, `POST /v1/roles/:id/permissions`, `POST /v1/roles/:id/users` (atribuição de permissão a papel e de papel a usuário)
-- `PATCH /v1/business-settings`
-
-Validado: suíte Jest completa (**31 suítes, 138 testes, todos passando**), `tsc --noEmit` limpo (código + specs), API rodando localmente com todas as rotas mapeadas sem erro no boot.
-
-**Pendente antes de fechar formalmente o bloco (Definition of Done da seção 6 do adendo):**
-- Commit + `RUN-SUMMARY.md` — não feito ainda.
-- Frontend ainda não foi ligado aos 4 novos endpoints (telas de edição de Serviços/Usuários/Papéis/Configurações reaproveitam os formulários de criação já existentes, conforme `BACKLOG_PRODUTO_E_DIFERENCIACAO.md` seção "ONDA 2.1").
-- `pnpm audit --audit-level=high` acusa **16 vulnerabilidades high / 11 moderate / 7 low** — mas todas em dependências não tocadas neste bloco (`next`/`postcss`/`eslint` em `apps/web`, `@nestjs/cli`→`glob`→`brace-expansion` em dev tooling). Isso bloqueia merge pra `main` pela regra de higiene (seção 7 do adendo) — precisa de decisão/priorização antes do merge, não é algo pra ignorar.
-- Merge pra `main` e qualquer deploy — Zona Vermelha, aguardando aprovação explícita.
-
-### 4.2 Frontend (25/07/2026, branch `onda-2/frontend-mvp-screens`, commit `252ee50`, não tocado nesta sessão)
-
-Todas as telas do núcleo do piloto (seção 2.1 do adendo de governança) foram implementadas no frontend, contra a API real já existente — não é mock:
-
-- Agenda (`/`): agendamentos, bloqueios, disponibilidade, recursos
-- Atendimentos, Vendas + Checkout, Pagamentos, Caixa, Comissões, Documentos Fiscais
-- Cadastros: Clientes, Profissionais, Serviços, Produtos
-- Configurações (somente leitura — hoje o backend já suporta edição, seção 4.1, falta ligar a tela)
-
-Validado com `next build`, `tsc --noEmit`, `eslint` e smoke test manual via `curl` autenticado em todas as rotas (todas retornando 200 com dado real).
+1. **CRUD de verdade fechado** — Clientes, Serviços (edição geral), Produtos, Usuários e Papéis ganharam UI de editar/criar que nunca tinha sido implementada (só Profissionais e Configurações tinham antes, apesar do backend já suportar desde 26/07 e o backlog dizer "Fechado").
+2. **3 bugs corrigidos:** hydration mismatch no calendário da Agenda, erro 403 cru ("Forbidden resource") em vez de mensagem humana (`PermissionGuard` corrigido — afeta a API inteira, não só onde foi encontrado), duração do agendamento não ajustando ao trocar serviço manualmente.
+3. **Resiliência de processo** — API e frontend agora rodam via `systemd --user` com `Restart=always`, sobrevivendo a crash sem intervenção manual (validado com `kill -9` duas vezes). Ver seção 1 e 2 acima.
+4. **White-label — primeira aplicação real** — sidebar com cores/logo reais do InsightLab (antes só existiam como arquivo, nunca usados no app). Área operacional principal (lado do tenant) mantida branca/neutra — **bloqueada** pra receber a identidade visual real do Mix Concept Hair porque **não existe nenhum ativo de marca do Mix no repositório** (nem logo, nem cor, nem campo no schema pra isso). Decisão pendente com Renato.
 
 ---
 
-## 5. Pendências conhecidas (não é dívida escondida — está tudo mapeado)
+## 5. Pendências conhecidas
 
-1. **Ligar o frontend aos 4 endpoints novos de backend** (seção 4.1) — próximo passo natural antes de qualquer merge.
-2. **`pnpm audit` com 16 `high`** em dependências de `apps/web` e dev tooling — decisão de priorização pendente antes do merge pra `main`.
-3. **Sem tag Git formal pro Bloco 27** (`v1.8.5-bloco27`) — puramente administrativo, não bloqueia nada.
-4. **Sem testes de frontend ainda** (`apps/web` não tem nenhum arquivo `*.test.*`) — gap pré-existente, vale endereçar.
-5. **Decremento de estoque na venda de produtos** (`stockQuantity` nunca é abatido) — gap de inventário separado do CRUD, ainda não endereçado.
-6. **Merge de qualquer branch pra `main` e qualquer deploy** — Zona Vermelha, aguardando aprovação explícita.
+1. **Ativos de marca do Mix Concept Hair** — não existem no repo. Bloqueia completar o white-label do lado operacional. Ver seção 5.3 do onda6.
+2. **`pnpm audit` com vulnerabilidades `high`** em dependências não tocadas — não reavaliado nesta sessão, verificar antes do merge pra `main`.
+3. **Sem tag Git formal pro Bloco 27** — administrativo, não bloqueia.
+4. **Sem testes de frontend** (`apps/web` sem `*.test.*`) — gap pré-existente.
+5. **Decremento de estoque na venda de produtos** (`stockQuantity` nunca é abatido) — gap de inventário, não endereçado.
+6. **Backlog de negócio** (apps mobile, superfície do cliente/WhatsApp/Pix, Focus NFe FASE 2, estorno de comissão liberada) — todos bloqueados em decisão de Renato ou conta em fornecedor externo, não em código. Ver `insightlab-one-onda5-backlog-consolidado.md` seção 6.
+7. **Merge de qualquer branch pra `main` e qualquer deploy** — Zona Vermelha, aguardando aprovação explícita.
 
 ---
 
-## 6. Fluxo de deploy combinado com Renato (25/07/2026)
+## 6. Fluxo de deploy combinado com Renato (25/07/2026, ainda vigente)
 
-**Regra fixa a partir de agora:** toda implementação nova vai primeiro pra **staging**, fica disponível pra Renato testar e validar manualmente, e só depois de validação explícita segue pra produção. Produção está suspensa desde `governance/DECISAO_PRODUCAO_SUSPENSA_PRIORIZAR_STAGING.md` — nada muda essa suspensão sem decisão nova.
+Toda implementação nova vai primeiro pra **staging**, valida com Renato manualmente, só depois vai pra produção. Produção suspensa desde `governance/DECISAO_PRODUCAO_SUSPENSA_PRIORIZAR_STAGING.md` — nada muda essa suspensão sem decisão nova.
 
 - Staging: `insightlab-one-api-staging.onrender.com` (Render + Neon + Upstash)
 - Produção: `srv-d9i0ecvaqgkc73c8hof0`, suspensa
@@ -130,6 +142,7 @@ Validado com `next build`, `tsc --noEmit`, `eslint` e smoke test manual via `cur
 
 ## 7. Documentos relacionados
 - `governance/insightlab-one-onda0-adendo-governanca.md` — plano geral, zonas de autonomia, corte de MVP
+- `governance/insightlab-one-onda5-backlog-consolidado.md` — retrato único do backlog de produto (o que fechou, o que está bloqueado em decisão/fornecedor)
+- `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` — detalhe completo do trabalho desta sessão (CRUD, bugs, resiliência, white-label)
 - `governance/DECISAO_PRODUCAO_SUSPENSA_PRIORIZAR_STAGING.md` — por que produção está pausada
-- `governance/REGISTRO_VARREDURA_FINAL_BACKLOG_MVP.md` — varredura que autorizou começar o frontend
-- `governance/BACKLOG_PRODUTO_E_DIFERENCIACAO.md` — backlog revisado (frontend + backend) e visão de produto/diferenciação de mercado
+- `governance/BACKLOG_PRODUTO_E_DIFERENCIACAO.md` — visão de produto/diferenciação de mercado
