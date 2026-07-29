@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { LegalDocumentType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { AppointmentsService } from '../appointments/appointments.service';
+import { LegalService } from '../legal/legal.service';
 import { CreatePublicAppointmentDto } from './dto/create-public-appointment.dto';
 
 @Injectable()
@@ -8,6 +10,7 @@ export class PublicBookingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly appointmentsService: AppointmentsService,
+    private readonly legalService: LegalService,
   ) {}
 
   private async resolveTenant(tenantSlug: string) {
@@ -116,7 +119,14 @@ export class PublicBookingService {
     return { weekday, rules };
   }
 
-  async createAppointment(tenantSlug: string, dto: CreatePublicAppointmentDto) {
+  async createAppointment(
+    tenantSlug: string,
+    dto: CreatePublicAppointmentDto,
+    clientInfo: { ipAddress: string | null; userAgent: string | null } = {
+      ipAddress: null,
+      userAgent: null,
+    },
+  ) {
     const tenant = await this.resolveTenant(tenantSlug);
 
     const service = await this.prisma.serviceCatalog.findFirst({
@@ -170,6 +180,14 @@ export class PublicBookingService {
     const endAt = new Date(startAt.getTime() + service.durationMinutes * 60000);
 
     const client = await this.findOrCreateClient(tenant.id, dto);
+
+    await this.legalService.recordClientConsent(
+      tenant.id,
+      client.id,
+      LegalDocumentType.PRIVACY_POLICY,
+      clientInfo.ipAddress,
+      clientInfo.userAgent,
+    );
 
     return this.appointmentsService.create(
       tenant.id,

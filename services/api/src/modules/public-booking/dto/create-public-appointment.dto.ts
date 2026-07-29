@@ -1,4 +1,4 @@
-import { IsDateString, IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { Equals, IsDateString, IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreatePublicAppointmentDto {
   @IsString()
@@ -32,4 +32,7 @@ export class CreatePublicAppointmentDto {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  @Equals(true, { message: 'É necessário aceitar a Política de Privacidade para agendar.' })
+  acceptedPrivacyPolicy!: boolean;
 }

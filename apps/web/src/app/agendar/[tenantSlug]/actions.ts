@@ -12,6 +12,7 @@ export interface CreatePublicAppointmentInput {
   professionalId?: string;
   startAt: string;
   notes?: string;
+  acceptedPrivacyPolicy: boolean;
 }
 
 export async function createPublicAppointment(
@@ -20,6 +21,25 @@ export async function createPublicAppointment(
 ): Promise<ActionResult<{ id: string }>> {
   return runAction(() =>
     apiFetch<{ id: string }>(`/v1/public/${tenantSlug}/appointments`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  );
+}
+
+export interface CreateDataSubjectRequestInput {
+  requesterName: string;
+  requesterContact: string;
+  requestType: "ACCESS" | "CORRECTION" | "DELETION" | "PORTABILITY" | "CONSENT_REVOCATION";
+  description?: string;
+}
+
+export async function createDataSubjectRequest(
+  tenantSlug: string,
+  input: CreateDataSubjectRequestInput,
+): Promise<ActionResult<{ id: string }>> {
+  return runAction(() =>
+    apiFetch<{ id: string }>(`/v1/legal/data-subject-requests/${tenantSlug}`, {
       method: "POST",
       body: JSON.stringify(input),
     }),

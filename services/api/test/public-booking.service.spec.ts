@@ -1,11 +1,13 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../src/database/prisma.service';
 import { AppointmentsService } from '../src/modules/appointments/appointments.service';
+import { LegalService } from '../src/modules/legal/legal.service';
 import { PublicBookingService } from '../src/modules/public-booking/public-booking.service';
 
 describe('PublicBookingService', () => {
   let service: PublicBookingService;
   let appointmentsService: { create: jest.Mock };
+  let legalService: { recordClientConsent: jest.Mock };
   let prisma: {
     tenant: { findUnique: jest.Mock };
     serviceCatalog: { findMany: jest.Mock; findFirst: jest.Mock };
@@ -25,10 +27,12 @@ describe('PublicBookingService', () => {
       client: { findFirst: jest.fn(), create: jest.fn() },
     };
     appointmentsService = { create: jest.fn() };
+    legalService = { recordClientConsent: jest.fn().mockResolvedValue(undefined) };
 
     service = new PublicBookingService(
       prisma as unknown as PrismaService,
       appointmentsService as unknown as AppointmentsService,
+      legalService as unknown as LegalService,
     );
   });
 
@@ -91,6 +95,7 @@ describe('PublicBookingService', () => {
       serviceId: 'svc_1',
       professionalId: 'prof_1',
       startAt: new Date(Date.now() + 86400000).toISOString(),
+      acceptedPrivacyPolicy: true as const,
     };
 
     const serviceFixture = {
@@ -159,6 +164,26 @@ describe('PublicBookingService', () => {
         expect.objectContaining({
           data: expect.objectContaining({ tenantId: 'tenant_1', source: 'public-booking' }),
         }),
+      );
+    });
+
+    it('records a privacy-policy consent for the client after booking', async () => {
+      prisma.serviceCatalog.findFirst.mockResolvedValueOnce(serviceFixture);
+      prisma.professional.findFirst.mockResolvedValueOnce({ id: 'prof_1' });
+      prisma.client.findFirst.mockResolvedValueOnce({ id: 'client_existing' });
+      appointmentsService.create.mockResolvedValueOnce({ id: 'appt_1' });
+
+      await service.createAppointment('mix-demo', validDto, {
+        ipAddress: '203.0.113.1',
+        userAgent: 'jest-test-agent',
+      });
+
+      expect(legalService.recordClientConsent).toHaveBeenCalledWith(
+        'tenant_1',
+        'client_existing',
+        'PRIVACY_POLICY',
+        '203.0.113.1',
+        'jest-test-agent',
       );
     });
 

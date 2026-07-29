@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -41,6 +43,9 @@ const bookingSchema = z
     clientPhone: z.string().min(8, "Informe um telefone válido."),
     clientEmail: z.string().email("E-mail inválido.").optional().or(z.literal("")),
     notes: z.string().max(500).optional().or(z.literal("")),
+    acceptedPrivacyPolicy: z.boolean().refine((v) => v === true, {
+      message: "É necessário aceitar a Política de Privacidade para agendar.",
+    }),
   })
   .refine((v) => !!v.date && !!v.time, {
     message: "Selecione data e horário.",
@@ -74,6 +79,7 @@ export function BookingForm({
       clientPhone: "",
       clientEmail: "",
       notes: "",
+      acceptedPrivacyPolicy: false,
     },
   });
 
@@ -127,6 +133,7 @@ export function BookingForm({
           values.professionalId === NONE ? undefined : values.professionalId,
         startAt,
         notes: values.notes || undefined,
+        acceptedPrivacyPolicy: values.acceptedPrivacyPolicy,
       });
 
       if (!result.ok) {
@@ -302,6 +309,28 @@ export function BookingForm({
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="acceptedPrivacyPolicy"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start gap-2 space-y-0">
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel className="font-normal">
+                  Li e aceito a{" "}
+                  <Link href="/privacidade" target="_blank" className="underline">
+                    Política de Privacidade
+                  </Link>
+                  .
+                </FormLabel>
+                <FormMessage />
+              </div>
+            </FormItem>
+          )}
+        />
+
         {serverError && (
           <p className="text-destructive text-sm" role="alert">
             {serverError}
@@ -311,6 +340,12 @@ export function BookingForm({
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Agendando..." : "Confirmar agendamento"}
         </Button>
+
+        <p className="text-muted-foreground text-center text-xs">
+          <Link href={`/agendar/${tenantSlug}/meus-dados`} className="underline">
+            Solicitar acesso, correção ou exclusão dos meus dados
+          </Link>
+        </p>
       </form>
     </Form>
   );

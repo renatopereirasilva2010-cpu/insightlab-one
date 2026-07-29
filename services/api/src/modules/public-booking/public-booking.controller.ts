@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import type { Request } from 'express';
 import { CreatePublicAppointmentDto } from './dto/create-public-appointment.dto';
 import { PublicBookingService } from './public-booking.service';
 
@@ -41,7 +42,15 @@ export class PublicBookingController {
   createAppointment(
     @Param('tenantSlug') tenantSlug: string,
     @Body() dto: CreatePublicAppointmentDto,
+    @Req() req: Request,
   ) {
-    return this.publicBookingService.createAppointment(tenantSlug, dto);
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const ipAddress =
+      (typeof forwardedFor === 'string' ? forwardedFor.split(',')[0].trim() : null) ??
+      req.socket?.remoteAddress ??
+      null;
+    const userAgent = (req.headers['user-agent'] as string | undefined) ?? null;
+
+    return this.publicBookingService.createAppointment(tenantSlug, dto, { ipAddress, userAgent });
   }
 }
