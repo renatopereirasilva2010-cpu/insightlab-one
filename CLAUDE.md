@@ -40,3 +40,35 @@ Ao pedir permissão: diga o comando exato, o que ele muda, e o rollback se der e
 
 ## Uma coisa a evitar
 Não "ajude" corrigindo algo fora do escopo do passo atual, por mais óbvio que pareça. Reporte e pergunte antes de expandir escopo.
+
+## InsightLab Brand and Product Experience
+
+Importado em 28/07/2026 a pedido de Renato. Fonte completa: `docs/brand/INSIGHTLAB_BRAND_SYSTEM.md`, `design-tokens/insightlab.tokens.{css,json}`, `apps/web/public/brand/insightlab-logo-original.png`. As regras fixas e zonas de autonomia acima continuam valendo por cima disto — marca não é exceção a governança técnica.
+
+Before changing UI, UX, visual styles, dashboards, charts, predictive features, CRM screens, campaigns, login, navigation, customer views, or product copy, read `docs/brand/INSIGHTLAB_BRAND_SYSTEM.md` and the token files above.
+
+### Brand hierarchy
+- Umbrella brand: **InsightLab**
+- Base product: **InsightLab One**
+- Intelligence capability: **InsightLab Intelligence**
+- Strategic descriptor: **Revenue Recovery Intelligence**
+- Verticals: **Beauty**, **Dental**, and future governed verticals
+- Write `InsightLab` without a space, capital `I` and `L`.
+- A tenant may be presented as `InsightLab One • <Tenant name>` — **pendente de decisão de Renato quanto ao grau de white-label na área operacional do tenant** (ver conversa de 28/07/2026 — o doc de marca recomenda identidade do tenant subordinada; Renato descreveu algo mais próximo de branding do tenant dominante na área operacional. Não resolver essa tensão sem confirmação explícita).
+
+### Non-negotiable experience principles
+Every relevant analytical experience should answer: o que está acontecendo, por que importa, qual oportunidade/risco, qual ação recomendada, qual impacto estimado, qual confiança, como acompanhar o resultado. Nunca comunicar previsão como garantia.
+
+### Visual identity
+Core colors: Navy `#0C235A`, Indigo `#444FB1`, Violet `#5C31D6`, Blue `#2FA1DD`, Cyan `#40BCDF`, Mist `#EBF0F9`. Proporção: 70-80% branco/off-white, 15-20% navy estrutural, 5-10% acentos. Logo é artwork — nunca redigitar o wordmark, nunca improvisar SVG/transparente/mono/favicon sem registrar a lacuna.
+
+### Implementation workflow (obrigatório antes de qualquer mudança visual)
+1. Inspecionar framework, tema atual, componentes, rotas, assets.
+2. Mapear cores/componentes existentes → tokens InsightLab.
+3. Preservar comportamento e regra de negócio.
+4. Propor sequência de implementação antes de mudança visual ampla.
+5. Implementar shell/componentes compartilhados antes de tela por tela.
+6. Validar responsividade, acessibilidade, testes, lint, build.
+7. Reportar lacunas de asset ou acessibilidade explicitamente.
+
+Não: substituir o design system cegamente, redesenhar fluxo de negócio sem autorização, gerar variante de logo silenciosamente, afirmar verificação visual sem ter renderizado de fato.

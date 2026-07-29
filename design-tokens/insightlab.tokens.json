@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json.schemastore.org/design-tokens.json",
+  "meta": {
+    "brand": "InsightLab",
+    "product": "InsightLab One",
+    "version": "1.0.0",
+    "status": "implementation-baseline",
+    "date": "2026-07-28",
+    "note": "Brand colors are sampled from the recovered official PNG. UI extensions are recommended implementation tokens."
+  },
+  "color": {
+    "brand": {
+      "navy900": "#0C235A",
+      "navy800": "#102561",
+      "indigo600": "#444FB1",
+      "violet600": "#5C31D6",
+      "violet300": "#9161C9",
+      "blue500": "#2FA1DD",
+      "cyan400": "#40BCDF",
+      "mist100": "#EBF0F9",
+      "white": "#FFFFFF"
+    },
+    "background": {
+      "default": "#F7F9FC",
+      "surface": "#FFFFFF",
+      "subtle": "#EBF0F9",
+      "inverse": "#0C235A"
+    },
+    "text": {
+      "primary": "#0C235A",
+      "secondary": "#52627A",
+      "inverse": "#FFFFFF",
+      "link": "#2F7FC4"
+    },
+    "border": {
+      "default": "#DCE4F2",
+      "strong": "#A8B3DA",
+      "focus": "#5C31D6"
+    },
+    "action": {
+      "primary": "#5C31D6",
+      "primaryHover": "#4E28BC",
+      "structural": "#0C235A",
+      "structuralHover": "#102561",
+      "disabled": "#A8B3DA"
+    },
+    "semantic": {
+      "success": "#168A60",
+      "warning": "#C98200",
+      "danger": "#C43D57",
+      "info": "#2FA1DD"
+    },
+    "dataVisualization": {
+      "series1": "#0C235A",
+      "series2": "#2FA1DD",
+      "series3": "#40BCDF",
+      "series4": "#444FB1",
+      "series5": "#5C31D6",
+      "forecast": "#9161C9",
+      "positive": "#168A60",
+      "attention": "#C98200",
+      "critical": "#C43D57"
+    }
+  },
+  "gradient": {
+    "brand": "linear-gradient(135deg, #40BCDF 0%, #2FA1DD 34%, #444FB1 67%, #5C31D6 100%)",
+    "subtle": "linear-gradient(135deg, rgba(64,188,223,0.12) 0%, rgba(92,49,214,0.10) 100%)"
+  },
+  "typography": {
+    "fontFamily": {
+      "ui": "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "display": "Poppins, Inter, system-ui, sans-serif"
+    },
+    "fontWeight": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "fontSize": {
+      "xs": "12px",
+      "sm": "14px",
+      "md": "16px",
+      "lg": "18px",
+      "xl": "20px",
+      "2xl": "24px",
+      "3xl": "30px",
+      "4xl": "36px",
+      "display": "48px"
+    },
+    "lineHeight": {
+      "tight": 1.2,
+      "heading": 1.3,
+      "body": 1.5,
+      "relaxed": 1.65
+    }
+  },
+  "spacing": {
+    "0": "0px",
+    "1": "4px",
+    "2": "8px",
+    "3": "12px",
+    "4": "16px",
+    "5": "20px",
+    "6": "24px",
+    "8": "32px",
+    "10": "40px",
+    "12": "48px",
+    "16": "64px"
+  },
+  "radius": {
+    "sm": "6px",
+    "md": "10px",
+    "lg": "12px",
+    "xl": "16px",
+    "pill": "999px"
+  },
+  "shadow": {
+    "sm": "0 1px 2px rgba(12, 35, 90, 0.06)",
+    "md": "0 6px 18px rgba(12, 35, 90, 0.08)",
+    "lg": "0 16px 40px rgba(12, 35, 90, 0.12)",
+    "focus": "0 0 0 3px rgba(92, 49, 214, 0.22)"
+  },
+  "motion": {
+    "durationFast": "150ms",
+    "durationDefault": "200ms",
+    "durationSlow": "250ms",
+    "easing": "cubic-bezier(0.2, 0, 0, 1)"
+  },
+  "layout": {
+    "gridUnit": "8px",
+    "contentMaxWidth": "1440px",
+    "sidebarWidth": "256px",
+    "headerHeight": "64px",
+    "cardPadding": "24px",
+    "lightSurfaceShare": "70-80%",
+    "structuralColorShare": "15-20%",
+    "accentColorShare": "5-10%"
+  },
+  "component": {
+    "button": {
+      "heightSm": "32px",
+      "heightMd": "40px",
+      "heightLg": "48px",
+      "radius": "10px"
+    },
+    "input": {
+      "height": "40px",
+      "radius": "10px"
+    },
+    "table": {
+      "rowHeightCompact": "44px",
+      "rowHeightDefault": "52px"
+    },
+    "logo": {
+      "desktopHeaderWidth": "180-220px",
+      "loginWidth": "240-360px",
+      "minimumRecommendedWidth": "160px",
+      "preferredBackground": "#FFFFFF"
+    }
+  }
+}
