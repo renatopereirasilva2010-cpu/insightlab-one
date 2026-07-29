@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -80,7 +81,22 @@ export function AppSidebar({ user }: { user: SessionUser }) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="px-2 py-1.5 text-sm font-semibold">InsightLab One</div>
+        <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center">
+          <div className="bg-white rounded-md p-1 shrink-0 group-data-[collapsible=icon]:hidden">
+            <Image
+              src="/brand/insightlab-logo-original.png"
+              alt="InsightLab"
+              width={96}
+              height={64}
+              className="h-6 w-auto"
+              priority
+              unoptimized
+            />
+          </div>
+          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">
+            InsightLab One
+          </span>
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
