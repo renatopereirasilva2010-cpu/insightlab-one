@@ -45,4 +45,8 @@ export class UpdateBusinessSettingsDto {
   @IsOptional()
   @IsBoolean()
   allowCommissionManualRelease?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  commissionReleaseAllowDeferred?: boolean;
 }

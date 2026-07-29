@@ -15,6 +15,14 @@ export enum UpdateProfessionalStatus {
   INACTIVE = 'INACTIVE',
 }
 
+export enum UpdatePayoutPixKeyType {
+  CPF = 'CPF',
+  CNPJ = 'CNPJ',
+  EMAIL = 'EMAIL',
+  PHONE = 'PHONE',
+  RANDOM = 'RANDOM',
+}
+
 export class UpdateProfessionalDto {
   @IsOptional()
   @IsString()
@@ -49,4 +57,13 @@ export class UpdateProfessionalDto {
   @IsOptional()
   @IsBoolean()
   onlineBookingEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  payoutPixKey?: string;
+
+  @IsOptional()
+  @IsEnum(UpdatePayoutPixKeyType)
+  payoutPixKeyType?: UpdatePayoutPixKeyType;
 }

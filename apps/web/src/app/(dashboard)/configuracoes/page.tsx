@@ -95,6 +95,14 @@ export default async function ConfiguracoesPage() {
                   </CardTitle>
                 </CardHeader>
               </Card>
+              <Card>
+                <CardHeader>
+                  <CardDescription>Liberar comissão com pagamento a prazo</CardDescription>
+                  <CardTitle className="text-lg">
+                    {settings.commissionReleaseAllowDeferred ? "Permitido" : "Não permitido"}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
             </div>
           )}
         </TabsContent>

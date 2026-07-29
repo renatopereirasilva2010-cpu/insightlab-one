@@ -4,6 +4,8 @@ import { BlockCommissionDto } from './dto/block-commission.dto';
 import { CancelCommissionDto } from './dto/cancel-commission.dto';
 import { GenerateCommissionDto } from './dto/generate-commission.dto';
 import { ReleaseCommissionDto } from './dto/release-commission.dto';
+import { MarkPayoutPaidDto } from './dto/mark-payout-paid.dto';
+import { MarkPayoutFailedDto } from './dto/mark-payout-failed.dto';
 
 @Injectable()
 export class CommissionsService {
@@ -110,7 +112,10 @@ export class CommissionsService {
     const commissionAmount =
       Math.round(dto.baseAmount * Number(professional.commissionRate)) / 100;
 
-    const hasPaidPayment = item.sale.payments.some((p) => p.status === 'PAID');
+    const allowDeferred = settings?.commissionReleaseAllowDeferred ?? false;
+    const hasEligiblePayment = item.sale.payments.some(
+      (p) => p.status === 'PAID' || (allowDeferred && p.isDeferred && p.status === 'PENDING'),
+    );
     const releaseMode = settings?.commissionReleaseMode ?? 'ON_PAYMENT';
 
     let status: 'PENDING' | 'RELEASED' | 'BLOCKED' = 'PENDING';
@@ -119,7 +124,7 @@ export class CommissionsService {
     if (releaseMode === 'IMMEDIATE') {
       status = 'RELEASED';
       releasedAt = new Date();
-    } else if (releaseMode === 'ON_PAYMENT' && hasPaidPayment) {
+    } else if (releaseMode === 'ON_PAYMENT' && hasEligiblePayment) {
       status = 'RELEASED';
       releasedAt = new Date();
     }
@@ -137,6 +142,18 @@ export class CommissionsService {
         status: status as any,
         releasedAt,
         notes: dto.notes,
+        ...(status === 'RELEASED'
+          ? {
+              payout: {
+                create: {
+                  tenantId,
+                  unitId,
+                  professionalId: item.professionalId,
+                  amount: commissionAmount,
+                },
+              },
+            }
+          : {}),
       },
     });
   }
@@ -144,6 +161,7 @@ export class CommissionsService {
   async release(tenantId: string, commissionId: string, dto: ReleaseCommissionDto) {
     const commission = await this.prisma.commission.findFirst({
       where: { id: commissionId, tenantId },
+      include: { payout: true },
     });
 
     if (!commission) {
@@ -180,6 +198,18 @@ export class CommissionsService {
         releasedManually: true,
         releasedAt: new Date(),
         notes: dto.notes ? `${commission.notes ?? ''}\n[LIBERAÇÃO] ${dto.notes}`.trim() : commission.notes,
+        ...(commission.payout
+          ? {}
+          : {
+              payout: {
+                create: {
+                  tenantId,
+                  unitId: commission.unitId,
+                  professionalId: commission.professionalId,
+                  amount: commission.commissionAmount,
+                },
+              },
+            }),
       },
     });
   }
@@ -264,5 +294,104 @@ export class CommissionsService {
         notes: dto.notes ? `${commission.notes ?? ''}\n[CANCELAMENTO] ${dto.notes}`.trim() : commission.notes,
       },
     });
+  }
+
+  findPayouts(tenantId: string) {
+    return this.prisma.commissionPayout.findMany({
+      where: { tenantId },
+      include: { professional: true, commission: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOwnPayouts(tenantId: string, professionalId: string | null) {
+    if (!professionalId) {
+      throw new BadRequestException({
+        code: 'USER_WITHOUT_LINKED_PROFESSIONAL',
+        title: 'Conta sem profissional vinculado',
+        message: 'Sua conta de acesso não está vinculada a um cadastro de profissional.',
+        recommendedAction: 'Peça para um administrador vincular sua conta a um profissional em Usuários.',
+      });
+    }
+
+    return this.prisma.commissionPayout.findMany({
+      where: { tenantId, professionalId },
+      include: { commission: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async markPayoutPaid(tenantId: string, payoutId: string, dto: MarkPayoutPaidDto) {
+    const payout = await this.findOwnedPayout(tenantId, payoutId);
+
+    if (payout.status === 'PAID') {
+      throw new BadRequestException({
+        code: 'PAYOUT_ALREADY_PAID',
+        title: 'Repasse já pago',
+        message: 'Este repasse já foi marcado como pago anteriormente.',
+        recommendedAction: 'Atualize a tela antes de tentar novamente.',
+      });
+    }
+
+    if (payout.status === 'CANCELED') {
+      throw new BadRequestException({
+        code: 'PAYOUT_CANCELED',
+        title: 'Repasse cancelado',
+        message: 'Não é possível marcar como pago um repasse cancelado.',
+        recommendedAction: 'Revise o histórico antes de tentar novamente.',
+      });
+    }
+
+    return this.prisma.commissionPayout.update({
+      where: { id: payout.id },
+      data: {
+        status: 'PAID',
+        paidAt: new Date(),
+        method: dto.method ?? payout.method,
+        providerReference: dto.providerReference,
+        errorCode: null,
+        errorMessage: null,
+        notes: dto.notes ? `${payout.notes ?? ''}\n[PAGO] ${dto.notes}`.trim() : payout.notes,
+      },
+    });
+  }
+
+  async markPayoutFailed(tenantId: string, payoutId: string, dto: MarkPayoutFailedDto) {
+    const payout = await this.findOwnedPayout(tenantId, payoutId);
+
+    if (payout.status === 'PAID') {
+      throw new BadRequestException({
+        code: 'PAYOUT_ALREADY_PAID',
+        title: 'Repasse já pago',
+        message: 'Não é possível marcar como falho um repasse já pago.',
+        recommendedAction: 'Revise o histórico antes de tentar novamente.',
+      });
+    }
+
+    return this.prisma.commissionPayout.update({
+      where: { id: payout.id },
+      data: {
+        status: 'FAILED',
+        errorCode: dto.errorCode,
+        errorMessage: dto.errorMessage,
+      },
+    });
+  }
+
+  private async findOwnedPayout(tenantId: string, payoutId: string) {
+    const payout = await this.prisma.commissionPayout.findFirst({
+      where: { id: payoutId, tenantId },
+    });
+
+    if (!payout) {
+      throw new NotFoundException({
+        code: 'PAYOUT_NOT_FOUND',
+        title: 'Repasse não encontrado',
+        message: 'Não encontramos o repasse informado.',
+        recommendedAction: 'Atualize a tela e tente novamente.',
+      });
+    }
+
+    return payout;
   }
 }

@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth";
+import { verifySession, hasPermission } from "@/lib/auth";
 import { apiFetch, ApiError } from "@/lib/api";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
@@ -6,12 +6,15 @@ import {
   StatusBadge,
   commissionStatusLabels,
   commissionStatusVariants,
+  payoutStatusLabels,
+  payoutStatusVariants,
+  payoutMethodLabels,
 } from "@/components/status-badge";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import type { Commission, Client } from "@/lib/api-types";
+import type { Commission, CommissionPayout, Client } from "@/lib/api-types";
 
 export default async function MinhasComissoesPage() {
-  await verifySession();
+  const user = await verifySession();
 
   let commissions: Commission[] = [];
   let errorMessage: string | null = null;
@@ -23,6 +26,15 @@ export default async function MinhasComissoesPage() {
       err instanceof ApiError
         ? err.message
         : "Não foi possível carregar seu extrato de comissão.";
+  }
+
+  let payouts: CommissionPayout[] = [];
+  if (hasPermission(user, "commission-payouts.read-own")) {
+    try {
+      payouts = await apiFetch<CommissionPayout[]>("/v1/commissions/payouts/me");
+    } catch {
+      payouts = [];
+    }
   }
 
   const { items: clients } = await safeList<Client>("/v1/clients");
@@ -90,6 +102,38 @@ export default async function MinhasComissoesPage() {
               { header: "Criada em", cell: (c) => formatDateTime(c.createdAt) },
             ]}
           />
+
+          {hasPermission(user, "commission-payouts.read-own") && (
+            <div className="space-y-3">
+              <div>
+                <h2 className="text-lg font-semibold">Meus repasses</h2>
+                <p className="text-muted-foreground text-sm">
+                  Status do pagamento da sua comissão liberada.
+                </p>
+              </div>
+
+              <DataTable<CommissionPayout>
+                rows={payouts}
+                rowKey={(p) => p.id}
+                emptyMessage="Nenhum repasse gerado ainda."
+                columns={[
+                  { header: "Valor", cell: (p) => formatCurrency(p.amount) },
+                  { header: "Método", cell: (p) => payoutMethodLabels[p.method] ?? p.method },
+                  {
+                    header: "Status",
+                    cell: (p) => (
+                      <StatusBadge
+                        status={p.status}
+                        labels={payoutStatusLabels}
+                        variants={payoutStatusVariants}
+                      />
+                    ),
+                  },
+                  { header: "Criado em", cell: (p) => formatDateTime(p.createdAt) },
+                ]}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

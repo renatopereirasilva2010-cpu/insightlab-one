@@ -48,6 +48,7 @@ export class BusinessSettingsService {
         allowDeferredPayment: dto.allowDeferredPayment,
         commissionReleaseMode: dto.commissionReleaseMode,
         allowCommissionManualRelease: dto.allowCommissionManualRelease,
+        commissionReleaseAllowDeferred: dto.commissionReleaseAllowDeferred,
       },
     });
   }

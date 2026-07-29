@@ -5,10 +5,14 @@ import {
   StatusBadge,
   commissionStatusLabels,
   commissionStatusVariants,
+  payoutStatusLabels,
+  payoutStatusVariants,
+  payoutMethodLabels,
 } from "@/components/status-badge";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import type {
   Commission,
+  CommissionPayout,
   Sale,
   Professional,
   Client,
@@ -17,6 +21,7 @@ import type {
 } from "@/lib/api-types";
 import { NewCommissionButton } from "./new-commission-button";
 import { CommissionRowActions } from "./commission-row-actions";
+import { PayoutRowActions } from "./payout-row-actions";
 
 export default async function ComissoesPage() {
   const user = await verifySession();
@@ -28,6 +33,7 @@ export default async function ComissoesPage() {
     { items: clients },
     { items: services },
     { items: products },
+    { items: payouts },
   ] = await Promise.all([
     safeList<Commission>("/v1/commissions"),
     safeList<Sale>("/v1/sales"),
@@ -35,6 +41,9 @@ export default async function ComissoesPage() {
     safeList<Client>("/v1/clients"),
     safeList<ServiceCatalogItem>("/v1/services-catalog"),
     safeList<Product>("/v1/products"),
+    hasPermission(user, "commission-payouts.read")
+      ? safeList<CommissionPayout>("/v1/commissions/payouts")
+      : Promise.resolve({ items: [] as CommissionPayout[], error: undefined }),
   ]);
 
   const professionalById = new Map(professionals.map((p) => [p.id, p]));
@@ -115,6 +124,48 @@ export default async function ComissoesPage() {
           },
         ]}
       />
+
+      {hasPermission(user, "commission-payouts.read") && (
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">Repasses aos profissionais</h2>
+            <p className="text-muted-foreground text-sm">
+              Estrutura de repasse gerada automaticamente quando a comissão é liberada. Hoje o
+              pagamento é feito manualmente (PIX) e marcado aqui até a integração automática de split
+              de pagamento entrar no ar.
+            </p>
+          </div>
+
+          <DataTable<CommissionPayout>
+            rows={payouts}
+            rowKey={(p) => p.id}
+            emptyMessage="Nenhum repasse gerado ainda."
+            columns={[
+              {
+                header: "Profissional",
+                cell: (p) => p.professional?.name ?? professionalById.get(p.professionalId)?.name ?? "—",
+              },
+              { header: "Valor", cell: (p) => formatCurrency(p.amount) },
+              { header: "Método", cell: (p) => payoutMethodLabels[p.method] ?? p.method },
+              {
+                header: "Status",
+                cell: (p) => (
+                  <StatusBadge status={p.status} labels={payoutStatusLabels} variants={payoutStatusVariants} />
+                ),
+              },
+              { header: "Criado em", cell: (p) => formatDateTime(p.createdAt) },
+              {
+                header: "",
+                className: "text-right",
+                cell: (p) =>
+                  hasPermission(user, "commission-payouts.update") ? (
+                    <PayoutRowActions payout={p} />
+                  ) : null,
+              },
+            ]}
+          />
+        </div>
+      )}
     </div>
   );
 }

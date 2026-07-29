@@ -201,6 +201,209 @@ describe('CommissionsService', () => {
 
       expect(result.status).toBe('RELEASED');
     });
+
+    it('stays PENDING for a deferred, unsettled payment when commissionReleaseAllowDeferred is off', async () => {
+      const prisma = buildGeneratePrismaMock({
+        item: {
+          id: 'item-1',
+          tenantId: 't-1',
+          saleId: 'sale-1',
+          professionalId: 'prof-1',
+          totalPrice: 100,
+          sale: {
+            id: 'sale-1',
+            tenantId: 't-1',
+            payments: [{ status: 'PENDING', isDeferred: true }],
+          },
+        },
+        settings: { commissionReleaseMode: 'ON_PAYMENT', commissionReleaseAllowDeferred: false },
+      });
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.generate('t-1', null, {
+        saleItemId: 'item-1',
+        baseAmount: 100,
+      } as any);
+
+      expect(result.status).toBe('PENDING');
+      expect((result as any).payout).toBeUndefined();
+    });
+
+    it('releases a deferred, unsettled payment when commissionReleaseAllowDeferred is on', async () => {
+      const prisma = buildGeneratePrismaMock({
+        item: {
+          id: 'item-1',
+          tenantId: 't-1',
+          saleId: 'sale-1',
+          professionalId: 'prof-1',
+          totalPrice: 100,
+          sale: {
+            id: 'sale-1',
+            tenantId: 't-1',
+            payments: [{ status: 'PENDING', isDeferred: true }],
+          },
+        },
+        settings: { commissionReleaseMode: 'ON_PAYMENT', commissionReleaseAllowDeferred: true },
+      });
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.generate('t-1', 'unit-1', {
+        saleItemId: 'item-1',
+        baseAmount: 100,
+      } as any);
+
+      expect(result.status).toBe('RELEASED');
+      expect((result as any).payout.create).toEqual({
+        tenantId: 't-1',
+        unitId: 'unit-1',
+        professionalId: 'prof-1',
+        amount: 30,
+      });
+    });
+
+    it('does not attach a nested payout when the commission stays PENDING', async () => {
+      const prisma = buildGeneratePrismaMock({});
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.generate('t-1', null, {
+        saleItemId: 'item-1',
+        baseAmount: 100,
+      } as any);
+
+      expect(result.status).toBe('PENDING');
+      expect((result as any).payout).toBeUndefined();
+    });
+  });
+
+  describe('release', () => {
+    function buildReleasePrismaMock(commission: any) {
+      return {
+        commission: {
+          findFirst: jest.fn().mockResolvedValue(commission),
+          update: jest.fn().mockImplementation(({ data }) => ({ ...commission, ...data })),
+        },
+      };
+    }
+
+    it('attaches a nested payout create when the commission had none yet', async () => {
+      const commission = {
+        id: 'com-1',
+        tenantId: 't-1',
+        unitId: 'unit-1',
+        professionalId: 'prof-1',
+        commissionAmount: 42,
+        status: 'PENDING',
+        notes: null,
+        payout: null,
+      };
+      const prisma = buildReleasePrismaMock(commission);
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.release('t-1', 'com-1', {});
+
+      expect(result.status).toBe('RELEASED');
+      expect((result as any).payout.create).toEqual({
+        tenantId: 't-1',
+        unitId: 'unit-1',
+        professionalId: 'prof-1',
+        amount: 42,
+      });
+    });
+
+    it('does not duplicate a payout that already exists', async () => {
+      const commission = {
+        id: 'com-1',
+        tenantId: 't-1',
+        unitId: 'unit-1',
+        professionalId: 'prof-1',
+        commissionAmount: 42,
+        status: 'PENDING',
+        notes: null,
+        payout: { id: 'payout-1', status: 'PENDING' },
+      };
+      const prisma = buildReleasePrismaMock(commission);
+      const service = new CommissionsService(prisma as any);
+
+      const updateCall = prisma.commission.update;
+      await service.release('t-1', 'com-1', {});
+
+      const data = updateCall.mock.calls[0][0].data;
+      expect(data.payout).toBeUndefined();
+    });
+
+    it('throws NotFoundException when the commission does not exist', async () => {
+      const prisma = buildReleasePrismaMock(null);
+      const service = new CommissionsService(prisma as any);
+
+      await expect(service.release('t-1', 'missing', {})).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('payouts', () => {
+    function buildPayoutPrismaMock(payout: any) {
+      return {
+        commissionPayout: {
+          findFirst: jest.fn().mockResolvedValue(payout),
+          findMany: jest.fn().mockResolvedValue(payout ? [payout] : []),
+          update: jest.fn().mockImplementation(({ data }) => ({ ...payout, ...data })),
+        },
+      };
+    }
+
+    it('marks a PENDING payout as PAID', async () => {
+      const payout = { id: 'payout-1', tenantId: 't-1', status: 'PENDING', method: 'PIX', notes: null };
+      const prisma = buildPayoutPrismaMock(payout);
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.markPayoutPaid('t-1', 'payout-1', { providerReference: 'tx-123' });
+
+      expect(result.status).toBe('PAID');
+      expect(result.paidAt).toBeInstanceOf(Date);
+      expect(result.providerReference).toBe('tx-123');
+    });
+
+    it('rejects marking an already-paid payout as paid again', async () => {
+      const payout = { id: 'payout-1', tenantId: 't-1', status: 'PAID' };
+      const prisma = buildPayoutPrismaMock(payout);
+      const service = new CommissionsService(prisma as any);
+
+      await expect(service.markPayoutPaid('t-1', 'payout-1', {})).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects marking a canceled payout as paid', async () => {
+      const payout = { id: 'payout-1', tenantId: 't-1', status: 'CANCELED' };
+      const prisma = buildPayoutPrismaMock(payout);
+      const service = new CommissionsService(prisma as any);
+
+      await expect(service.markPayoutPaid('t-1', 'payout-1', {})).rejects.toThrow(BadRequestException);
+    });
+
+    it('marks a PENDING payout as FAILED with an error code', async () => {
+      const payout = { id: 'payout-1', tenantId: 't-1', status: 'PENDING' };
+      const prisma = buildPayoutPrismaMock(payout);
+      const service = new CommissionsService(prisma as any);
+
+      const result = await service.markPayoutFailed('t-1', 'payout-1', {
+        errorCode: 'PIX_KEY_INVALID',
+        errorMessage: 'Chave PIX inválida.',
+      });
+
+      expect(result.status).toBe('FAILED');
+      expect(result.errorCode).toBe('PIX_KEY_INVALID');
+    });
+
+    it('throws NotFoundException when the payout does not exist for the tenant', async () => {
+      const prisma = buildPayoutPrismaMock(null);
+      const service = new CommissionsService(prisma as any);
+
+      await expect(service.markPayoutPaid('t-1', 'missing', {})).rejects.toThrow(NotFoundException);
+    });
+
+    it('findOwnPayouts throws BadRequestException without a linked professional', async () => {
+      const service = new CommissionsService({} as any);
+
+      await expect(service.findOwnPayouts('t-1', null)).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('cancel', () => {

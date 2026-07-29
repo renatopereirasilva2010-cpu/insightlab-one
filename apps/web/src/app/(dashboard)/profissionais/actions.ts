@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { apiFetch } from "@/lib/api";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import type { Professional, UserListItem } from "@/lib/api-types";
+import type { PixKeyType, Professional, UserListItem } from "@/lib/api-types";
 
 export interface CreateProfessionalInput {
   name: string;
@@ -11,6 +11,8 @@ export interface CreateProfessionalInput {
   email?: string;
   roleTitle?: string;
   commissionRate?: number;
+  payoutPixKey?: string;
+  payoutPixKeyType?: PixKeyType;
 }
 
 export async function createProfessional(
@@ -19,6 +21,31 @@ export async function createProfessional(
   const result = await runAction(() =>
     apiFetch<Professional>("/v1/professionals", {
       method: "POST",
+      body: JSON.stringify(input),
+    }),
+  );
+
+  if (result.ok) revalidatePath("/profissionais");
+  return result;
+}
+
+export interface UpdateProfessionalInput {
+  name?: string;
+  phone?: string;
+  email?: string;
+  roleTitle?: string;
+  commissionRate?: number;
+  payoutPixKey?: string;
+  payoutPixKeyType?: PixKeyType;
+}
+
+export async function updateProfessional(
+  id: string,
+  input: UpdateProfessionalInput,
+): Promise<ActionResult<Professional>> {
+  const result = await runAction(() =>
+    apiFetch<Professional>(`/v1/professionals/${id}`, {
+      method: "PATCH",
       body: JSON.stringify(input),
     }),
   );

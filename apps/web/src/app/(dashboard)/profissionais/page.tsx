@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/format";
 import type { Professional, UserListItem } from "@/lib/api-types";
 import { NewProfessionalButton } from "./new-professional-button";
 import { LinkAccountButton } from "./link-account-button";
+import { EditProfessionalButton } from "./edit-professional-button";
 
 export default async function ProfissionaisPage() {
   const user = await verifySession();
@@ -66,10 +67,16 @@ export default async function ProfissionaisPage() {
           {
             header: "",
             className: "text-right",
-            cell: (p) =>
-              hasPermission(user, "users.update") ? (
-                <LinkAccountButton professional={p} users={users} />
-              ) : null,
+            cell: (p) => (
+              <div className="flex justify-end gap-1">
+                {hasPermission(user, "users.update") && (
+                  <LinkAccountButton professional={p} users={users} />
+                )}
+                {hasPermission(user, "professionals.update") && (
+                  <EditProfessionalButton professional={p} />
+                )}
+              </div>
+            ),
           },
         ]}
       />

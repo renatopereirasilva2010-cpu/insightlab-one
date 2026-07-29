@@ -1,4 +1,12 @@
-import { IsEmail, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsEmail, IsEnum, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+
+export enum PayoutPixKeyTypeInput {
+  CPF = 'CPF',
+  CNPJ = 'CNPJ',
+  EMAIL = 'EMAIL',
+  PHONE = 'PHONE',
+  RANDOM = 'RANDOM',
+}
 
 export class CreateProfessionalDto {
   @IsString()
@@ -25,4 +33,13 @@ export class CreateProfessionalDto {
   @Min(0)
   @Max(100)
   commissionRate?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  payoutPixKey?: string;
+
+  @IsOptional()
+  @IsEnum(PayoutPixKeyTypeInput)
+  payoutPixKeyType?: PayoutPixKeyTypeInput;
 }

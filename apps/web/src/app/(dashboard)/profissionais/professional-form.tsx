@@ -9,6 +9,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Form,
   FormControl,
   FormField,
@@ -16,7 +23,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { createProfessional } from "./actions";
+import type { Professional } from "@/lib/api-types";
+import { createProfessional, updateProfessional } from "./actions";
+
+const NONE = "__none__";
+
+const pixKeyTypeLabels: Record<string, string> = {
+  CPF: "CPF",
+  CNPJ: "CNPJ",
+  EMAIL: "E-mail",
+  PHONE: "Telefone",
+  RANDOM: "Chave aleatória",
+};
 
 const professionalSchema = z.object({
   name: z.string().min(1, "Informe o nome.").max(150),
@@ -24,39 +42,65 @@ const professionalSchema = z.object({
   phone: z.string().max(30).optional().or(z.literal("")),
   email: z.string().email("E-mail inválido.").max(150).optional().or(z.literal("")),
   commissionRate: z.coerce.number().min(0).max(100).optional(),
+  payoutPixKey: z.string().max(150).optional().or(z.literal("")),
+  payoutPixKeyType: z.string(),
 });
 
 type ProfessionalInput = z.input<typeof professionalSchema>;
 type ProfessionalValues = z.output<typeof professionalSchema>;
 
-export function ProfessionalForm({ onSuccess }: { onSuccess: () => void }) {
+export function ProfessionalForm({
+  existing,
+  onSuccess,
+}: {
+  /** Quando presente, o formulario edita este profissional em vez de criar um novo. */
+  existing?: Professional;
+  onSuccess: () => void;
+}) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ProfessionalInput, unknown, ProfessionalValues>({
     resolver: zodResolver(professionalSchema),
-    defaultValues: { name: "", roleTitle: "", phone: "", email: "", commissionRate: undefined },
+    defaultValues: {
+      name: existing?.name ?? "",
+      roleTitle: existing?.roleTitle ?? "",
+      phone: existing?.phone ?? "",
+      email: existing?.email ?? "",
+      commissionRate: existing?.commissionRate ?? undefined,
+      payoutPixKey: existing?.payoutPixKey ?? "",
+      payoutPixKeyType: existing?.payoutPixKeyType ?? NONE,
+    },
   });
 
   async function onSubmit(values: ProfessionalValues) {
     setServerError(null);
     setIsSubmitting(true);
     try {
-      const result = await createProfessional({
+      const payload = {
         name: values.name,
         roleTitle: values.roleTitle || undefined,
         phone: values.phone || undefined,
         email: values.email || undefined,
         commissionRate: values.commissionRate,
-      });
+        payoutPixKey: values.payoutPixKey || undefined,
+        payoutPixKeyType:
+          values.payoutPixKeyType === NONE
+            ? undefined
+            : (values.payoutPixKeyType as Professional["payoutPixKeyType"] & string),
+      };
+
+      const result = existing
+        ? await updateProfessional(existing.id, payload)
+        : await createProfessional(payload);
 
       if (!result.ok) {
         setServerError(result.message);
         return;
       }
 
-      toast.success("Profissional cadastrado.");
+      toast.success(existing ? "Profissional atualizado." : "Profissional cadastrado.");
       form.reset();
       router.refresh();
       onSuccess();
@@ -148,6 +192,48 @@ export function ProfessionalForm({ onSuccess }: { onSuccess: () => void }) {
           )}
         />
 
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="payoutPixKey"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Chave PIX para repasse</FormLabel>
+                <FormControl>
+                  <Input placeholder="Opcional" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="payoutPixKeyType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo da chave</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Não informado</SelectItem>
+                    {Object.entries(pixKeyTypeLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         {serverError && (
           <p className="text-destructive text-sm" role="alert">
             {serverError}
@@ -155,7 +241,11 @@ export function ProfessionalForm({ onSuccess }: { onSuccess: () => void }) {
         )}
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Salvando..." : "Cadastrar profissional"}
+          {isSubmitting
+            ? "Salvando..."
+            : existing
+              ? "Salvar alterações"
+              : "Cadastrar profissional"}
         </Button>
       </form>
     </Form>

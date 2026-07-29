@@ -24,6 +24,8 @@ export class ProfessionalsService {
         email: dto.email,
         roleTitle: dto.roleTitle,
         commissionRate: dto.commissionRate,
+        payoutPixKey: dto.payoutPixKey,
+        payoutPixKeyType: dto.payoutPixKeyType,
       },
     });
   }
@@ -52,6 +54,8 @@ export class ProfessionalsService {
         commissionRate: dto.commissionRate,
         status: dto.status,
         onlineBookingEnabled: dto.onlineBookingEnabled,
+        payoutPixKey: dto.payoutPixKey,
+        payoutPixKeyType: dto.payoutPixKeyType,
       },
     });
   }
