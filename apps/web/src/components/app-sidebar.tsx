@@ -9,6 +9,7 @@ import {
   UserRound,
   Scissors,
   Package,
+  Boxes,
   ShoppingCart,
   Wallet,
   Banknote,
@@ -18,6 +19,9 @@ import {
   LogOut,
   Receipt,
   LayoutDashboard,
+  MessageCircle,
+  ShieldCheck,
+  CircleHelp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +46,7 @@ const navItems = [
   { href: "/caixa", label: "Caixa", icon: Banknote },
   { href: "/comissoes", label: "Comissões", icon: Percent },
   { href: "/fiscal", label: "Documentos Fiscais", icon: FileText },
+  { href: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
 ];
 
 const cadastrosItems = [
@@ -49,10 +54,13 @@ const cadastrosItems = [
   { href: "/profissionais", label: "Profissionais", icon: UserRound },
   { href: "/servicos", label: "Serviços", icon: Scissors },
   { href: "/produtos", label: "Produtos", icon: Package },
+  { href: "/estoque", label: "Estoque", icon: Boxes },
 ];
 
 const configItems = [
   { href: "/configuracoes", label: "Configurações", icon: Settings },
+  { href: "/lgpd", label: "LGPD", icon: ShieldCheck },
+  { href: "/ajuda", label: "Ajuda", icon: CircleHelp },
 ];
 
 export function AppSidebar({ user }: { user: SessionUser }) {

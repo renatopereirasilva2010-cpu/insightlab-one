@@ -136,3 +136,53 @@ export const paymentMethodLabels: Record<string, string> = {
   BANK_TRANSFER: "Transferência",
   DEFERRED: "A prazo",
 };
+
+export const payoutStatusLabels: Record<string, string> = {
+  PENDING: "Pendente",
+  SCHEDULED: "Agendado",
+  PAID: "Pago",
+  FAILED: "Falhou",
+  CANCELED: "Cancelado",
+};
+
+export const payoutStatusVariants: Record<string, BadgeVariant> = {
+  PENDING: "outline",
+  SCHEDULED: "default",
+  PAID: "secondary",
+  FAILED: "destructive",
+  CANCELED: "destructive",
+};
+
+export const payoutMethodLabels: Record<string, string> = {
+  PIX: "Pix",
+  BANK_TRANSFER: "Transferência",
+  MANUAL: "Manual",
+};
+
+export const whatsAppMessageStatusLabels: Record<string, string> = {
+  PENDING: "Enviando",
+  SENT: "Enviada",
+  FAILED: "Falhou",
+  SKIPPED: "Pulada (sem credencial)",
+};
+
+export const whatsAppMessageStatusVariants: Record<string, BadgeVariant> = {
+  PENDING: "outline",
+  SENT: "secondary",
+  FAILED: "destructive",
+  SKIPPED: "outline",
+};
+
+export const dataSubjectRequestStatusLabels: Record<string, string> = {
+  OPEN: "Aberta",
+  IN_PROGRESS: "Em andamento",
+  RESOLVED: "Resolvida",
+  REJECTED: "Rejeitada",
+};
+
+export const dataSubjectRequestStatusVariants: Record<string, BadgeVariant> = {
+  OPEN: "outline",
+  IN_PROGRESS: "default",
+  RESOLVED: "secondary",
+  REJECTED: "destructive",
+};

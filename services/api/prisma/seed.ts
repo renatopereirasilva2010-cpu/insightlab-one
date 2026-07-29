@@ -41,6 +41,7 @@ const permissions = [
   { code: 'appointments.create', name: 'Create appointments', module: 'appointments' },
   { code: 'appointments.no_show', name: 'No Show appointments', module: 'appointments' },
   { code: 'appointments.read', name: 'Read appointments', module: 'appointments' },
+  { code: 'appointments.update', name: 'Update appointments', module: 'appointments' },
   { code: 'attendances.cancel', name: 'Cancel attendances', module: 'attendances' },
   { code: 'attendances.create', name: 'Create attendances', module: 'attendances' },
   { code: 'attendances.finish', name: 'Finish attendances', module: 'attendances' },
@@ -55,6 +56,9 @@ const permissions = [
   { code: 'commissions.read', name: 'Read commissions', module: 'commissions' },
   { code: 'commissions.read-own', name: 'Read own commissions', module: 'commissions' },
   { code: 'commissions.release', name: 'Release commissions', module: 'commissions' },
+  { code: 'commission-payouts.read', name: 'Read commission payouts', module: 'commissions' },
+  { code: 'commission-payouts.read-own', name: 'Read own commission payouts', module: 'commissions' },
+  { code: 'commission-payouts.update', name: 'Update commission payouts', module: 'commissions' },
   { code: 'payments.create', name: 'Create payments', module: 'payments' },
   { code: 'payments.read', name: 'Read payments', module: 'payments' },
   { code: 'payments.receive', name: 'Receive payments', module: 'payments' },
@@ -74,8 +78,15 @@ const permissions = [
   { code: 'services.update', name: 'Update services', module: 'services' },
   { code: 'supplies.create', name: 'Create supplies', module: 'supplies' },
   { code: 'supplies.read', name: 'Read supplies', module: 'supplies' },
+  { code: 'supplies.update', name: 'Update supplies', module: 'supplies' },
+  { code: 'supplies.movements.create', name: 'Register supply movements', module: 'supplies' },
+  { code: 'supplies.movements.read', name: 'Read supply movement history', module: 'supplies' },
   { code: 'unit-conversions.create', name: 'Create unit conversions', module: 'unit-conversions' },
   { code: 'unit-conversions.read', name: 'Read unit conversions', module: 'unit-conversions' },
+  { code: 'whatsapp.read', name: 'Read WhatsApp message history', module: 'whatsapp' },
+  { code: 'whatsapp.resend', name: 'Resend a WhatsApp message', module: 'whatsapp' },
+  { code: 'data-subject-requests.read', name: 'Read LGPD data subject requests', module: 'legal' },
+  { code: 'data-subject-requests.update', name: 'Resolve LGPD data subject requests', module: 'legal' },
 ];
 
 async function main() {
@@ -211,7 +222,12 @@ async function main() {
 
   // Papel profissional - login somente-leitura escopado à própria comissão
   // (governance/insightlab-one-onda3-benchmark-revisao-backlog.md, ONDA 3 FASE 1).
-  const professionalPermissionCodes = ['auth.login', 'auth.refresh', 'commissions.read-own'];
+  const professionalPermissionCodes = [
+    'auth.login',
+    'auth.refresh',
+    'commissions.read-own',
+    'commission-payouts.read-own',
+  ];
   const professionalPermissions = await prisma.permission.findMany({
     where: { code: { in: professionalPermissionCodes } },
   });
@@ -267,6 +283,39 @@ async function main() {
     where: { userId_roleId: { userId: professionalUser.id, roleId: professionalRole.id } },
     update: {},
     create: { userId: professionalUser.id, roleId: professionalRole.id },
+  });
+
+  await prisma.legalDocument.upsert({
+    where: { type_version: { type: 'TERMS_OF_USE', version: 'v1' } },
+    update: {},
+    create: {
+      type: 'TERMS_OF_USE',
+      version: 'v1',
+      title: 'Termos de Uso do InsightLab One',
+      content:
+        '[RASCUNHO — pendente de revisão jurídica antes de valer como termo definitivo]\n\n' +
+        'Ao usar o InsightLab One, você concorda em utilizar a plataforma exclusivamente para a gestão ' +
+        'do seu negócio (agenda, atendimento, vendas, pagamentos, comissões e módulos correlatos), ' +
+        'respeitando a legislação aplicável, incluindo a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018). ' +
+        'Você é responsável pela veracidade dos dados inseridos e pelo controle de acesso da sua equipe ao sistema.',
+    },
+  });
+
+  await prisma.legalDocument.upsert({
+    where: { type_version: { type: 'PRIVACY_POLICY', version: 'v1' } },
+    update: {},
+    create: {
+      type: 'PRIVACY_POLICY',
+      version: 'v1',
+      title: 'Política de Privacidade do InsightLab One',
+      content:
+        '[RASCUNHO — pendente de revisão jurídica antes de valer como política definitiva]\n\n' +
+        'Coletamos os dados pessoais necessários para operar sua agenda e atendimento (nome, telefone, ' +
+        'e-mail e histórico de serviços), com base no seu consentimento e/ou na execução do contrato de ' +
+        'prestação de serviço. Você (titular dos dados) pode solicitar acesso, correção, portabilidade, ' +
+        'exclusão ou revogação de consentimento a qualquer momento pelo canal de solicitações do titular. ' +
+        'Não compartilhamos seus dados com terceiros fora do necessário para operar o serviço contratado.',
+    },
   });
 
   console.log('Seed concluído com sucesso.');

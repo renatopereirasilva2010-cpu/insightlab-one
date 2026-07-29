@@ -15,35 +15,40 @@ model Tenant {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  units             Unit[]
-  users             User[]
-  roles             Role[]
-  settings          BusinessSettings?
-  auditLogs         AuditLog[]
-  clients           Client[]
-  professionals     Professional[]
-  serviceCategories ServiceCategory[]
-  servicesCatalog   ServiceCatalog[]
-  productCategories ProductCategory[]
-  products          Product[]
-  supplyCategories  SupplyCategory[]
-  supplies          SupplyItem[]
-  resources         OperationalResource[]
-  unitConversions   UnitConversion[]
-  appointments      Appointment[]
-  availabilities    ProfessionalAvailability[]
-  appointmentBlocks AppointmentBlock[]
-  attendances       Attendance[]
-  sales             Sale[]
-  saleItems         SaleItem[]
-  payments          Payment[]
-  cashRegisters     CashRegister[]
-  commissions       Commission[]
-  subscription      TenantSubscription?
-  entitlements      FeatureEntitlement[]
-  healthSnapshots   TenantHealthSnapshot[]
-  migrationJobs     MigrationJob[]
-  fiscalDocuments   FiscalDocument[]
+  units               Unit[]
+  users               User[]
+  roles               Role[]
+  settings            BusinessSettings?
+  auditLogs           AuditLog[]
+  consentRecords      ConsentRecord[]
+  dataSubjectRequests DataSubjectRequest[]
+  clients             Client[]
+  professionals       Professional[]
+  serviceCategories   ServiceCategory[]
+  servicesCatalog     ServiceCatalog[]
+  productCategories   ProductCategory[]
+  products            Product[]
+  supplyCategories    SupplyCategory[]
+  supplies            SupplyItem[]
+  supplyMovements     SupplyMovement[]
+  resources           OperationalResource[]
+  unitConversions     UnitConversion[]
+  appointments        Appointment[]
+  availabilities      ProfessionalAvailability[]
+  appointmentBlocks   AppointmentBlock[]
+  whatsAppMessages    WhatsAppMessage[]
+  attendances         Attendance[]
+  sales               Sale[]
+  saleItems           SaleItem[]
+  payments            Payment[]
+  cashRegisters       CashRegister[]
+  commissions         Commission[]
+  commissionPayouts   CommissionPayout[]
+  subscription        TenantSubscription?
+  entitlements        FeatureEntitlement[]
+  healthSnapshots     TenantHealthSnapshot[]
+  migrationJobs       MigrationJob[]
+  fiscalDocuments     FiscalDocument[]
 }
 
 model MigrationJob {
@@ -182,16 +187,19 @@ model Unit {
   servicesCatalog   ServiceCatalog[]
   products          Product[]
   supplies          SupplyItem[]
+  supplyMovements   SupplyMovement[]
   resources         OperationalResource[]
   appointments      Appointment[]
   availabilities    ProfessionalAvailability[]
   appointmentBlocks AppointmentBlock[]
+  whatsAppMessages  WhatsAppMessage[]
   attendances       Attendance[]
   sales             Sale[]
   saleItems         SaleItem[]
   payments          Payment[]
   cashRegisters     CashRegister[]
   commissions       Commission[]
+  commissionPayouts CommissionPayout[]
   fiscalDocuments   FiscalDocument[]
 
   @@index([tenantId])
@@ -276,18 +284,20 @@ model RolePermission {
 }
 
 model BusinessSettings {
-  id                           String                @id @default(cuid())
-  tenantId                     String                @unique
-  timezone                     String                @default("America/Sao_Paulo")
-  currency                     String                @default("BRL")
-  cancelPolicyHours            Int                   @default(24)
-  lateToleranceMinutes         Int                   @default(10)
-  deferredPaymentLabel         String                @default("Pagamento diferido")
-  allowDeferredPayment         Boolean               @default(true)
-  commissionReleaseMode        CommissionReleaseMode @default(ON_PAYMENT)
-  allowCommissionManualRelease Boolean               @default(true)
-  createdAt                    DateTime              @default(now())
-  updatedAt                    DateTime              @updatedAt
+  id                             String                @id @default(cuid())
+  tenantId                       String                @unique
+  timezone                       String                @default("America/Sao_Paulo")
+  currency                       String                @default("BRL")
+  cancelPolicyHours              Int                   @default(24)
+  lateToleranceMinutes           Int                   @default(10)
+  deferredPaymentLabel           String                @default("Pagamento diferido")
+  allowDeferredPayment           Boolean               @default(true)
+  commissionReleaseMode          CommissionReleaseMode @default(ON_PAYMENT)
+  allowCommissionManualRelease   Boolean               @default(true)
+  /// Quando true, um pagamento a prazo (isDeferred) ja e suficiente pra liberar a comissao no modo ON_PAYMENT, sem esperar a quitacao.
+  commissionReleaseAllowDeferred Boolean               @default(false)
+  createdAt                      DateTime              @default(now())
+  updatedAt                      DateTime              @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 }
@@ -313,6 +323,61 @@ model AuditLog {
   @@index([userId])
 }
 
+model LegalDocument {
+  id          String            @id @default(cuid())
+  type        LegalDocumentType
+  version     String
+  title       String
+  content     String
+  active      Boolean           @default(true)
+  publishedAt DateTime          @default(now())
+  createdAt   DateTime          @default(now())
+
+  consents ConsentRecord[]
+
+  @@unique([type, version])
+  @@index([type, active])
+}
+
+model ConsentRecord {
+  id              String             @id @default(cuid())
+  tenantId        String
+  subjectType     ConsentSubjectType
+  subjectId       String
+  legalDocumentId String
+  ipAddress       String?
+  userAgent       String?
+  acceptedAt      DateTime           @default(now())
+  revokedAt       DateTime?
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+  legalDocument LegalDocument @relation(fields: [legalDocumentId], references: [id])
+
+  @@index([tenantId])
+  @@index([subjectType, subjectId])
+  @@index([legalDocumentId])
+}
+
+model DataSubjectRequest {
+  id               String                   @id @default(cuid())
+  tenantId         String
+  subjectType      ConsentSubjectType
+  subjectId        String?
+  requesterName    String
+  requesterContact String
+  requestType      DataSubjectRequestType
+  description      String?
+  status           DataSubjectRequestStatus @default(OPEN)
+  resolutionNotes  String?
+  requestedAt      DateTime                 @default(now())
+  resolvedAt       DateTime?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([status])
+}
+
 model Client {
   id                      String       @id @default(cuid())
   tenantId                String
@@ -331,11 +396,12 @@ model Client {
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id])
-  unit         Unit?         @relation(fields: [unitId], references: [id])
-  appointments Appointment[]
-  attendances  Attendance[]
-  sales        Sale[]
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  unit             Unit?             @relation(fields: [unitId], references: [id])
+  appointments     Appointment[]
+  attendances      Attendance[]
+  sales            Sale[]
+  whatsAppMessages WhatsAppMessage[]
 
   @@index([tenantId])
   @@index([unitId])
@@ -355,19 +421,22 @@ model Professional {
   commissionRate       Decimal?           @db.Decimal(5, 2)
   status               ProfessionalStatus @default(ACTIVE)
   onlineBookingEnabled Boolean            @default(true)
+  payoutPixKey         String?
+  payoutPixKeyType     PixKeyType?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
-  tenant         Tenant                     @relation(fields: [tenantId], references: [id])
-  unit           Unit?                      @relation(fields: [unitId], references: [id])
-  appointments   Appointment[]
-  availabilities ProfessionalAvailability[]
-  blocks         AppointmentBlock[]
-  attendances    Attendance[]
-  sales          Sale[]
-  saleItems      SaleItem[]
-  commissions    Commission[]
-  user           User?
+  tenant            Tenant                     @relation(fields: [tenantId], references: [id])
+  unit              Unit?                      @relation(fields: [unitId], references: [id])
+  appointments      Appointment[]
+  availabilities    ProfessionalAvailability[]
+  blocks            AppointmentBlock[]
+  attendances       Attendance[]
+  sales             Sale[]
+  saleItems         SaleItem[]
+  commissions       Commission[]
+  commissionPayouts CommissionPayout[]
+  user              User?
 
   @@index([tenantId])
   @@index([unitId])
@@ -495,6 +564,7 @@ model SupplyItem {
   unit        Unit?            @relation(fields: [unitId], references: [id])
   category    SupplyCategory?  @relation(fields: [categoryId], references: [id])
   conversions UnitConversion[]
+  movements   SupplyMovement[]
 
   @@index([tenantId])
   @@index([unitId])
@@ -541,6 +611,33 @@ model UnitConversion {
   @@index([supplyItemId])
 }
 
+model SupplyMovement {
+  id                String             @id @default(cuid())
+  tenantId          String
+  unitId            String?
+  supplyItemId      String
+  type              SupplyMovementType
+  /// Quantidade lançada na unidade informada em `unit` (pode ser fracionária).
+  quantity          Decimal            @db.Decimal(12, 4)
+  /// Unidade em que a quantidade foi lançada (baseUnit ou operationalUnit do insumo).
+  unit              String
+  /// Quantidade já convertida para o baseUnit do insumo - o que efetivamente ajusta o estoque.
+  baseQuantity      Decimal            @db.Decimal(12, 4)
+  reason            String?
+  referenceType     String?
+  referenceId       String?
+  performedByUserId String?
+  createdAt         DateTime           @default(now())
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
+  unitRef    Unit?      @relation(fields: [unitId], references: [id])
+  supplyItem SupplyItem @relation(fields: [supplyItemId], references: [id])
+
+  @@index([tenantId])
+  @@index([supplyItemId])
+  @@index([createdAt])
+}
+
 model Appointment {
   id                 String             @id @default(cuid())
   tenantId           String
@@ -563,13 +660,14 @@ model Appointment {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  tenant       Tenant               @relation(fields: [tenantId], references: [id])
-  unit         Unit?                @relation(fields: [unitId], references: [id])
-  client       Client               @relation(fields: [clientId], references: [id])
-  professional Professional?        @relation(fields: [professionalId], references: [id])
-  service      ServiceCatalog       @relation(fields: [serviceId], references: [id])
-  resource     OperationalResource? @relation(fields: [resourceId], references: [id])
-  attendance   Attendance?
+  tenant           Tenant               @relation(fields: [tenantId], references: [id])
+  unit             Unit?                @relation(fields: [unitId], references: [id])
+  client           Client               @relation(fields: [clientId], references: [id])
+  professional     Professional?        @relation(fields: [professionalId], references: [id])
+  service          ServiceCatalog       @relation(fields: [serviceId], references: [id])
+  resource         OperationalResource? @relation(fields: [resourceId], references: [id])
+  attendance       Attendance?
+  whatsAppMessages WhatsAppMessage[]
 
   @@index([tenantId])
   @@index([unitId])
@@ -625,6 +723,32 @@ model AppointmentBlock {
   @@index([professionalId])
   @@index([resourceId])
   @@index([startsAt])
+}
+
+model WhatsAppMessage {
+  id                String                @id @default(cuid())
+  tenantId          String
+  unitId            String?
+  appointmentId     String?
+  clientId          String?
+  toPhone           String
+  templateName      String
+  status            WhatsAppMessageStatus @default(PENDING)
+  providerMessageId String?
+  errorCode         String?
+  errorMessage      String?
+  sentAt            DateTime?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  unit        Unit?        @relation(fields: [unitId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  client      Client?      @relation(fields: [clientId], references: [id])
+
+  @@index([tenantId])
+  @@index([appointmentId])
+  @@index([status])
 }
 
 model Attendance {
@@ -692,20 +816,20 @@ model Sale {
 }
 
 model SaleItem {
-  id          String       @id @default(cuid())
-  tenantId    String
-  unitId      String?
-  saleId      String
-  itemType    SaleItemType
+  id             String       @id @default(cuid())
+  tenantId       String
+  unitId         String?
+  saleId         String
+  itemType       SaleItemType
   serviceId      String?
   productId      String?
   professionalId String?
-  description String?
-  quantity    Decimal      @default(1) @db.Decimal(10, 3)
-  unitPrice   Decimal      @db.Decimal(10, 2)
-  totalPrice  Decimal      @db.Decimal(10, 2)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  description    String?
+  quantity       Decimal      @default(1) @db.Decimal(10, 3)
+  unitPrice      Decimal      @db.Decimal(10, 2)
+  totalPrice     Decimal      @db.Decimal(10, 2)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   tenant       Tenant          @relation(fields: [tenantId], references: [id])
   unit         Unit?           @relation(fields: [unitId], references: [id])
@@ -798,15 +922,47 @@ model Commission {
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
 
-  tenant       Tenant       @relation(fields: [tenantId], references: [id])
-  unit         Unit?        @relation(fields: [unitId], references: [id])
-  sale         Sale         @relation(fields: [saleId], references: [id])
-  saleItem     SaleItem?    @relation(fields: [saleItemId], references: [id])
-  professional Professional @relation(fields: [professionalId], references: [id])
+  tenant       Tenant            @relation(fields: [tenantId], references: [id])
+  unit         Unit?             @relation(fields: [unitId], references: [id])
+  sale         Sale              @relation(fields: [saleId], references: [id])
+  saleItem     SaleItem?         @relation(fields: [saleItemId], references: [id])
+  professional Professional      @relation(fields: [professionalId], references: [id])
+  payout       CommissionPayout?
 
   @@index([tenantId])
   @@index([unitId])
   @@index([saleId])
+  @@index([professionalId])
+  @@index([status])
+}
+
+model CommissionPayout {
+  id                String       @id @default(cuid())
+  tenantId          String
+  unitId            String?
+  professionalId    String
+  commissionId      String       @unique
+  amount            Decimal      @db.Decimal(10, 2)
+  method            PayoutMethod @default(PIX)
+  status            PayoutStatus @default(PENDING)
+  /// null = repasse manual (transferencia feita fora do sistema); futuramente: "ASAAS" etc.
+  provider          String?
+  providerReference String?
+  scheduledFor      DateTime?
+  paidAt            DateTime?
+  errorCode         String?
+  errorMessage      String?
+  notes             String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  unit         Unit?        @relation(fields: [unitId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+  commission   Commission   @relation(fields: [commissionId], references: [id])
+
+  @@index([tenantId])
+  @@index([unitId])
   @@index([professionalId])
   @@index([status])
 }
@@ -834,6 +990,7 @@ model FiscalDocument {
   unit   Unit?                 @relation(fields: [unitId], references: [id])
   events FiscalDocumentEvent[]
 
+  @@unique([tenantId, sourceType, sourceId, documentType])
   @@index([tenantId])
   @@index([unitId])
   @@index([sourceType, sourceId])
@@ -841,7 +998,6 @@ model FiscalDocument {
   @@index([status])
   @@index([referenceNumber])
   @@index([accessKey])
-  @@unique([tenantId, sourceType, sourceId, documentType])
 }
 
 model FiscalDocumentEvent {
@@ -867,6 +1023,13 @@ enum TenantStatus {
 enum UnitStatus {
   ACTIVE
   INACTIVE
+}
+
+enum SupplyMovementType {
+  ENTRY
+  SALE_CONSUMPTION
+  INTERNAL_USE
+  ADJUSTMENT
 }
 
 enum UserStatus {
@@ -964,6 +1127,60 @@ enum CommissionReleaseMode {
   ON_PAYMENT
   MANUAL
   IMMEDIATE
+}
+
+enum LegalDocumentType {
+  TERMS_OF_USE
+  PRIVACY_POLICY
+}
+
+enum ConsentSubjectType {
+  USER
+  CLIENT
+}
+
+enum DataSubjectRequestType {
+  ACCESS
+  CORRECTION
+  DELETION
+  PORTABILITY
+  CONSENT_REVOCATION
+}
+
+enum DataSubjectRequestStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum WhatsAppMessageStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum PixKeyType {
+  CPF
+  CNPJ
+  EMAIL
+  PHONE
+  RANDOM
+}
+
+enum PayoutMethod {
+  PIX
+  BANK_TRANSFER
+  MANUAL
+}
+
+enum PayoutStatus {
+  PENDING
+  SCHEDULED
+  PAID
+  FAILED
+  CANCELED
 }
 
 enum BillingStatus {

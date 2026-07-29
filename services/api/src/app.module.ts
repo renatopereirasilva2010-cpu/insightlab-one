@@ -33,6 +33,8 @@ import { BillingAdminModule } from './modules/billing-admin/billing-admin.module
 import { FeatureEntitlementsModule } from './modules/feature-entitlements/feature-entitlements.module';
 import { FiscalDocumentsModule } from './modules/fiscal-documents/fiscal-documents.module';
 import { PublicBookingModule } from './modules/public-booking/public-booking.module';
+import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
+import { LegalModule } from './modules/legal/legal.module';
 
 @Module({
   controllers: [AppController],
@@ -70,6 +72,8 @@ import { PublicBookingModule } from './modules/public-booking/public-booking.mod
     FeatureEntitlementsModule,
     FiscalDocumentsModule,
     PublicBookingModule,
+    WhatsAppModule,
+    LegalModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

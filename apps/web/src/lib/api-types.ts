@@ -189,6 +189,7 @@ export interface Commission {
   notes: string | null;
   professional?: Professional;
   sale?: Sale;
+  payout?: CommissionPayout;
   createdAt: string;
   updatedAt: string;
 }
@@ -211,6 +212,8 @@ export interface Client {
 
 export type ProfessionalStatus = "ACTIVE" | "INACTIVE";
 
+export type PixKeyType = "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM";
+
 export interface Professional {
   id: string;
   tenantId: string;
@@ -222,6 +225,8 @@ export interface Professional {
   commissionRate: number | null;
   status: ProfessionalStatus;
   onlineBookingEnabled: boolean;
+  payoutPixKey: string | null;
+  payoutPixKeyType: PixKeyType | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -262,6 +267,42 @@ export interface Product {
   status: GenericStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SupplyItem {
+  id: string;
+  tenantId: string;
+  unitId: string | null;
+  categoryId: string | null;
+  name: string;
+  sku: string | null;
+  description: string | null;
+  baseUnit: string;
+  operationalUnit: string | null;
+  unitCost: number | null;
+  stockQuantity: number | null;
+  minStock: number | null;
+  status: GenericStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SupplyMovementType = "ENTRY" | "SALE_CONSUMPTION" | "INTERNAL_USE" | "ADJUSTMENT";
+
+export interface SupplyMovement {
+  id: string;
+  tenantId: string;
+  unitId: string | null;
+  supplyItemId: string;
+  type: SupplyMovementType;
+  quantity: number;
+  unit: string;
+  baseQuantity: number;
+  reason: string | null;
+  referenceType: string | null;
+  referenceId: string | null;
+  performedByUserId: string | null;
+  createdAt: string;
 }
 
 export type FiscalDocumentSourceType = "SALE" | "PAYMENT" | "MANUAL";
@@ -305,6 +346,25 @@ export interface FiscalDocument {
   updatedAt: string;
 }
 
+export type WhatsAppMessageStatus = "PENDING" | "SENT" | "FAILED" | "SKIPPED";
+
+export interface WhatsAppMessage {
+  id: string;
+  tenantId: string;
+  unitId: string | null;
+  appointmentId: string | null;
+  clientId: string | null;
+  toPhone: string;
+  templateName: string;
+  status: WhatsAppMessageStatus;
+  providerMessageId: string | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  sentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type UserStatus = "ACTIVE" | "INACTIVE" | "BLOCKED";
 
 export interface UserListItem {
@@ -342,6 +402,32 @@ export interface BusinessSettings {
   allowDeferredPayment: boolean;
   commissionReleaseMode: CommissionReleaseMode;
   allowCommissionManualRelease: boolean;
+  commissionReleaseAllowDeferred: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PayoutMethod = "PIX" | "BANK_TRANSFER" | "MANUAL";
+export type PayoutStatus = "PENDING" | "SCHEDULED" | "PAID" | "FAILED" | "CANCELED";
+
+export interface CommissionPayout {
+  id: string;
+  tenantId: string;
+  unitId: string | null;
+  professionalId: string;
+  commissionId: string;
+  amount: number;
+  method: PayoutMethod;
+  status: PayoutStatus;
+  provider: string | null;
+  providerReference: string | null;
+  scheduledFor: string | null;
+  paidAt: string | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  notes: string | null;
+  professional?: Professional;
+  commission?: Commission;
   createdAt: string;
   updatedAt: string;
 }
@@ -365,4 +451,45 @@ export interface ApiErrorBody {
   message: string;
   recommendedAction: string;
   traceId: string | null;
+}
+
+export type LegalDocumentType = "TERMS_OF_USE" | "PRIVACY_POLICY";
+
+export interface LegalDocument {
+  id: string;
+  type: LegalDocumentType;
+  version: string;
+  title: string;
+  content: string;
+  active: boolean;
+  publishedAt: string;
+  createdAt: string;
+}
+
+export interface OwnConsentStatus {
+  termsOfUse: { id: string; version: string; accepted: boolean } | null;
+  privacyPolicy: { id: string; version: string; accepted: boolean } | null;
+}
+
+export type DataSubjectRequestType =
+  | "ACCESS"
+  | "CORRECTION"
+  | "DELETION"
+  | "PORTABILITY"
+  | "CONSENT_REVOCATION";
+export type DataSubjectRequestStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "REJECTED";
+
+export interface DataSubjectRequest {
+  id: string;
+  tenantId: string;
+  subjectType: "USER" | "CLIENT";
+  subjectId: string | null;
+  requesterName: string;
+  requesterContact: string;
+  requestType: DataSubjectRequestType;
+  description: string | null;
+  status: DataSubjectRequestStatus;
+  resolutionNotes: string | null;
+  requestedAt: string;
+  resolvedAt: string | null;
 }

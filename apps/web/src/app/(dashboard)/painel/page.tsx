@@ -1,4 +1,5 @@
-import { verifySession } from "@/lib/auth";
+import { verifySession, hasPermission } from "@/lib/auth";
+import { apiFetch, ApiError } from "@/lib/api";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +14,20 @@ import type {
   CashRegister,
   Professional,
   ServiceCatalogItem,
+  UserListItem,
+  BusinessSettings,
 } from "@/lib/api-types";
 import { DormantClientsPanel } from "./dormant-clients-panel";
+import { QuickStartGuide, type QuickStartStep } from "./quick-start-guide";
+
+async function fetchBusinessSettings(): Promise<BusinessSettings | null> {
+  try {
+    return await apiFetch<BusinessSettings>("/v1/business-settings");
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 404 || err.status === 403)) return null;
+    throw err;
+  }
+}
 
 function isToday(value: string | null): boolean {
   if (!value) return false;
@@ -28,7 +41,8 @@ function isToday(value: string | null): boolean {
 }
 
 export default async function PainelPage() {
-  await verifySession();
+  const user = await verifySession();
+  const isAdmin = hasPermission(user, "roles.read");
 
   const [
     { items: clients },
@@ -40,6 +54,8 @@ export default async function PainelPage() {
     { items: cashRegisters },
     { items: professionals },
     { items: services },
+    { items: users },
+    businessSettings,
   ] = await Promise.all([
     safeList<Client>("/v1/clients"),
     safeList<Appointment>("/v1/appointments"),
@@ -50,7 +66,47 @@ export default async function PainelPage() {
     safeList<CashRegister>("/v1/cash-register"),
     safeList<Professional>("/v1/professionals"),
     safeList<ServiceCatalogItem>("/v1/services-catalog"),
+    isAdmin ? safeList<UserListItem>("/v1/users") : Promise.resolve({ items: [] as UserListItem[] }),
+    isAdmin ? fetchBusinessSettings() : Promise.resolve(null),
   ]);
+
+  const quickStartSteps: QuickStartStep[] = [
+    {
+      key: "business-settings",
+      label: "Configurar dados do negócio",
+      description: "Fuso horário, moeda, política de cancelamento e liberação de comissão.",
+      href: "/configuracoes",
+      done: Boolean(businessSettings),
+    },
+    {
+      key: "professionals",
+      label: "Cadastrar profissionais",
+      description: "Equipe que vai atender e receber comissão.",
+      href: "/profissionais",
+      done: professionals.length > 0,
+    },
+    {
+      key: "services",
+      label: "Cadastrar serviços",
+      description: "Catálogo de serviços com duração e preço.",
+      href: "/servicos",
+      done: services.length > 0,
+    },
+    {
+      key: "clients",
+      label: "Cadastrar clientes",
+      description: "Pode crescer aos poucos com o uso — não precisa importar tudo de uma vez.",
+      href: "/clientes",
+      done: clients.length > 0,
+    },
+    {
+      key: "team-access",
+      label: "Dar acesso à equipe",
+      description: "Crie logins para recepção e profissionais além do seu.",
+      href: "/configuracoes",
+      done: users.length > 1,
+    },
+  ];
 
   const professionalById = new Map(professionals.map((p) => [p.id, p]));
   const serviceById = new Map(services.map((s) => [s.id, s]));
@@ -111,6 +167,8 @@ export default async function PainelPage() {
         <h1 className="text-2xl font-semibold">Painel</h1>
         <p className="text-muted-foreground">Resumo do dia e clientes que precisam de atenção.</p>
       </div>
+
+      {isAdmin && <QuickStartGuide steps={quickStartSteps} />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
