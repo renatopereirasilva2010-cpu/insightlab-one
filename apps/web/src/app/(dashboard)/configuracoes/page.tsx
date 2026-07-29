@@ -6,8 +6,12 @@ import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/compo
 import { formatDate } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { BusinessSettings, UserListItem, Role } from "@/lib/api-types";
+import type { BusinessSettings, UserListItem, Role, Permission } from "@/lib/api-types";
 import { EditSettingsButton } from "./edit-settings-button";
+import { NewUserButton } from "./new-user-button";
+import { UserRowActions } from "./user-row-actions";
+import { NewRoleButton } from "./new-role-button";
+import { ManageRoleButton } from "./manage-role-button";
 
 const RELEASE_MODE_LABELS: Record<string, string> = {
   ON_PAYMENT: "Ao pagamento",
@@ -27,10 +31,13 @@ async function fetchBusinessSettings(): Promise<BusinessSettings | null> {
 export default async function ConfiguracoesPage() {
   const user = await verifySession();
 
-  const [settings, { items: users }, { items: roles }] = await Promise.all([
+  const [settings, { items: users }, { items: roles }, { items: permissions }] = await Promise.all([
     hasPermission(user, "settings.read") ? fetchBusinessSettings() : Promise.resolve(null),
     safeList<UserListItem>("/v1/users"),
     safeList<Role>("/v1/roles"),
+    hasPermission(user, "roles.assign")
+      ? safeList<Permission>("/v1/permissions")
+      : Promise.resolve({ items: [] as Permission[] }),
   ]);
 
   return (
@@ -113,11 +120,17 @@ export default async function ConfiguracoesPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="users">
+        <TabsContent value="users" className="space-y-4">
+          {hasPermission(user, "users.create") && (
+            <div className="flex justify-end">
+              <NewUserButton />
+            </div>
+          )}
           <DataTable<UserListItem>
             rows={users}
             rowKey={(u) => u.id}
             emptyMessage="Nenhum usuário encontrado."
+            emptyAction={hasPermission(user, "users.create") ? <NewUserButton /> : undefined}
             columns={[
               { header: "Nome", cell: (u) => u.name },
               { header: "E-mail", cell: (u) => u.email },
@@ -132,19 +145,39 @@ export default async function ConfiguracoesPage() {
                 ),
               },
               { header: "Criado em", cell: (u) => formatDate(u.createdAt) },
+              {
+                header: "",
+                className: "text-right",
+                cell: (u) =>
+                  hasPermission(user, "users.update") ? <UserRowActions user={u} /> : null,
+              },
             ]}
           />
         </TabsContent>
 
-        <TabsContent value="roles">
+        <TabsContent value="roles" className="space-y-4">
+          {hasPermission(user, "roles.assign") && (
+            <div className="flex justify-end">
+              <NewRoleButton />
+            </div>
+          )}
           <DataTable<Role>
             rows={roles}
             rowKey={(r) => r.id}
             emptyMessage="Nenhum papel encontrado."
+            emptyAction={hasPermission(user, "roles.assign") ? <NewRoleButton /> : undefined}
             columns={[
               { header: "Código", cell: (r) => r.code },
               { header: "Nome", cell: (r) => r.name },
               { header: "Descrição", cell: (r) => r.description ?? "—" },
+              {
+                header: "",
+                className: "text-right",
+                cell: (r) =>
+                  hasPermission(user, "roles.assign") ? (
+                    <ManageRoleButton role={r} permissions={permissions} users={users} />
+                  ) : null,
+              },
             ]}
           />
         </TabsContent>

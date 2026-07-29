@@ -16,7 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { createProduct } from "./actions";
+import type { Product } from "@/lib/api-types";
+import { createProduct, updateProduct } from "./actions";
 
 const productSchema = z.object({
   name: z.string().min(1, "Informe o nome.").max(150),
@@ -28,33 +29,49 @@ const productSchema = z.object({
 type ProductInput = z.input<typeof productSchema>;
 type ProductValues = z.output<typeof productSchema>;
 
-export function ProductForm({ onSuccess }: { onSuccess: () => void }) {
+export function ProductForm({
+  existing,
+  onSuccess,
+}: {
+  /** Quando presente, o formulario edita este produto em vez de criar um novo. */
+  existing?: Product;
+  onSuccess: () => void;
+}) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ProductInput, unknown, ProductValues>({
     resolver: zodResolver(productSchema),
-    defaultValues: { name: "", sku: "", salePrice: 0, cost: undefined },
+    defaultValues: {
+      name: existing?.name ?? "",
+      sku: existing?.sku ?? "",
+      salePrice: existing?.salePrice ?? 0,
+      cost: existing?.cost ?? undefined,
+    },
   });
 
   async function onSubmit(values: ProductValues) {
     setServerError(null);
     setIsSubmitting(true);
     try {
-      const result = await createProduct({
+      const payload = {
         name: values.name,
         sku: values.sku || undefined,
         salePrice: values.salePrice,
         cost: values.cost,
-      });
+      };
+
+      const result = existing
+        ? await updateProduct(existing.id, payload)
+        : await createProduct(payload);
 
       if (!result.ok) {
         setServerError(result.message);
         return;
       }
 
-      toast.success("Produto cadastrado.");
+      toast.success(existing ? "Produto atualizado." : "Produto cadastrado.");
       form.reset();
       router.refresh();
       onSuccess();
@@ -143,7 +160,11 @@ export function ProductForm({ onSuccess }: { onSuccess: () => void }) {
         )}
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Salvando..." : "Cadastrar produto"}
+          {isSubmitting
+            ? "Salvando..."
+            : existing
+              ? "Salvar alterações"
+              : "Cadastrar produto"}
         </Button>
       </form>
     </Form>

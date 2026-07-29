@@ -5,6 +5,7 @@ import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/compo
 import { formatCurrency } from "@/lib/format";
 import type { Product } from "@/lib/api-types";
 import { NewProductButton } from "./new-product-button";
+import { EditProductButton } from "./edit-product-button";
 
 export default async function ProdutosPage() {
   const user = await verifySession();
@@ -45,6 +46,12 @@ export default async function ProdutosPage() {
                 variants={genericStatusVariants}
               />
             ),
+          },
+          {
+            header: "",
+            className: "text-right",
+            cell: (p) =>
+              hasPermission(user, "products.update") ? <EditProductButton product={p} /> : null,
           },
         ]}
       />

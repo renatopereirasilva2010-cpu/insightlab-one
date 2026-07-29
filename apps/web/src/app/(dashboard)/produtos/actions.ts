@@ -25,3 +25,25 @@ export async function createProduct(
   if (result.ok) revalidatePath("/produtos");
   return result;
 }
+
+export interface UpdateProductInput {
+  name?: string;
+  sku?: string;
+  salePrice?: number;
+  cost?: number;
+}
+
+export async function updateProduct(
+  id: string,
+  input: UpdateProductInput,
+): Promise<ActionResult<Product>> {
+  const result = await runAction(() =>
+    apiFetch<Product>(`/v1/products/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  );
+
+  if (result.ok) revalidatePath("/produtos");
+  return result;
+}

@@ -26,3 +26,29 @@ export async function createClient(
   if (result.ok) revalidatePath("/clientes");
   return result;
 }
+
+export interface UpdateClientInput {
+  name?: string;
+  phone?: string;
+  email?: string;
+  socialName?: string;
+  source?: string;
+}
+
+export async function updateClient(
+  id: string,
+  input: UpdateClientInput,
+): Promise<ActionResult<Client>> {
+  const result = await runAction(() =>
+    apiFetch<Client>(`/v1/clients/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  );
+
+  if (result.ok) {
+    revalidatePath("/clientes");
+    revalidatePath(`/clientes/${id}`);
+  }
+  return result;
+}

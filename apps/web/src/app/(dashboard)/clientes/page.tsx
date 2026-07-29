@@ -6,6 +6,7 @@ import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/compo
 import { formatDate } from "@/lib/format";
 import type { Client } from "@/lib/api-types";
 import { NewClientButton } from "./new-client-button";
+import { EditClientButton } from "./edit-client-button";
 
 export default async function ClientesPage() {
   const user = await verifySession();
@@ -58,6 +59,12 @@ export default async function ClientesPage() {
             ),
           },
           { header: "Cadastrado em", cell: (c) => formatDate(c.createdAt) },
+          {
+            header: "",
+            className: "text-right",
+            cell: (c) =>
+              hasPermission(user, "clients.update") ? <EditClientButton client={c} /> : null,
+          },
         ]}
       />
     </div>

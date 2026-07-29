@@ -30,6 +30,30 @@ export async function createService(
   return result;
 }
 
+export interface UpdateServiceInput {
+  name?: string;
+  description?: string;
+  durationMinutes?: number;
+  price?: number;
+  availableOnline?: boolean;
+  status?: "ACTIVE" | "INACTIVE";
+}
+
+export async function updateService(
+  id: string,
+  input: UpdateServiceInput,
+): Promise<ActionResult<ServiceCatalogItem>> {
+  const result = await runAction(() =>
+    apiFetch<ServiceCatalogItem>(`/v1/services-catalog/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  );
+
+  if (result.ok) revalidatePath("/servicos");
+  return result;
+}
+
 export interface UpdateServiceFiscalInput {
   cnaeCode?: string;
   serviceListItemCode?: string;

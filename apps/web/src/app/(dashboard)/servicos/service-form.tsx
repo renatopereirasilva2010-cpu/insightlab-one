@@ -19,7 +19,8 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { createService } from "./actions";
+import type { ServiceCatalogItem } from "@/lib/api-types";
+import { createService, updateService } from "./actions";
 
 const serviceSchema = z.object({
   name: z.string().min(1, "Informe o nome.").max(150),
@@ -39,7 +40,16 @@ const serviceSchema = z.object({
 type ServiceInput = z.input<typeof serviceSchema>;
 type ServiceValues = z.output<typeof serviceSchema>;
 
-export function ServiceForm({ onSuccess }: { onSuccess: () => void }) {
+export function ServiceForm({
+  existing,
+  onSuccess,
+}: {
+  /** Quando presente, o formulario edita este servico em vez de criar um novo.
+   * CNAE, item da lista de servicos e aliquota de ISS continuam exclusivos do
+   * dialogo "Fiscal" - o endpoint geral de update nao aceita esses campos. */
+  existing?: ServiceCatalogItem;
+  onSuccess: () => void;
+}) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,14 +57,14 @@ export function ServiceForm({ onSuccess }: { onSuccess: () => void }) {
   const form = useForm<ServiceInput, unknown, ServiceValues>({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      durationMinutes: 30,
-      price: 0,
-      cnaeCode: "",
-      serviceListItemCode: "",
-      issRate: undefined,
-      availableOnline: true,
+      name: existing?.name ?? "",
+      description: existing?.description ?? "",
+      durationMinutes: existing?.durationMinutes ?? 30,
+      price: existing?.price ?? 0,
+      cnaeCode: existing?.cnaeCode ?? "",
+      serviceListItemCode: existing?.serviceListItemCode ?? "",
+      issRate: existing?.issRate ?? undefined,
+      availableOnline: existing?.availableOnline ?? true,
     },
   });
 
@@ -62,23 +72,31 @@ export function ServiceForm({ onSuccess }: { onSuccess: () => void }) {
     setServerError(null);
     setIsSubmitting(true);
     try {
-      const result = await createService({
-        name: values.name,
-        description: values.description || undefined,
-        durationMinutes: values.durationMinutes,
-        price: values.price,
-        cnaeCode: values.cnaeCode || undefined,
-        serviceListItemCode: values.serviceListItemCode || undefined,
-        issRate: values.issRate,
-        availableOnline: values.availableOnline,
-      });
+      const result = existing
+        ? await updateService(existing.id, {
+            name: values.name,
+            description: values.description || undefined,
+            durationMinutes: values.durationMinutes,
+            price: values.price,
+            availableOnline: values.availableOnline,
+          })
+        : await createService({
+            name: values.name,
+            description: values.description || undefined,
+            durationMinutes: values.durationMinutes,
+            price: values.price,
+            cnaeCode: values.cnaeCode || undefined,
+            serviceListItemCode: values.serviceListItemCode || undefined,
+            issRate: values.issRate,
+            availableOnline: values.availableOnline,
+          });
 
       if (!result.ok) {
         setServerError(result.message);
         return;
       }
 
-      toast.success("Serviço cadastrado.");
+      toast.success(existing ? "Serviço atualizado." : "Serviço cadastrado.");
       form.reset();
       router.refresh();
       onSuccess();
@@ -159,56 +177,60 @@ export function ServiceForm({ onSuccess }: { onSuccess: () => void }) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="cnaeCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>CNAE</FormLabel>
-                <FormControl>
-                  <Input placeholder="7 dígitos" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {!existing && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="cnaeCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNAE</FormLabel>
+                    <FormControl>
+                      <Input placeholder="7 dígitos" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="issRate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Alíquota ISS (%)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step="0.01"
-                    {...field}
-                    value={(field.value as number | string | undefined) ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+              <FormField
+                control={form.control}
+                name="issRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alíquota ISS (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="0.01"
+                        {...field}
+                        value={(field.value as number | string | undefined) ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        <FormField
-          control={form.control}
-          name="serviceListItemCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Item da lista de serviços</FormLabel>
-              <FormControl>
-                <Input placeholder="Opcional" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="serviceListItemCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Item da lista de serviços</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Opcional" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
 
         <FormField
           control={form.control}
@@ -226,6 +248,12 @@ export function ServiceForm({ onSuccess }: { onSuccess: () => void }) {
           )}
         />
 
+        {existing && (
+          <p className="text-muted-foreground text-xs">
+            CNAE, item da lista de serviços e alíquota de ISS ficam no botão &quot;Fiscal&quot;.
+          </p>
+        )}
+
         {serverError && (
           <p className="text-destructive text-sm" role="alert">
             {serverError}
@@ -233,7 +261,11 @@ export function ServiceForm({ onSuccess }: { onSuccess: () => void }) {
         )}
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Salvando..." : "Cadastrar serviço"}
+          {isSubmitting
+            ? "Salvando..."
+            : existing
+              ? "Salvar alterações"
+              : "Cadastrar serviço"}
         </Button>
       </form>
     </Form>

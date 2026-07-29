@@ -16,64 +16,63 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import type { Client } from "@/lib/api-types";
-import { createClient, updateClient } from "./actions";
+import type { UserListItem } from "@/lib/api-types";
+import { createUser, updateUser } from "./user-actions";
 
-const clientSchema = z.object({
+const userSchema = z.object({
   name: z.string().min(1, "Informe o nome.").max(150),
+  email: z.string().email("E-mail inválido.").max(150),
+  password: z.string().min(8, "Mínimo 8 caracteres.").or(z.literal("")),
   phone: z.string().max(30).optional().or(z.literal("")),
-  email: z.string().email("E-mail inválido.").max(150).optional().or(z.literal("")),
-  socialName: z.string().max(150).optional().or(z.literal("")),
-  source: z.string().max(100).optional().or(z.literal("")),
 });
 
-type ClientValues = z.infer<typeof clientSchema>;
+type UserValues = z.infer<typeof userSchema>;
 
-export function ClientForm({
+export function UserForm({
   existing,
   onSuccess,
 }: {
-  /** Quando presente, o formulario edita este cliente em vez de criar um novo. */
-  existing?: Client;
+  /** Quando presente, o formulario edita este usuario em vez de criar um novo.
+   * E-mail e senha nao sao editaveis por aqui - apenas na criacao. */
+  existing?: UserListItem;
   onSuccess: () => void;
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<ClientValues>({
-    resolver: zodResolver(clientSchema),
+  const form = useForm<UserValues>({
+    resolver: zodResolver(userSchema),
     defaultValues: {
       name: existing?.name ?? "",
-      phone: existing?.phone ?? "",
       email: existing?.email ?? "",
-      socialName: existing?.socialName ?? "",
-      source: existing?.source ?? "",
+      password: "",
+      phone: "",
     },
   });
 
-  async function onSubmit(values: ClientValues) {
+  async function onSubmit(values: UserValues) {
     setServerError(null);
     setIsSubmitting(true);
     try {
-      const payload = {
-        name: values.name,
-        phone: values.phone || undefined,
-        email: values.email || undefined,
-        socialName: values.socialName || undefined,
-        source: values.source || undefined,
-      };
-
       const result = existing
-        ? await updateClient(existing.id, payload)
-        : await createClient(payload);
+        ? await updateUser(existing.id, {
+            name: values.name,
+            phone: values.phone || undefined,
+          })
+        : await createUser({
+            name: values.name,
+            email: values.email,
+            password: values.password,
+            phone: values.phone || undefined,
+          });
 
       if (!result.ok) {
         setServerError(result.message);
         return;
       }
 
-      toast.success(existing ? "Cliente atualizado." : "Cliente cadastrado.");
+      toast.success(existing ? "Usuário atualizado." : "Usuário cadastrado.");
       form.reset();
       router.refresh();
       onSuccess();
@@ -101,56 +100,42 @@ export function ClientForm({
 
         <FormField
           control={form.control}
-          name="socialName"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome social</FormLabel>
+              <FormLabel>E-mail</FormLabel>
               <FormControl>
-                <Input placeholder="Opcional" {...field} />
+                <Input type="email" placeholder="voce@empresa.com" disabled={!!existing} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        {!existing && (
           <FormField
             control={form.control}
-            name="phone"
+            name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Telefone</FormLabel>
+                <FormLabel>Senha</FormLabel>
                 <FormControl>
-                  <Input placeholder="(11) 90000-0000" {...field} />
+                  <Input type="password" placeholder="Mínimo 8 caracteres" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>E-mail</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="Opcional" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        )}
 
         <FormField
           control={form.control}
-          name="source"
+          name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Origem</FormLabel>
+              <FormLabel>Telefone</FormLabel>
               <FormControl>
-                <Input placeholder="Ex.: Instagram, indicação" {...field} />
+                <Input placeholder="Opcional" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -168,7 +153,7 @@ export function ClientForm({
             ? "Salvando..."
             : existing
               ? "Salvar alterações"
-              : "Cadastrar cliente"}
+              : "Cadastrar usuário"}
         </Button>
       </form>
     </Form>

@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/format";
 import type { ServiceCatalogItem } from "@/lib/api-types";
 import { NewServiceButton } from "./new-service-button";
 import { EditFiscalButton } from "./edit-fiscal-button";
+import { EditServiceButton } from "./edit-service-button";
 
 export default async function ServicosPage() {
   const user = await verifySession();
@@ -53,7 +54,12 @@ export default async function ServicosPage() {
             header: "",
             className: "text-right",
             cell: (s) =>
-              hasPermission(user, "services.update") ? <EditFiscalButton service={s} /> : null,
+              hasPermission(user, "services.update") ? (
+                <div className="flex justify-end gap-1">
+                  <EditServiceButton service={s} />
+                  <EditFiscalButton service={s} />
+                </div>
+              ) : null,
           },
         ]}
       />
