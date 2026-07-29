@@ -1,4 +1,4 @@
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermissionGuard } from '../src/common/guards/permission.guard';
 
@@ -45,20 +45,37 @@ describe('PermissionGuard', () => {
     const guard = buildGuard(['payments.read', 'payments.update-status']);
     const context = buildContext({ permissions: ['payments.read'] });
 
-    expect(guard.canActivate(context)).toBe(false);
+    expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
   });
 
   it('denies access when the user has none of the required permissions', () => {
     const guard = buildGuard(['payments.update-status']);
     const context = buildContext({ permissions: ['sales.read', 'clients.read'] });
 
-    expect(guard.canActivate(context)).toBe(false);
+    expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
   });
 
   it('denies access when the request has no user permissions at all', () => {
     const guard = buildGuard(['payments.read']);
     const context = buildContext(undefined);
 
-    expect(guard.canActivate(context)).toBe(false);
+    expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+  });
+
+  it('denied response carries a humanized message instead of the raw NestJS default', () => {
+    const guard = buildGuard(['payments.update-status']);
+    const context = buildContext({ permissions: [] });
+
+    try {
+      guard.canActivate(context);
+      throw new Error('expected canActivate to throw');
+    } catch (err) {
+      expect(err).toBeInstanceOf(ForbiddenException);
+      const response = (err as ForbiddenException).getResponse() as Record<string, unknown>;
+      expect(response.message).not.toBe('Forbidden resource');
+      expect(response.code).toBe('PERMISSION_DENIED');
+      expect(typeof response.title).toBe('string');
+      expect(typeof response.recommendedAction).toBe('string');
+    }
   });
 });

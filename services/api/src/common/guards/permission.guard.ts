@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { REQUIRED_PERMISSIONS_KEY } from '../decorators/required-permissions.decorator';
 
@@ -18,6 +18,16 @@ export class PermissionGuard implements CanActivate {
     const user = request.user;
     const permissions: string[] = user?.permissions ?? [];
 
-    return required.every((permission) => permissions.includes(permission));
+    const allowed = required.every((permission) => permissions.includes(permission));
+    if (!allowed) {
+      throw new ForbiddenException({
+        code: 'PERMISSION_DENIED',
+        title: 'Sem permissão',
+        message: 'Sua conta não tem permissão para acessar este recurso.',
+        recommendedAction: 'Se você acredita que deveria ter acesso, contate um administrador.',
+      });
+    }
+
+    return true;
   }
 }
