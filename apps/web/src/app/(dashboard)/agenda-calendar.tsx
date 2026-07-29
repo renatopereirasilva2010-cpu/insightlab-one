@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EntityDialog } from "@/components/entity-dialog";
@@ -268,9 +268,19 @@ function DayGrid({
   const gridHeight = totalMinutes * PX_PER_MINUTE;
   const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
 
-  const now = new Date();
-  const showNowLine = isSameDay(now, date);
-  const nowTop = ((now.getHours() * 60 + now.getMinutes()) - gridStartMinutes) * PX_PER_MINUTE;
+  // "now" só é conhecido no client (o servidor e o client hidratam em
+  // instantes diferentes) - calcular no render causa hydration mismatch.
+  // null até o primeiro effect rodar significa "não mostrar a linha ainda".
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const interval = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+  const showNowLine = now !== null && isSameDay(now, date);
+  const nowTop = now
+    ? ((now.getHours() * 60 + now.getMinutes()) - gridStartMinutes) * PX_PER_MINUTE
+    : 0;
 
   function handleColumnClick(professionalId: string | null, event: React.MouseEvent<HTMLDivElement>) {
     if (!canCreate) return;

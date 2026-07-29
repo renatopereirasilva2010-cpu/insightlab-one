@@ -134,6 +134,19 @@ export function AppointmentForm({
     form.setValue("endAt", toDatetimeLocalValue(slot.endAt), { shouldValidate: true });
   }
 
+  /** Ao trocar o serviço manualmente (fora de uma sugestão), ajusta o
+   * término pra bater com a duração do novo serviço, mantendo o início. */
+  function handleServiceChange(newServiceId: string) {
+    form.setValue("serviceId", newServiceId, { shouldValidate: true });
+    const startAtValue = form.getValues("startAt");
+    if (!startAtValue) return;
+    const service = services.find((s) => s.id === newServiceId);
+    if (!service) return;
+    const start = new Date(startAtValue);
+    const end = new Date(start.getTime() + service.durationMinutes * 60_000);
+    form.setValue("endAt", toDatetimeLocalValue(end.toISOString()), { shouldValidate: true });
+  }
+
   async function onSubmit(values: AppointmentValues) {
     setServerError(null);
     setIsSubmitting(true);
@@ -209,7 +222,7 @@ export function AppointmentForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Serviço</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={handleServiceChange}>
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o serviço" />
