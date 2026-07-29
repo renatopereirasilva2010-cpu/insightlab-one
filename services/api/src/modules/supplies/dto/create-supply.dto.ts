@@ -18,4 +18,14 @@ export class CreateSupplyDto {
   @IsNumber()
   @Min(0)
   unitCost?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  initialStock?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minStock?: number;
 }
