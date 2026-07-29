@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RequiredPermissions } from '../../common/decorators/required-permissions.decorator';
@@ -7,12 +7,17 @@ import { PermissionGuard } from '../../common/guards/permission.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { CancelAppointmentDto } from './dto/cancel-appointment.dto';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { AppointmentsService } from './appointments.service';
+import { WhatsAppService } from '../whatsapp/whatsapp.service';
 
 @Controller('v1/appointments')
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionGuard)
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    private readonly whatsAppService: WhatsAppService,
+  ) {}
 
   @Get()
   @RequiredPermissions('appointments.read')
@@ -22,12 +27,27 @@ export class AppointmentsController {
 
   @Post()
   @RequiredPermissions('appointments.create')
-  create(
+  async create(
     @CurrentTenant() tenant: { id: string },
     @CurrentUser() user: { unitId?: string | null },
     @Body() dto: CreateAppointmentDto,
   ) {
-    return this.appointmentsService.create(tenant.id, user?.unitId ?? null, dto);
+    const appointment = await this.appointmentsService.create(tenant.id, user?.unitId ?? null, dto);
+    this.whatsAppService
+      .sendAppointmentConfirmation(tenant.id, user?.unitId ?? null, appointment.id)
+      .catch(() => undefined);
+    return appointment;
+  }
+
+  @Patch(':id')
+  @RequiredPermissions('appointments.update')
+  update(
+    @CurrentTenant() tenant: { id: string },
+    @CurrentUser() user: { unitId?: string | null },
+    @Param('id') id: string,
+    @Body() dto: UpdateAppointmentDto,
+  ) {
+    return this.appointmentsService.update(tenant.id, user?.unitId ?? null, id, dto);
   }
 
   @Post(':id/cancel')

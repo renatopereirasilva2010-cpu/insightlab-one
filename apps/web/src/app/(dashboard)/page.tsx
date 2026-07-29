@@ -62,6 +62,7 @@ export default async function AgendaPage() {
         <TabsContent value="appointments" className="space-y-4">
           <AppointmentsPanel
             appointments={sortedAppointments}
+            blocks={blocks}
             clients={clients}
             professionals={professionals}
             services={services}
@@ -69,7 +70,9 @@ export default async function AgendaPage() {
             appointmentsError={appointmentsError}
             canCreate={hasPermission(user, "appointments.create")}
             canManage={
-              hasPermission(user, "appointments.cancel") || hasPermission(user, "appointments.no_show")
+              hasPermission(user, "appointments.cancel") ||
+              hasPermission(user, "appointments.no_show") ||
+              hasPermission(user, "appointments.update")
             }
           />
         </TabsContent>

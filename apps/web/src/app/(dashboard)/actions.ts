@@ -35,6 +35,31 @@ export async function createAppointment(
   return result;
 }
 
+export interface UpdateAppointmentInput {
+  clientId?: string;
+  professionalId?: string;
+  serviceId?: string;
+  resourceId?: string;
+  startAt?: string;
+  endAt?: string;
+  isOverbook?: boolean;
+  notes?: string;
+}
+
+export async function updateAppointment(
+  id: string,
+  input: UpdateAppointmentInput,
+): Promise<ActionResult<Appointment>> {
+  const result = await runAction(() =>
+    apiFetch<Appointment>(`/v1/appointments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  );
+  if (result.ok) revalidatePath("/");
+  return result;
+}
+
 export async function cancelAppointment(
   id: string,
   reason?: string,

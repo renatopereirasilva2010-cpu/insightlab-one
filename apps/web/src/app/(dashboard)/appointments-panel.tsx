@@ -16,7 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Appointment, Client, Professional, ServiceCatalogItem } from "@/lib/api-types";
+import type {
+  Appointment,
+  AppointmentBlock,
+  Client,
+  Professional,
+  ServiceCatalogItem,
+} from "@/lib/api-types";
 import { NewAppointmentButton } from "./new-appointment-button";
 import { AppointmentRowActions } from "./appointment-row-actions";
 import { AgendaCalendar } from "./agenda-calendar";
@@ -26,6 +32,7 @@ const ALL = "__all__";
 
 export function AppointmentsPanel({
   appointments,
+  blocks,
   clients,
   professionals,
   services,
@@ -35,6 +42,7 @@ export function AppointmentsPanel({
   canManage,
 }: {
   appointments: Appointment[];
+  blocks: AppointmentBlock[];
   clients: Client[];
   professionals: Professional[];
   services: ServiceCatalogItem[];
@@ -137,6 +145,7 @@ export function AppointmentsPanel({
       {viewMode === "calendar" ? (
         <AgendaCalendar
           appointments={sorted}
+          blocks={blocks}
           clients={clients}
           professionals={professionals}
           services={services}

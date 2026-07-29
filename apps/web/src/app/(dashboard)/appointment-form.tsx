@@ -25,8 +25,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import type { Client, Professional, ServiceCatalogItem, OperationalResource } from "@/lib/api-types";
-import { createAppointment, suggestAppointmentSlots } from "./actions";
+import type { Appointment, Client, Professional, ServiceCatalogItem, OperationalResource } from "@/lib/api-types";
+import { createAppointment, updateAppointment, suggestAppointmentSlots } from "./actions";
 
 const NONE = "__none__";
 
@@ -71,12 +71,22 @@ export function AppointmentForm({
   professionals,
   services,
   resources,
+  existing,
+  defaultProfessionalId,
+  defaultStartAt,
+  defaultEndAt,
   onSuccess,
 }: {
   clients: Client[];
   professionals: Professional[];
   services: ServiceCatalogItem[];
   resources: OperationalResource[];
+  /** Quando presente, o formulario edita este agendamento em vez de criar um novo. */
+  existing?: Appointment;
+  /** Prefill vindo de um clique num horario vazio do calendario (so no modo criacao). */
+  defaultProfessionalId?: string;
+  defaultStartAt?: string;
+  defaultEndAt?: string;
   onSuccess: () => void;
 }) {
   const router = useRouter();
@@ -87,15 +97,15 @@ export function AppointmentForm({
   const form = useForm<AppointmentValues>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      clientId: "",
-      professionalId: NONE,
-      serviceId: "",
-      resourceId: NONE,
-      startAt: "",
-      endAt: "",
-      isWalkIn: false,
-      isOverbook: false,
-      notes: "",
+      clientId: existing?.clientId ?? "",
+      professionalId: existing?.professionalId ?? defaultProfessionalId ?? NONE,
+      serviceId: existing?.serviceId ?? "",
+      resourceId: existing?.resourceId ?? NONE,
+      startAt: existing ? toDatetimeLocalValue(existing.startAt) : defaultStartAt ? toDatetimeLocalValue(defaultStartAt) : "",
+      endAt: existing ? toDatetimeLocalValue(existing.endAt) : defaultEndAt ? toDatetimeLocalValue(defaultEndAt) : "",
+      isWalkIn: existing?.isWalkIn ?? false,
+      isOverbook: existing?.isOverbook ?? false,
+      notes: existing?.notes ?? "",
     },
   });
 
@@ -128,24 +138,35 @@ export function AppointmentForm({
     setServerError(null);
     setIsSubmitting(true);
     try {
-      const result = await createAppointment({
-        clientId: values.clientId,
-        professionalId: values.professionalId === NONE ? undefined : values.professionalId,
-        serviceId: values.serviceId,
-        resourceId: values.resourceId === NONE ? undefined : values.resourceId,
-        startAt: new Date(values.startAt).toISOString(),
-        endAt: new Date(values.endAt).toISOString(),
-        isWalkIn: values.isWalkIn,
-        isOverbook: values.isOverbook,
-        notes: values.notes || undefined,
-      });
+      const result = existing
+        ? await updateAppointment(existing.id, {
+            clientId: values.clientId,
+            professionalId: values.professionalId === NONE ? undefined : values.professionalId,
+            serviceId: values.serviceId,
+            resourceId: values.resourceId === NONE ? undefined : values.resourceId,
+            startAt: new Date(values.startAt).toISOString(),
+            endAt: new Date(values.endAt).toISOString(),
+            isOverbook: values.isOverbook,
+            notes: values.notes || undefined,
+          })
+        : await createAppointment({
+            clientId: values.clientId,
+            professionalId: values.professionalId === NONE ? undefined : values.professionalId,
+            serviceId: values.serviceId,
+            resourceId: values.resourceId === NONE ? undefined : values.resourceId,
+            startAt: new Date(values.startAt).toISOString(),
+            endAt: new Date(values.endAt).toISOString(),
+            isWalkIn: values.isWalkIn,
+            isOverbook: values.isOverbook,
+            notes: values.notes || undefined,
+          });
 
       if (!result.ok) {
         setServerError(result.message);
         return;
       }
 
-      toast.success("Agendamento criado.");
+      toast.success(existing ? "Agendamento atualizado." : "Agendamento criado.");
       form.reset();
       router.refresh();
       onSuccess();
@@ -357,7 +378,7 @@ export function AppointmentForm({
         )}
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Salvando..." : "Criar agendamento"}
+          {isSubmitting ? "Salvando..." : existing ? "Salvar alterações" : "Criar agendamento"}
         </Button>
       </form>
     </Form>
