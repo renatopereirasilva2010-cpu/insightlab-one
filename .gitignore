@@ -44,3 +44,6 @@ backups/
 
 # logs dos servicos systemd --user (API/web sempre-up) - runtime local, nunca versionar
 .run/
+
+# fotos/logo enviados via upload (disco local, onda8) - dado de runtime, nunca versionar
+services/api/uploads/

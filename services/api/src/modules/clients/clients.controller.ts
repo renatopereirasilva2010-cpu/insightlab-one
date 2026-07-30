@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RequiredPermissions } from '../../common/decorators/required-permissions.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../common/guards/permission.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
+import { createPhotoUploadInterceptor } from '../../common/upload/photo-upload.interceptor';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { ClientsService } from './clients.service';
@@ -38,5 +49,16 @@ export class ClientsController {
     @Body() dto: UpdateClientDto,
   ) {
     return this.clientsService.update(tenant.id, id, dto);
+  }
+
+  @Post(':id/photo')
+  @RequiredPermissions('clients.update')
+  @UseInterceptors(createPhotoUploadInterceptor('clients'))
+  uploadPhoto(
+    @CurrentTenant() tenant: { id: string },
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.clientsService.updatePhoto(tenant.id, id, file);
   }
 }

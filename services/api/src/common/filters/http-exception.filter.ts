@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { MulterError } from 'multer';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -27,6 +28,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
           typeof exceptionResponse === 'object'
             ? (exceptionResponse as any).recommendedAction ?? 'Revise a ação e tente novamente.'
             : 'Revise a ação e tente novamente.',
+        traceId,
+      });
+      return;
+    }
+
+    if (exception instanceof MulterError && exception.code === 'LIMIT_FILE_SIZE') {
+      response.status(HttpStatus.BAD_REQUEST).json({
+        code: 'PHOTO_TOO_LARGE',
+        title: 'Imagem muito grande',
+        message: 'O arquivo enviado passa do limite de 3MB.',
+        recommendedAction: 'Envie uma imagem menor e tente novamente.',
         traceId,
       });
       return;
