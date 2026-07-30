@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { AssignPermissionDto } from './dto/assign-permission.dto';
@@ -10,11 +10,22 @@ export class RolesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAllByTenant(tenantId: string) {
-    return this.prisma.role.findMany({
+    const roles = await this.prisma.role.findMany({
       where: { tenantId },
-      select: { id: true, code: true, name: true, description: true },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        description: true,
+        rolePermissions: { select: { permission: { select: { code: true } } } },
+      },
       orderBy: { name: 'asc' },
     });
+
+    return roles.map(({ rolePermissions, ...role }) => ({
+      ...role,
+      permissionCodes: rolePermissions.map((rp) => rp.permission.code),
+    }));
   }
 
   async create(tenantId: string, dto: CreateRoleDto) {
@@ -114,5 +125,58 @@ export class RolesService {
     return this.prisma.userRole.create({
       data: { userId: user.id, roleId: role.id },
     });
+  }
+
+  /**
+   * Endpoints escopados para quem tem `reports.manage` (Gerente), nao `roles.assign`.
+   * O prefixo "reports." e verificado aqui, no service, nao so no guard - mesmo que
+   * alguem chame este metodo por outro caminho no futuro, continua impossivel usar
+   * essa via pra conceder/revogar qualquer permissao fora do modulo de relatorios
+   * (ex.: audit.read, tenants.update). Ver onda8.
+   */
+  private assertReportPermissionCode(code: string) {
+    if (!code.startsWith('reports.')) {
+      throw new ForbiddenException({
+        code: 'REPORT_PERMISSION_ONLY',
+        title: 'Ação não permitida',
+        message: 'Esta ação só pode conceder ou revogar permissões do módulo de relatórios (prefixo "reports.").',
+        recommendedAction: 'Peça a um Administrador pra ajustar qualquer outra permissão.',
+      });
+    }
+  }
+
+  async assignReportPermission(tenantId: string, roleId: string, dto: AssignPermissionDto) {
+    this.assertReportPermissionCode(dto.permissionCode);
+    return this.assignPermission(tenantId, roleId, dto);
+  }
+
+  async revokeReportPermission(tenantId: string, roleId: string, permissionCode: string) {
+    this.assertReportPermissionCode(permissionCode);
+
+    const role = await this.prisma.role.findFirst({ where: { id: roleId, tenantId } });
+    if (!role) {
+      throw new NotFoundException({
+        code: 'ROLE_NOT_FOUND',
+        title: 'Papel não encontrado',
+        message: 'Não encontramos o papel informado para este tenant.',
+        recommendedAction: 'Revise o papel selecionado e tente novamente.',
+      });
+    }
+
+    const permission = await this.prisma.permission.findFirst({ where: { code: permissionCode } });
+    if (!permission) {
+      throw new NotFoundException({
+        code: 'PERMISSION_NOT_FOUND',
+        title: 'Permissão não encontrada',
+        message: 'Não encontramos a permissão informada.',
+        recommendedAction: 'Revise o código de permissão e tente novamente.',
+      });
+    }
+
+    await this.prisma.rolePermission.deleteMany({
+      where: { roleId: role.id, permissionId: permission.id },
+    });
+
+    return { removed: true };
   }
 }

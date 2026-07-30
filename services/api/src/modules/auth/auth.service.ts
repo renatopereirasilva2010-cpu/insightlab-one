@@ -144,4 +144,36 @@ export class AuthService {
 
     return this.issueTokens(user);
   }
+
+  async me(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        userRoles: { include: { role: { select: { id: true, name: true } } } },
+        tenant: { select: { name: true, logoUrl: true } },
+        professional: { select: { photoUrl: true } },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'AUTH_INVALID_SESSION',
+        title: 'Sessão inválida',
+        message: 'Sua sessão não é mais válida.',
+        recommendedAction: 'Faça login novamente.',
+      });
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+      professionalId: user.professionalId,
+      photoUrl: user.professional?.photoUrl ?? null,
+      roles: user.userRoles.map((userRole) => ({
+        id: userRole.role.id,
+        name: userRole.role.name,
+      })),
+      tenant: { name: user.tenant.name, logoUrl: user.tenant.logoUrl },
+    };
+  }
 }

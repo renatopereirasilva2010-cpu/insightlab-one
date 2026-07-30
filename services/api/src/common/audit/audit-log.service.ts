@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { QueryAuditLogDto } from './dto/query-audit-log.dto';
 
 export interface AuditLogEntry {
   tenantId: string;
@@ -37,5 +38,36 @@ export class AuditLogService {
       // auditoria nunca pode derrubar a requisicao original - so registra e segue
       this.logger.warn(`Falha ao gravar audit log: ${(error as Error).message}`);
     }
+  }
+
+  async query(tenantId: string, query: QueryAuditLogDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 50;
+
+    const where: Prisma.AuditLogWhereInput = {
+      tenantId,
+      ...(query.entity ? { entity: query.entity } : {}),
+      ...(query.from || query.to
+        ? {
+            createdAt: {
+              ...(query.from ? { gte: new Date(query.from) } : {}),
+              ...(query.to ? { lte: new Date(query.to) } : {}),
+            },
+          }
+        : {}),
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: { user: { select: { name: true, email: true } } },
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+
+    return { items, total, page, pageSize };
   }
 }

@@ -87,6 +87,13 @@ const permissions = [
   { code: 'whatsapp.resend', name: 'Resend a WhatsApp message', module: 'whatsapp' },
   { code: 'data-subject-requests.read', name: 'Read LGPD data subject requests', module: 'legal' },
   { code: 'data-subject-requests.update', name: 'Resolve LGPD data subject requests', module: 'legal' },
+  { code: 'reports.read', name: 'Access the reports module', module: 'reports' },
+  { code: 'reports.revenue.read', name: 'Read revenue report', module: 'reports' },
+  { code: 'reports.commissions.read', name: 'Read commissions report', module: 'reports' },
+  { code: 'reports.appointments.read', name: 'Read appointments/occupancy report', module: 'reports' },
+  { code: 'reports.inventory.read', name: 'Read low-stock inventory report', module: 'reports' },
+  { code: 'reports.clients-churn.read', name: 'Read inactive-clients report', module: 'reports' },
+  { code: 'reports.manage', name: 'Customize which reports a role can see', module: 'reports' },
 ];
 
 async function main() {
@@ -287,15 +294,17 @@ async function main() {
 
   // Papel Gerente - gestao operacional completa, exceto dado critico do
   // sistema (plataforma multi-tenant, identidade legal/fiscal do tenant,
-  // atribuicao de papeis/permissoes, trilha de auditoria e solicitacoes
-  // de titular LGPD). Pedido por Renato em 29/07/2026, seguindo o padrao
-  // de mercado (Vagaro separa "Admin" operacional de "Manage/Supervisor").
+  // atribuicao de papeis/permissoes e solicitacoes de titular LGPD).
+  // Pedido por Renato em 29/07/2026, seguindo o padrao de mercado (Vagaro
+  // separa "Admin" operacional de "Manage/Supervisor"). Em 30/07/2026,
+  // Renato pediu explicitamente acesso de leitura a trilha de auditoria
+  // pra este papel - por isso audit.read NAO esta mais na lista de exclusao
+  // (era julgamento nosso na rodada anterior, nao trava dele).
   const gerenteExcludedPrefixes = ['admin-master.'];
   const gerenteExcludedCodes = [
     'tenants.update',
     'units.update',
     'roles.assign',
-    'audit.read',
     'data-subject-requests.read',
     'data-subject-requests.update',
   ];
@@ -305,15 +314,16 @@ async function main() {
       !gerenteExcludedCodes.includes(p.code),
   );
 
+  const gerenteRoleDescription =
+    'Gestao operacional completa (agenda, vendas, financeiro, comissao, equipe, configuracoes de negocio, relatorios, trilha de auditoria), sem acesso a dado critico do sistema (identidade legal do tenant, atribuicao de papeis, LGPD).';
   const gerenteRole = await prisma.role.upsert({
     where: { tenantId_code: { tenantId: tenant.id, code: 'GERENTE' } },
-    update: {},
+    update: { description: gerenteRoleDescription },
     create: {
       tenantId: tenant.id,
       code: 'GERENTE',
       name: 'Gerente',
-      description:
-        'Gestao operacional completa (agenda, vendas, financeiro, comissao, equipe, configuracoes de negocio), sem acesso a dado critico do sistema (identidade legal do tenant, atribuicao de papeis, auditoria, LGPD).',
+      description: gerenteRoleDescription,
     },
   });
 

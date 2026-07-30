@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { RequiredPermissions } from '../../common/decorators/required-permissions.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -44,5 +44,28 @@ export class RolesController {
     @Body() dto: AssignUserDto,
   ) {
     return this.rolesService.assignUser(tenant.id, id, dto);
+  }
+
+  // Escopado pra reports.manage (Gerente) - so aceita codigos "reports.*",
+  // verificado no service. roles.assign (Admin) continua usando o endpoint
+  // generico acima pra qualquer outra permissao.
+  @Post(':id/report-permissions')
+  @RequiredPermissions('reports.manage')
+  assignReportPermission(
+    @CurrentTenant() tenant: { id: string },
+    @Param('id') id: string,
+    @Body() dto: AssignPermissionDto,
+  ) {
+    return this.rolesService.assignReportPermission(tenant.id, id, dto);
+  }
+
+  @Delete(':id/report-permissions/:code')
+  @RequiredPermissions('reports.manage')
+  revokeReportPermission(
+    @CurrentTenant() tenant: { id: string },
+    @Param('id') id: string,
+    @Param('code') code: string,
+  ) {
+    return this.rolesService.revokeReportPermission(tenant.id, id, code);
   }
 }
