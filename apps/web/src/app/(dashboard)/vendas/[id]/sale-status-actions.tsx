@@ -4,6 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw, CheckCircle2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import type { Sale } from "@/lib/api-types";
 import { recalculateSale, readyForCheckout, cancelSale } from "../actions";
@@ -69,15 +80,31 @@ export function SaleStatusActions({
       )}
 
       {canCancel && !isTerminal && (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={pending !== null}
-          onClick={() => run("cancel", () => cancelSale(sale.id), "Venda cancelada.")}
-        >
-          <Ban />
-          Cancelar venda
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="sm" disabled={pending !== null}>
+              <Ban />
+              Cancelar venda
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancelar esta venda?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Itens, pagamentos e comissões vinculados a esta venda deixam de valer. Essa ação não
+                pode ser desfeita pela tela — só criando uma venda nova.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Voltar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => run("cancel", () => cancelSale(sale.id), "Venda cancelada.")}
+              >
+                Cancelar venda
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

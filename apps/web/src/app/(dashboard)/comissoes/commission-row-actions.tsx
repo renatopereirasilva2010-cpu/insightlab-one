@@ -4,6 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Lock, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import type { Commission } from "@/lib/api-types";
 import { releaseCommission, blockCommission, cancelCommission } from "./actions";
@@ -53,15 +64,30 @@ export function CommissionRowActions({ commission }: { commission: Commission })
         </Button>
       )}
       {commission.status !== "RELEASED" && (
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={pending !== null}
-          onClick={() => run("cancel", () => cancelCommission(commission.id), "Comissão cancelada.")}
-          title="Cancelar"
-        >
-          <Ban />
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" disabled={pending !== null} title="Cancelar">
+              <Ban />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancelar esta comissão?</AlertDialogTitle>
+              <AlertDialogDescription>
+                O profissional deixa de ter direito a este valor. Comissões já liberadas não podem
+                ser canceladas por aqui.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Voltar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => run("cancel", () => cancelCommission(commission.id), "Comissão cancelada.")}
+              >
+                Cancelar comissão
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

@@ -4,6 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import type { UserListItem } from "@/lib/api-types";
 import { blockUser } from "./user-actions";
@@ -29,15 +40,26 @@ export function UserRowActions({ user }: { user: UserListItem }) {
     <div className="flex justify-end gap-1">
       <EditUserButton user={user} />
       {user.status !== "BLOCKED" && (
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={pending}
-          onClick={handleBlock}
-          title="Bloquear"
-        >
-          <Ban />
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" disabled={pending} title="Bloquear">
+              <Ban />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bloquear {user.name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {user.email} deixa de conseguir logar imediatamente. Você pode reverter depois
+                editando o status do usuário.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Voltar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleBlock}>Bloquear</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );
