@@ -1,6 +1,6 @@
 # Guia de Retomada de Sessão — InsightLab One
 
-**Última atualização:** 30/07/2026, ao fechar `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` (relatórios customizáveis, auditoria com leitura, logo por tenant data-driven, fotos em cadastros, menu de usuário no header). Onda anterior: `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` (white-label completo, papéis Gerente/Recepção, Inteligência de Receita, segurança).
+**Última atualização:** 30/07/2026, ao fechar o adendo de `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` seção 11 (nome social + correção de bug de UI na sidebar + validação mobile). Onda base: relatórios customizáveis, auditoria com leitura, logo por tenant data-driven, fotos em cadastros, menu de usuário no header. Onda anterior: `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` (white-label completo, papéis Gerente/Recepção, Inteligência de Receita, segurança).
 **Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero. **Leia isto antes de subir API/frontend manualmente — desde 29/07/2026 eles rodam supervisionados por `systemd --user`, não é mais `pnpm start:dev` direto no terminal.**
 
 ---
@@ -126,6 +126,8 @@ cd ~/projects/insightlab-one/workspace/apps/web && pnpm dev
 - Operador restrito (seed, permissões mínimas): `operador.restrito@mix-demo.local` / `Operador@12345`
 - Profissional vinculado (seed, pra testar isolamento de "Minhas Comissões"): `profissional.demo.login@mix-demo.local` / `Profissional@12345`
 
+**Nota:** durante a validação da onda8 (adendo, 30/07/2026), a conta `admin@mix-demo.local` recebeu nome social "Renato" (aparece como "Seja bem-vindo, Renato" no header) e o profissional de teste "Profissional Teste 1" recebeu nome social "Pri" — dado de demonstração da funcionalidade, ajustável a qualquer momento pela própria tela (Configurações → Usuários / Profissionais → Editar).
+
 ---
 
 ## 4. O que foi entregue (29-30/07/2026)
@@ -152,6 +154,8 @@ Três rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-cor
 13. **Módulo de Relatórios (`/relatorios`)** — 5 relatórios com filtro de período real e export CSV, permissão customizável por papel via checklist em Configurações → Papéis (escopo travado em `reports.*`, testado contra abuso).
 14. **Menu de usuário no header** — "Seja bem-vindo, {nome}" + papel + logout, todo perfil incluindo Admin.
 15. **Fotos em cadastros** — profissional/cliente/produto, avatar reaproveitado em listas e seletores (agendamento, venda, comissões).
+16. **Nome social** — Usuário/Profissional/Cliente podem ter nome social, exibido como nome principal em toda a tela (header, listas, seletores) quando preenchido; nome de registro continua intacto.
+17. **Bug de UI corrigido** — texto "InsightLab One" quebrando durante transição do toggle da sidebar; mobile (375-390px) validado no shell de navegação e nas telas novas desta sessão.
 
 ---
 

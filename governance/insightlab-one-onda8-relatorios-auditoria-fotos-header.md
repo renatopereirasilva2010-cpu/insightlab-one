@@ -83,4 +83,18 @@ Fotos em cadastros: campo de foto em profissional/cliente/produto (upload separa
 
 ---
 
+---
+
+## 11. Adendo (mesmo dia) — Nome social e correção de UI
+
+Renato pediu, logo após o fechamento desta onda: (1) permitir que qualquer cadastro de pessoa (usuário logado, cliente, profissional) mostre o nome social no lugar do nome de registro em toda a tela, e (2) investigar e corrigir um bug visual no toggle da sidebar, além de validar responsividade mobile.
+
+**Nome social:** `Client` já tinha o campo (`socialName`), só não era usado como nome principal em lugar nenhum. Adicionado `socialName` a `User` e `Professional` (migração `20260730081128_add_social_name`, mesmo workaround de DDL da seção 4). Novo helper `displayName()` (`socialName || name`) — o campo preenchido já é a escolha da pessoa, sem precisar de um toggle separado. Aplicado como nome principal em: header (menu de usuário), listas de Usuários/Profissionais/Clientes, seletores de cliente/profissional na Agenda e Venda, coluna de profissional em Comissões. Nome de registro continua intacto nos formulários. Testado ao vivo via Playwright (profissional e o próprio Admin).
+
+**Bug do toggle da sidebar:** reproduzido via Playwright — cliques rápidos no botão de expandir/recolher fazem a transição de largura CSS parar num valor intermediário, e o texto "InsightLab One" (sem proteção contra quebra de linha, diferente dos itens de navegação que já usam `truncate`) quebrava em duas linhas nesse meio-termo. Corrigido com `whitespace-nowrap`/`truncate`/`overflow-hidden` no cabeçalho da sidebar, mesmo padrão que os itens de menu já usavam.
+
+**Responsividade mobile:** validada em 375-390px — shell de navegação (sidebar mobile em Sheet, header, menu de usuário), módulo de Relatórios, Configurações e os seletores com avatar, todos adequados. Achado pré-existente, não corrigido (fora do escopo, não introduzido nesta sessão): a lista de abas da Agenda (Agendamentos/Bloqueios/Disponibilidade/Salas) usa scroll horizontal nativo em vez de um padrão mais polido — funcional, não quebrado.
+
+**Validação:** 271/271 testes, `tsc`/build limpos, lint sem novidade (mesmo 1 erro pré-existente de antes, não tocado).
+
 *Documento gerado por Claude Code a pedido de Renato, a partir do plano aprovado nesta sessão, em 30/07/2026.*
