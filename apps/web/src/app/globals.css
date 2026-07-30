@@ -66,14 +66,12 @@
   );
 
   /* Marca do tenant (Mix Concept Hair) - extraida visualmente do logo
-   * (pincelada dourada/bronze, moldura preta, fundo cru/pergaminho)
-   * enquanto o arquivo real do logo nao existe no repo (ver
-   * governance/insightlab-one-onda6-... e whitelabel_brand_status na
-   * memoria do Claude Code). Ajustar o hex se divergir do arquivo real
-   * quando ele chegar - isto e uma extracao visual, nao um color-pick
-   * exato. Aplicada so na area operacional (fundo, acento, sombra),
-   * nunca nas acoes primarias (essas continuam violeta do InsightLab,
-   * cor de marca consistente entre os dois lados). */
+   * (pincelada dourada/bronze, moldura preta, fundo cru/pergaminho) e
+   * confirmada contra o arquivo real do logo apos o upload (30/07/2026,
+   * ver services/api/uploads/tenants/.../...-1785429435132.png). Aplicada
+   * so na area operacional (fundo, acento, sombra), nunca nas acoes
+   * primarias (essas continuam violeta do InsightLab, cor de marca
+   * consistente entre os dois lados). */
   --mix-gold: #b08d45;
   --mix-gold-bright: #c9a227;
   --mix-black: #1a1a1a;
@@ -156,5 +154,29 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* Barra de rolagem com acento da marca do tenant - fina, arredondada,
+   * cor dourada. Nao afeta a sidebar, que esconde a propria barra via a
+   * classe .no-scrollbar (mais especifica, sempre vence). */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mix-gold) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--mix-gold);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--mix-gold-bright);
   }
 }

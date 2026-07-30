@@ -37,6 +37,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { InsightLabWatermark } from "@/components/decorative/insightlab-watermark";
 import type { SessionUser } from "@/lib/session";
 
 const navItems = [
@@ -83,6 +84,8 @@ export function AppSidebar({ user }: { user: SessionUser }) {
 
   return (
     <Sidebar collapsible="icon">
+      <div className="relative flex h-full flex-col">
+      <InsightLabWatermark />
       <SidebarHeader>
         <div className="flex items-center gap-2 overflow-hidden px-2 py-1.5 group-data-[collapsible=icon]:justify-center">
           <div className="bg-white rounded-md p-1 shrink-0 group-data-[collapsible=icon]:hidden">
@@ -166,6 +169,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           Powered by InsightLab
         </p>
       </SidebarFooter>
+      </div>
     </Sidebar>
   );
 }

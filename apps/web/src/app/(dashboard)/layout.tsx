@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { HelpDrawer } from "@/components/help-drawer";
 import { TenantBadge } from "@/components/tenant-badge";
 import { UserMenu } from "@/components/user-menu";
+import { MixWatermark } from "@/components/decorative/mix-watermark";
 import type { SessionProfile } from "@/lib/api-types";
 import { ConsentBanner } from "./lgpd/consent-banner";
 
@@ -21,6 +22,7 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <AppSidebar user={user} />
       <SidebarInset>
+        <MixWatermark />
         <header
           className="flex h-16 shrink-0 items-center gap-3 border-b px-4"
           style={{ borderColor: "var(--mix-gold)" }}
