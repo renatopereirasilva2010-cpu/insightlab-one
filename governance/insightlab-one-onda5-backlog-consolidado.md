@@ -65,12 +65,14 @@
 **Decisão pendente:** qual a regra de negócio pra estornar comissão já paga/liberada ao profissional.
 
 ### 2.6 Pós-piloto (sequenciável, sem bloqueio técnico, só faz sentido com mais de 1 tenant)
-Herdado do corte de MVP original (`insightlab-one-onda0-adendo-governanca.md` seção 2.2/2.3) — nada disso muda até o piloto validar:
+Herdado do corte de MVP original (`insightlab-one-onda0-adendo-governanca.md` seção 2.2/2.3) — nada disso muda até o piloto validar. **Apps mobile e marketplace adicionados explicitamente em 30/07/2026 a pedido de Renato** (já apareciam de forma dispersa — pesquisa de apps mobile na seção 2.2/3, marketplace citado só de passagem junto do white-label — agora como itens próprios, discretos um do outro):
 - Painel admin-master multi-tenant + billing status.
 - Estoque/compras/suprimentos — só entra se a Mix depender disso no dia a dia (avaliação ainda não feita).
 - Planos/add-ons/entitlements (versão mínima governada primeiro).
 - Pacotes e assinaturas recorrentes (muda modelo de receita de transacional pra recorrente — modelagem de dado nova).
-- White-label, marketplace de descoberta de salão.
+- **Apps mobile** (app de operação para dono+equipe e app/superfície para cliente final — pesquisa de mercado e stack já prontas, ver seção 2.2 e seção 3; decisão de escopo/quantidade ainda pendente com Renato).
+- White-label.
+- **Marketplace de descoberta de salão** (vitrine multi-tenant para aquisição de novos clientes finais, distinto do widget de agendamento por tenant da seção 2.3 — item citado em `BACKLOG_PRODUTO_E_DIFERENCIACAO.md` linha 86, sem pesquisa de mercado dedicada ainda).
 - Migração assistida de outros tenants (parsing real de FDB/CSV/XLSX — decisão já confirmada como pós-piloto).
 - DevSecOps/qualidade formal completa (hoje só a higiene mínima da seção 7 do adendo original roda).
 - Split automático de pagamento com adquirente/maquininha (`insightlab-one-onda3-benchmark-revisao-backlog.md` seção 5) — mais fundo que qualquer item hoje, exige homologação com adquirente.
@@ -171,7 +173,7 @@ Herdado do corte de MVP original (`insightlab-one-onda0-adendo-governanca.md` se
 - [ ] Confirmar Asaas (Pix/split online) e Meta Cloud API direto (WhatsApp) como fornecedores, ou pedir mais alternativas
 - [ ] Regra de negócio pra estorno de comissão já liberada
 - [ ] Priorização entre sugestão de horário ótimo (seção 2.4) e superfície do cliente (seção 2.3) — qual vem primeiro
-- [ ] Confirmar que Focus NFe FASE 2, admin-master, estoque, planos/add-ons, white-label, identidade visual/redes sociais (seção 2.3.1) e split de pagamento com maquininha própria seguem fora da fila ativa por ora
+- [ ] Confirmar que Focus NFe FASE 2, admin-master, estoque, planos/add-ons, apps mobile, white-label, marketplace, identidade visual/redes sociais (seção 2.3.1) e split de pagamento com maquininha própria seguem fora da fila ativa por ora
 
 ---
 

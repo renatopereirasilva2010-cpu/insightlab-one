@@ -40,6 +40,8 @@ Este adendo propõe um corte de MVP explícito, um mecanismo pra parar de repeti
 
 *(Decisão de Renato: confirmar, ajustar ou vetar este corte antes de seguir.)*
 
+**Atualização 30/07/2026:** apps mobile e marketplace de descoberta de salão adicionados explicitamente ao pós-piloto, a pedido de Renato. Lista completa e detalhada agora vive em `insightlab-one-onda5-backlog-consolidado.md` seção 2.6 (documento que substitui esta seção como retrato corrente do backlog pós-piloto) — mantido aqui como registro histórico do corte original.
+
 ---
 
 ## 3. Estratégia de ferramenta: Claude Code (local) vs. Cowork
