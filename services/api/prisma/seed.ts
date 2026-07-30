@@ -285,6 +285,146 @@ async function main() {
     create: { userId: professionalUser.id, roleId: professionalRole.id },
   });
 
+  // Papel Gerente - gestao operacional completa, exceto dado critico do
+  // sistema (plataforma multi-tenant, identidade legal/fiscal do tenant,
+  // atribuicao de papeis/permissoes, trilha de auditoria e solicitacoes
+  // de titular LGPD). Pedido por Renato em 29/07/2026, seguindo o padrao
+  // de mercado (Vagaro separa "Admin" operacional de "Manage/Supervisor").
+  const gerenteExcludedPrefixes = ['admin-master.'];
+  const gerenteExcludedCodes = [
+    'tenants.update',
+    'units.update',
+    'roles.assign',
+    'audit.read',
+    'data-subject-requests.read',
+    'data-subject-requests.update',
+  ];
+  const gerentePermissions = allPermissions.filter(
+    (p) =>
+      !gerenteExcludedPrefixes.some((prefix) => p.code.startsWith(prefix)) &&
+      !gerenteExcludedCodes.includes(p.code),
+  );
+
+  const gerenteRole = await prisma.role.upsert({
+    where: { tenantId_code: { tenantId: tenant.id, code: 'GERENTE' } },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      code: 'GERENTE',
+      name: 'Gerente',
+      description:
+        'Gestao operacional completa (agenda, vendas, financeiro, comissao, equipe, configuracoes de negocio), sem acesso a dado critico do sistema (identidade legal do tenant, atribuicao de papeis, auditoria, LGPD).',
+    },
+  });
+
+  for (const permission of gerentePermissions) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: gerenteRole.id, permissionId: permission.id } },
+      update: {},
+      create: { roleId: gerenteRole.id, permissionId: permission.id },
+    });
+  }
+
+  const gerentePasswordHash = await bcrypt.hash('Gerente@12345', 10);
+
+  const gerenteUser = await prisma.user.upsert({
+    where: { email: 'gerente.demo@mix-demo.local' },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      unitId: unit.id,
+      name: 'Gerente Demo',
+      email: 'gerente.demo@mix-demo.local',
+      passwordHash: gerentePasswordHash,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId: gerenteUser.id, roleId: gerenteRole.id } },
+    update: {},
+    create: { userId: gerenteUser.id, roleId: gerenteRole.id },
+  });
+
+  // Papel Recepcao - balcao: agenda, atendimento, venda/checkout, pagamento,
+  // caixa, e leitura de catalogo pra vender - sem comissao, configuracoes,
+  // usuarios/papeis ou edicao de documento fiscal. Padrao "front desk" do
+  // mercado (Vagaro, Fresha).
+  const recepcaoPermissionCodes = [
+    'auth.login',
+    'auth.refresh',
+    'clients.read',
+    'clients.create',
+    'clients.update',
+    'availability.read',
+    'appointments.read',
+    'appointments.create',
+    'appointments.update',
+    'appointments.cancel',
+    'appointments.no_show',
+    'attendances.read',
+    'attendances.create',
+    'attendances.start',
+    'attendances.finish',
+    'attendances.cancel',
+    'sales.read',
+    'sales.create',
+    'sales.update',
+    'sales.checkout',
+    'payments.read',
+    'payments.create',
+    'payments.receive',
+    'payments.update-status',
+    'cash-register.read',
+    'cash-register.open',
+    'cash-register.close',
+    'services.read',
+    'products.read',
+    'fiscal-documents.read',
+  ];
+  const recepcaoPermissions = await prisma.permission.findMany({
+    where: { code: { in: recepcaoPermissionCodes } },
+  });
+
+  const recepcaoRole = await prisma.role.upsert({
+    where: { tenantId_code: { tenantId: tenant.id, code: 'RECEPCAO' } },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      code: 'RECEPCAO',
+      name: 'Recepção',
+      description:
+        'Balcao: agenda, atendimento, venda/checkout, pagamento e caixa. Sem acesso a comissao, configuracoes, usuarios/papeis ou edicao de documento fiscal.',
+    },
+  });
+
+  for (const permission of recepcaoPermissions) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: recepcaoRole.id, permissionId: permission.id } },
+      update: {},
+      create: { roleId: recepcaoRole.id, permissionId: permission.id },
+    });
+  }
+
+  const recepcaoPasswordHash = await bcrypt.hash('Recepcao@12345', 10);
+
+  const recepcaoUser = await prisma.user.upsert({
+    where: { email: 'recepcao.demo@mix-demo.local' },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      unitId: unit.id,
+      name: 'Recepção Demo',
+      email: 'recepcao.demo@mix-demo.local',
+      passwordHash: recepcaoPasswordHash,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId: recepcaoUser.id, roleId: recepcaoRole.id } },
+    update: {},
+    create: { userId: recepcaoUser.id, roleId: recepcaoRole.id },
+  });
+
   await prisma.legalDocument.upsert({
     where: { type_version: { type: 'TERMS_OF_USE', version: 'v1' } },
     update: {},

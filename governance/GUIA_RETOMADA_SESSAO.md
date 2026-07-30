@@ -103,6 +103,8 @@ cd ~/projects/insightlab-one/workspace/apps/web && pnpm dev
 ### 3.5 Login pra testar manualmente
 - URL: `http://localhost:3000/login`
 - Admin (seed): `admin@mix-demo.local` / `Admin@12345`
+- Gerente (seed, 29/07/2026 — tudo exceto dado crítico do sistema): `gerente.demo@mix-demo.local` / `Gerente@12345`
+- Recepção (seed, 29/07/2026 — balcão: agenda/venda/pagamento/caixa): `recepcao.demo@mix-demo.local` / `Recepcao@12345`
 - Operador restrito (seed, permissões mínimas): `operador.restrito@mix-demo.local` / `Operador@12345`
 - Profissional vinculado (seed, pra testar isolamento de "Minhas Comissões"): `profissional.demo.login@mix-demo.local` / `Profissional@12345`
 
