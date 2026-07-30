@@ -107,4 +107,57 @@ describe('AuthService', () => {
       await expect(service.refresh('token')).rejects.toThrow(UnauthorizedException);
     });
   });
+
+  describe('me', () => {
+    it('returns name/email/professionalId, flattened roles and tenant branding', async () => {
+      const prisma = {
+        user: {
+          findUnique: jest.fn().mockResolvedValue({
+            name: 'Gerente Demo',
+            email: 'gerente.demo@mix-demo.local',
+            professionalId: null,
+            professional: null,
+            userRoles: [{ role: { id: 'role-1', name: 'Gerente' } }],
+            tenant: { name: 'Mix Demo', logoUrl: '/uploads/tenants/t-1/logo.png' },
+          }),
+        },
+      };
+      const service = new AuthService(prisma as any, {} as any);
+
+      await expect(service.me('user-1')).resolves.toEqual({
+        name: 'Gerente Demo',
+        email: 'gerente.demo@mix-demo.local',
+        professionalId: null,
+        photoUrl: null,
+        roles: [{ id: 'role-1', name: 'Gerente' }],
+        tenant: { name: 'Mix Demo', logoUrl: '/uploads/tenants/t-1/logo.png' },
+      });
+    });
+
+    it('surfaces the linked professional photo when present', async () => {
+      const prisma = {
+        user: {
+          findUnique: jest.fn().mockResolvedValue({
+            name: 'Priscila',
+            email: 'priscila@mix-demo.local',
+            professionalId: 'prof-1',
+            professional: { photoUrl: '/uploads/professionals/t-1/prof-1-1.png' },
+            userRoles: [{ role: { id: 'role-2', name: 'Profissional' } }],
+            tenant: { name: 'Mix Demo', logoUrl: null },
+          }),
+        },
+      };
+      const service = new AuthService(prisma as any, {} as any);
+
+      const result = await service.me('user-2');
+      expect(result.photoUrl).toBe('/uploads/professionals/t-1/prof-1-1.png');
+    });
+
+    it('rejects when the user no longer exists', async () => {
+      const prisma = { user: { findUnique: jest.fn().mockResolvedValue(null) } };
+      const service = new AuthService(prisma as any, {} as any);
+
+      await expect(service.me('ghost')).rejects.toThrow(UnauthorizedException);
+    });
+  });
 });

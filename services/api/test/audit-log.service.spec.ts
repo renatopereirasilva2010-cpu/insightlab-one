@@ -5,6 +5,8 @@ describe('AuditLogService', () => {
     return {
       auditLog: {
         create: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
       },
     };
   }
@@ -70,5 +72,51 @@ describe('AuditLogService', () => {
         action: 'POST /v1/payments',
       }),
     ).resolves.toBeUndefined();
+  });
+
+  describe('query', () => {
+    it('scopes findMany/count by tenantId and paginates with the given defaults', async () => {
+      const prisma = buildPrismaMock();
+      const service = new AuditLogService(prisma as any);
+
+      await service.query('t-1', {});
+
+      expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tenantId: 't-1' },
+          skip: 0,
+          take: 50,
+        }),
+      );
+      expect(prisma.auditLog.count).toHaveBeenCalledWith({ where: { tenantId: 't-1' } });
+    });
+
+    it('applies entity and date-range filters when provided', async () => {
+      const prisma = buildPrismaMock();
+      const service = new AuditLogService(prisma as any);
+
+      await service.query('t-1', {
+        entity: 'payments',
+        from: '2026-07-01T00:00:00.000Z',
+        to: '2026-07-31T00:00:00.000Z',
+        page: 2,
+        pageSize: 10,
+      });
+
+      expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            tenantId: 't-1',
+            entity: 'payments',
+            createdAt: {
+              gte: new Date('2026-07-01T00:00:00.000Z'),
+              lte: new Date('2026-07-31T00:00:00.000Z'),
+            },
+          },
+          skip: 10,
+          take: 10,
+        }),
+      );
+    });
   });
 });

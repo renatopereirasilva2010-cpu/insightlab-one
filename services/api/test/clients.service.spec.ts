@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ClientsService } from '../src/modules/clients/clients.service';
 
 describe('ClientsService', () => {
@@ -95,6 +95,37 @@ describe('ClientsService', () => {
         source: undefined,
         status: 'INACTIVE',
       },
+    });
+  });
+
+  describe('updatePhoto', () => {
+    it('rejects when no file was sent (missing or wrong mimetype)', async () => {
+      await expect(service.updatePhoto('tenant-1', 'client-1', undefined)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(prisma.client.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the client does not belong to the tenant', async () => {
+      prisma.client.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.updatePhoto('tenant-1', 'client-x', { filename: 'foo.png' } as any),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.client.update).not.toHaveBeenCalled();
+    });
+
+    it('saves the built photo URL for a client scoped to the tenant', async () => {
+      const existing = { id: 'client-1', tenantId: 'tenant-1' };
+      prisma.client.findFirst.mockResolvedValue(existing);
+      prisma.client.update.mockResolvedValue({ ...existing, photoUrl: '/uploads/clients/tenant-1/client-1-1.png' });
+
+      await service.updatePhoto('tenant-1', 'client-1', { filename: 'client-1-1.png' } as any);
+
+      expect(prisma.client.update).toHaveBeenCalledWith({
+        where: { id: 'client-1' },
+        data: { photoUrl: '/uploads/clients/tenant-1/client-1-1.png' },
+      });
     });
   });
 });
