@@ -39,7 +39,7 @@ import {
 import type { SessionUser } from "@/lib/session";
 
 const navItems = [
-  { href: "/painel", label: "Painel", icon: LayoutDashboard },
+  { href: "/painel", label: "Inteligência de Receita", icon: LayoutDashboard },
   { href: "/", label: "Agenda", icon: Calendar },
   { href: "/atendimentos", label: "Atendimentos", icon: ClipboardList },
   { href: "/vendas", label: "Vendas", icon: ShoppingCart },

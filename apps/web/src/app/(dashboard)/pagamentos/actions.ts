@@ -9,7 +9,10 @@ export async function markPaymentPaid(id: string): Promise<ActionResult<Payment>
   const result = await runAction(() =>
     apiFetch<Payment>(`/v1/payments/${id}/mark-paid`, { method: "POST" }),
   );
-  if (result.ok) revalidatePath("/pagamentos");
+  if (result.ok) {
+    revalidatePath("/pagamentos");
+    revalidatePath("/painel");
+  }
   return result;
 }
 

@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react";
 import { verifySession, hasPermission } from "@/lib/auth";
 import { apiFetch, ApiError } from "@/lib/api";
 import { safeList } from "@/lib/safe-fetch";
@@ -19,6 +20,9 @@ import type {
 } from "@/lib/api-types";
 import { DormantClientsPanel } from "./dormant-clients-panel";
 import { QuickStartGuide, type QuickStartStep } from "./quick-start-guide";
+import { RevenueTrendChart, RevenueBreakdownChart } from "./revenue-charts";
+import { ExportCsvButton } from "./export-button";
+import { AutoRefreshOnFocus } from "./auto-refresh";
 
 async function fetchBusinessSettings(): Promise<BusinessSettings | null> {
   try {
@@ -161,45 +165,104 @@ export default async function PainelPage() {
     }))
     .sort((a, b) => b.total - a.total);
 
+  // Tendencia de faturamento dos ultimos 14 dias, a partir dos mesmos
+  // pagamentos ja carregados - sem endpoint novo.
+  const TREND_DAYS = 14;
+  // Chave em hora local, nao UTC (mesmo criterio de "hoje" usado em
+  // isToday() acima) - evitar que o fuso (UTC-3) empurre pagamentos da
+  // noite pro dia seguinte no grafico.
+  const dayKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const today = new Date();
+  const revenueByDayMap = new Map<string, number>();
+  for (let i = TREND_DAYS - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    revenueByDayMap.set(dayKey(d), 0);
+  }
+  for (const p of payments) {
+    if (p.status !== "PAID" || !p.paidAt) continue;
+    const key = dayKey(new Date(p.paidAt));
+    if (revenueByDayMap.has(key)) {
+      revenueByDayMap.set(key, (revenueByDayMap.get(key) ?? 0) + Number(p.amount));
+    }
+  }
+  const trendRows = Array.from(revenueByDayMap.entries()).map(([date, total]) => ({
+    date: new Date(date + "T12:00:00").toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+    }),
+    faturamento: Math.round(total * 100) / 100,
+  }));
+
+  const exportSummaryRows = [
+    { indicador: "Faturamento hoje", valor: revenueToday },
+    { indicador: "Comissão gerada hoje", valor: commissionTotalToday },
+    { indicador: "Caixas abertos agora", valor: openRegisters.length },
+    { indicador: "Saldo de abertura (caixas abertos)", valor: openBalance },
+  ];
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Painel</h1>
-        <p className="text-muted-foreground">Resumo do dia e clientes que precisam de atenção.</p>
+      <AutoRefreshOnFocus />
+      <div className="flex items-center gap-2">
+        <Sparkles className="text-primary h-6 w-6 shrink-0" />
+        <div>
+          <h1 className="text-2xl font-semibold">Inteligência de Receita</h1>
+          <p className="text-muted-foreground text-sm">
+            Revenue Recovery Intelligence — resumo do dia, tendência e clientes que precisam de atenção.
+          </p>
+        </div>
       </div>
 
       {isAdmin && <QuickStartGuide steps={quickStartSteps} />}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardDescription>Faturamento hoje</CardDescription>
-            <CardTitle className="text-2xl">{formatCurrency(revenueToday)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Comissão gerada hoje</CardDescription>
-            <CardTitle className="text-2xl">{formatCurrency(commissionTotalToday)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Caixas abertos agora</CardDescription>
-            <CardTitle className="text-2xl">{openRegisters.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Saldo de abertura (caixas abertos)</CardDescription>
-            <CardTitle className="text-2xl">{formatCurrency(openBalance)}</CardTitle>
-          </CardHeader>
-        </Card>
+      <div className="flex items-center justify-between">
+        <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader>
+              <CardDescription>Faturamento hoje</CardDescription>
+              <CardTitle className="text-2xl">{formatCurrency(revenueToday)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardDescription>Comissão gerada hoje</CardDescription>
+              <CardTitle className="text-2xl">{formatCurrency(commissionTotalToday)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardDescription>Caixas abertos agora</CardDescription>
+              <CardTitle className="text-2xl">{openRegisters.length}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardDescription>Saldo de abertura (caixas abertos)</CardDescription>
+              <CardTitle className="text-2xl">{formatCurrency(openBalance)}</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
       </div>
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium">Faturamento — últimos 14 dias</h2>
+        <ExportCsvButton rows={exportSummaryRows} filename="resumo-painel.csv" label="Exportar resumo (CSV)" />
+      </div>
+      <RevenueTrendChart data={trendRows} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="space-y-3">
-          <h2 className="text-lg font-medium">Faturamento por profissional (hoje)</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium">Faturamento por profissional (hoje)</h2>
+            <ExportCsvButton
+              rows={professionalRows.map((r) => ({ profissional: r.name, faturamento: r.total }))}
+              filename="faturamento-por-profissional.csv"
+              label="CSV"
+            />
+          </div>
+          <RevenueBreakdownChart data={professionalRows.map((r) => ({ name: r.name, total: r.total }))} />
           <DataTable<{ professionalId: string; name: string; total: number }>
             rows={professionalRows}
             rowKey={(r) => r.professionalId}
@@ -212,7 +275,15 @@ export default async function PainelPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-medium">Faturamento por serviço (hoje)</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium">Faturamento por serviço (hoje)</h2>
+            <ExportCsvButton
+              rows={serviceRows.map((r) => ({ serviço: r.name, faturamento: r.total }))}
+              filename="faturamento-por-servico.csv"
+              label="CSV"
+            />
+          </div>
+          <RevenueBreakdownChart data={serviceRows.map((r) => ({ name: r.name, total: r.total }))} />
           <DataTable<{ serviceId: string; name: string; total: number }>
             rows={serviceRows}
             rowKey={(r) => r.serviceId}

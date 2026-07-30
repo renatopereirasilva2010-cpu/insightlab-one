@@ -87,6 +87,9 @@ export async function createPayment(input: CreatePaymentInput): Promise<ActionRe
   const result = await runAction(() =>
     apiFetch<Payment>("/v1/payments", { method: "POST", body: JSON.stringify(input) }),
   );
-  if (result.ok) revalidatePath(`/vendas/${input.saleId}`);
+  if (result.ok) {
+    revalidatePath(`/vendas/${input.saleId}`);
+    revalidatePath("/painel");
+  }
   return result;
 }

@@ -20,7 +20,10 @@ export async function generateCommission(
       body: JSON.stringify(input),
     }),
   );
-  if (result.ok) revalidatePath("/comissoes");
+  if (result.ok) {
+    revalidatePath("/comissoes");
+    revalidatePath("/painel");
+  }
   return result;
 }
 

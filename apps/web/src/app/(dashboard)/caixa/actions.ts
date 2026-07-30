@@ -20,7 +20,10 @@ export async function openCashRegister(
       body: JSON.stringify(input),
     }),
   );
-  if (result.ok) revalidatePath("/caixa");
+  if (result.ok) {
+    revalidatePath("/caixa");
+    revalidatePath("/painel");
+  }
   return result;
 }
 
@@ -39,6 +42,9 @@ export async function closeCashRegister(
       body: JSON.stringify(input),
     }),
   );
-  if (result.ok) revalidatePath("/caixa");
+  if (result.ok) {
+    revalidatePath("/caixa");
+    revalidatePath("/painel");
+  }
   return result;
 }

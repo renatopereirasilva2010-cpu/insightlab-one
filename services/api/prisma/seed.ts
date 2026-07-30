@@ -355,6 +355,7 @@ async function main() {
     'clients.read',
     'clients.create',
     'clients.update',
+    'professionals.read',
     'availability.read',
     'appointments.read',
     'appointments.create',
