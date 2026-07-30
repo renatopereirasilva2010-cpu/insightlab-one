@@ -9,7 +9,7 @@
 
 - **Branch ativa:** `onda-2/backend-crud-completo`
 - **Working tree:** limpa — tudo da onda8 já commitado (ver seção 4).
-- **`main` local:** sincronizada com `onda-2/backend-crud-completo` (fast-forward feito em 30/07). **`origin/main` (GitHub) ainda não** — o push falhou por falta de credencial Git configurada nesta máquina/sessão (`fatal: could not read Username for 'https://github.com'`). Renato autorizou publicar o histórico completo; falta só rodar `git push origin main:main --force-with-lease` de um terminal autenticado (o force é necessário porque o `origin/main` antigo era um recorte de 6 commits sem ancestral comum com o histórico real).
+- **`main` local e `origin/main` (GitHub):** sincronizadas desde 30/07/2026, ambas em `b5df4ab` — push feito com `--force-with-lease` (necessário porque o `origin/main` antigo era um recorte de 6 commits sem ancestral comum com o histórico real; Renato autorizou publicar o histórico completo). Credencial Git configurada em `.git/credentials` (arquivo local do repositório, fora do controle de versão, permissão 600) — push futuro deste workspace autentica sozinho, sem precisar pedir token de novo. **Push continua sendo Zona Vermelha** — ter credencial funcionando não dispensa aprovação explícita de Renato a cada push real.
 
 ### O que já está rodando (nesta máquina, agora) — via systemd, não mais processo solto
 | Serviço | Como está rodando | Porta | Observação |
@@ -161,15 +161,14 @@ Três rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-cor
 
 ## 5. Pendências conhecidas
 
-1. **Push do histórico completo pro GitHub** — autorizado por Renato, falta credencial. Ver seção 1 (comando exato).
-2. **`@nestjs/core` (CVE-2026-35515)** — risco aceito e confirmado por Renato, documentado em `DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` (código morto no projeto, correção exige migração de major do framework).
-3. **Fluxo formal de migração de schema** — hoje depende do workaround manual da seção 2.2 (a credencial de runtime não tem DDL).
-4. **Erro de lint pré-existente em `agenda-calendar.tsx`** (`react-hooks/incompatible-library` via React Compiler) — não introduzido nesta sessão, fora de escopo, reportado pra decisão de Renato.
-5. **Sem tag Git formal pro Bloco 27** — administrativo, não bloqueia.
-6. **Sem testes de frontend** (`apps/web` sem `*.test.*`) — gap pré-existente.
-7. **Decremento de estoque na venda de produtos** (`stockQuantity` nunca é abatido) — gap de inventário, não endereçado.
-8. **Backlog de negócio** (apps mobile, superfície do cliente/WhatsApp/Pix, Focus NFe FASE 2, estorno de comissão liberada) — todos bloqueados em decisão de Renato ou conta em fornecedor externo, não em código. Ver `insightlab-one-onda5-backlog-consolidado.md` seção 6.
-9. **Deploy pra staging/produção** — Zona Vermelha, aguardando aprovação explícita (merge local já autorizado, deploy é decisão separada).
+1. **`@nestjs/core` (CVE-2026-35515)** — risco aceito e confirmado por Renato, documentado em `DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` (código morto no projeto, correção exige migração de major do framework).
+2. **Fluxo formal de migração de schema** — hoje depende do workaround manual da seção 2.2 (a credencial de runtime não tem DDL).
+3. **Erro de lint pré-existente em `agenda-calendar.tsx`** (`react-hooks/incompatible-library` via React Compiler) — não introduzido nesta sessão, fora de escopo, reportado pra decisão de Renato.
+4. **Sem tag Git formal pro Bloco 27** — administrativo, não bloqueia.
+5. **Sem testes de frontend** (`apps/web` sem `*.test.*`) — gap pré-existente.
+6. **Decremento de estoque na venda de produtos** (`stockQuantity` nunca é abatido) — gap de inventário, não endereçado.
+7. **Backlog de negócio** (apps mobile, superfície do cliente/WhatsApp/Pix, Focus NFe FASE 2, estorno de comissão liberada) — todos bloqueados em decisão de Renato ou conta em fornecedor externo, não em código. Ver `insightlab-one-onda5-backlog-consolidado.md` seção 6.
+8. **Deploy pra staging/produção** — Zona Vermelha, aguardando aprovação explícita (push pra `main` no GitHub já feito; deploy de fato é decisão separada).
 
 ---
 
