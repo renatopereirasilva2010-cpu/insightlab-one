@@ -12,6 +12,8 @@ import { NewUserButton } from "./new-user-button";
 import { UserRowActions } from "./user-row-actions";
 import { NewRoleButton } from "./new-role-button";
 import { ManageRoleButton } from "./manage-role-button";
+import { ManageReportPermissionsButton } from "./manage-report-permissions-button";
+import { TenantLogoForm } from "./tenant-logo-form";
 
 const RELEASE_MODE_LABELS: Record<string, string> = {
   ON_PAYMENT: "Ao pagamento",
@@ -55,6 +57,11 @@ export default async function ConfiguracoesPage() {
         </TabsList>
 
         <TabsContent value="business" className="space-y-4">
+          {hasPermission(user, "tenants.update") && (
+            <div className="flex justify-end">
+              <TenantLogoForm tenantId={user.tenantId} />
+            </div>
+          )}
           {!settings ? (
             <p className="text-muted-foreground text-sm">
               Nenhuma configuração encontrada para este negócio.
@@ -176,6 +183,8 @@ export default async function ConfiguracoesPage() {
                 cell: (r) =>
                   hasPermission(user, "roles.assign") ? (
                     <ManageRoleButton role={r} permissions={permissions} users={users} />
+                  ) : hasPermission(user, "reports.manage") ? (
+                    <ManageReportPermissionsButton role={r} />
                   ) : null,
               },
             ]}

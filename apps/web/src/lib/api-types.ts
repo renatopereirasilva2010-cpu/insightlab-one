@@ -204,6 +204,7 @@ export interface Client {
   socialName: string | null;
   phone: string | null;
   email: string | null;
+  photoUrl: string | null;
   status: ClientStatus;
   source: string | null;
   createdAt: string;
@@ -227,6 +228,7 @@ export interface Professional {
   onlineBookingEnabled: boolean;
   payoutPixKey: string | null;
   payoutPixKeyType: PixKeyType | null;
+  photoUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -264,6 +266,7 @@ export interface Product {
   salePrice: number;
   stockQuantity: number | null;
   minStock: number | null;
+  photoUrl: string | null;
   status: GenericStatus;
   createdAt: string;
   updatedAt: string;
@@ -382,6 +385,7 @@ export interface Role {
   code: string;
   name: string;
   description: string | null;
+  permissionCodes?: string[];
 }
 
 export interface Permission {
@@ -389,6 +393,15 @@ export interface Permission {
   code: string;
   name: string;
   module: string;
+}
+
+export interface SessionProfile {
+  name: string;
+  email: string;
+  professionalId: string | null;
+  photoUrl: string | null;
+  roles: { id: string; name: string }[];
+  tenant: { name: string; logoUrl: string | null };
 }
 
 export interface BusinessSettings {

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Calendar,
   ClipboardList,
@@ -17,12 +17,13 @@ import {
   Percent,
   FileText,
   Settings,
-  LogOut,
   Receipt,
   LayoutDashboard,
   MessageCircle,
   ShieldCheck,
   CircleHelp,
+  BarChart3,
+  History,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ import type { SessionUser } from "@/lib/session";
 
 const navItems = [
   { href: "/painel", label: "Inteligência de Receita", icon: LayoutDashboard },
+  { href: "/relatorios", label: "Relatórios", icon: BarChart3, permission: "reports.read" },
   { href: "/", label: "Agenda", icon: Calendar },
   { href: "/atendimentos", label: "Atendimentos", icon: ClipboardList },
   { href: "/vendas", label: "Vendas", icon: ShoppingCart },
@@ -60,23 +62,24 @@ const cadastrosItems = [
 
 const configItems = [
   { href: "/configuracoes", label: "Configurações", icon: Settings },
+  { href: "/auditoria", label: "Auditoria", icon: History, permission: "audit.read" },
   { href: "/lgpd", label: "LGPD", icon: ShieldCheck },
   { href: "/ajuda", label: "Ajuda", icon: CircleHelp },
 ];
 
 export function AppSidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
-  const router = useRouter();
 
-  const operacaoItems = user.permissions.includes("commissions.read-own")
-    ? [...navItems, { href: "/minhas-comissoes", label: "Minhas Comissões", icon: Receipt }]
-    : navItems;
+  const operacaoItems = [
+    ...navItems,
+    ...(user.permissions.includes("commissions.read-own")
+      ? [{ href: "/minhas-comissoes", label: "Minhas Comissões", icon: Receipt }]
+      : []),
+  ].filter((item) => !item.permission || user.permissions.includes(item.permission));
 
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
-  }
+  const visibleConfigItems = configItems.filter(
+    (item) => !item.permission || user.permissions.includes(item.permission),
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -139,7 +142,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <SidebarGroupLabel>Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {configItems.map((item) => (
+              {visibleConfigItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>
@@ -154,19 +157,6 @@ export function AppSidebar({ user }: { user: SessionUser }) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">
-              {user.email}
-            </div>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout}>
-              <LogOut />
-              <span>Sair</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
         <div
           className="mt-1 h-[3px] w-full shrink-0 group-data-[collapsible=icon]:hidden"
           style={{ background: "var(--insightlab-gradient-brand)" }}
