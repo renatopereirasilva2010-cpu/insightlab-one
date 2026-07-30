@@ -1,5 +1,7 @@
 # DECISÃO DE RISCO ACEITO — `@nestjs/core` (CVE-2026-35515, SSE injection)
 
+**Status:** CONFIRMADO por Renato em 30/07/2026 — decisão registrada abaixo está em vigor.
+
 ## 1. Contexto
 
 Auditoria de dependências (`pnpm audit --prod`, 29/07/2026, dentro da correção geral de vulnerabilidades desta sessão) encontrou 1 vulnerabilidade moderada (CVSS 6.3) em `@nestjs/core@10.4.22`:
