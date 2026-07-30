@@ -1,26 +1,21 @@
 import Image from "next/image";
-import fs from "node:fs";
-import path from "node:path";
+import { buildMediaUrl } from "@/lib/media";
 
 /**
- * Identidade do tenant no header da area operacional. Hoje "Mix Concept
- * Hair" e fixo (schema nao tem campo de marca por tenant ainda - ver
- * DECISAO pendente em governance/insightlab-one-onda6-...md e a memoria
- * whitelabel_brand_status do Claude Code). Se
- * public/brand/mix-concept-hair-logo.png existir, mostra o logo real;
- * caso contrario, mostra um selo tipografico nas cores extraidas do logo
- * (dourado/preto/creme) em vez de deixar o nome sem nenhum tratamento
- * visual - nunca redesenha ou reinventa o logo em si.
+ * Identidade do tenant no header da area operacional - regra geral pra
+ * qualquer tenant (onda8, resolve a pendencia que estava registrada no
+ * CLAUDE.md): se o tenant tiver logoUrl (upload feito pelo Admin em
+ * Configuracoes), mostra o logo real; caso contrario, selo tipografico nas
+ * cores da marca do tenant. Nunca redesenha/reinventa um logo que nao existe.
  */
-export function TenantBadge({ name }: { name: string }) {
-  const logoPath = path.join(process.cwd(), "public", "brand", "mix-concept-hair-logo.png");
-  const hasRealLogo = fs.existsSync(logoPath);
+export function TenantBadge({ name, logoUrl }: { name: string; logoUrl: string | null }) {
+  const resolvedLogoUrl = buildMediaUrl(logoUrl);
 
-  if (hasRealLogo) {
+  if (resolvedLogoUrl) {
     return (
       <div className="flex items-center gap-2">
         <Image
-          src="/brand/mix-concept-hair-logo.png"
+          src={resolvedLogoUrl}
           alt={name}
           width={32}
           height={32}

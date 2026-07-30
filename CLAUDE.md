@@ -59,7 +59,7 @@ Before changing UI, UX, visual styles, dashboards, charts, predictive features, 
 - Strategic descriptor: **Revenue Recovery Intelligence**
 - Verticals: **Beauty**, **Dental**, and future governed verticals
 - Write `InsightLab` without a space, capital `I` and `L`.
-- A tenant may be presented as `InsightLab One • <Tenant name>` — **pendente de decisão de Renato quanto ao grau de white-label na área operacional do tenant** (ver conversa de 28/07/2026 — o doc de marca recomenda identidade do tenant subordinada; Renato descreveu algo mais próximo de branding do tenant dominante na área operacional. Não resolver essa tensão sem confirmação explícita).
+- **Resolvido em 30/07/2026 (onda8):** o logo do tenant fica sempre em destaque na área operacional — regra geral para qualquer tenant, não caso especial do Mix. Implementado via `Tenant.logoUrl` (upload pelo Admin em Configurações, endpoint `POST /v1/tenants/:id/logo`), lido em `GET /v1/auth/me` e renderizado por `components/tenant-badge.tsx`; sem logo cadastrado, cai num selo tipográfico nas cores do tenant, nunca inventa a arte. Isso substitui a pendência anterior sobre "grau de white-label" — decisão fechada, não reabrir sem evidência nova.
 
 ### Non-negotiable experience principles
 Every relevant analytical experience should answer: o que está acontecendo, por que importa, qual oportunidade/risco, qual ação recomendada, qual impacto estimado, qual confiança, como acompanhar o resultado. Nunca comunicar previsão como garantia.
