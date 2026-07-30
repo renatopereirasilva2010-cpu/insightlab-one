@@ -167,6 +167,14 @@ export function AppSidebar({ user }: { user: SessionUser }) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <div
+          className="mt-1 h-[3px] w-full shrink-0 group-data-[collapsible=icon]:hidden"
+          style={{ background: "var(--insightlab-gradient-brand)" }}
+          aria-hidden
+        />
+        <p className="px-2 py-1 text-[10px] tracking-wide text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
+          Powered by InsightLab
+        </p>
       </SidebarFooter>
     </Sidebar>
   );

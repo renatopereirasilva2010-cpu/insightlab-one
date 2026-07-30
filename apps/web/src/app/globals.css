@@ -51,33 +51,51 @@
 :root {
   /* Marca InsightLab - fonte: design-tokens/insightlab.tokens.css e
    * docs/brand/INSIGHTLAB_BRAND_SYSTEM.md. Aplicada na estrutura do shell
-   * (sidebar, acoes primarias) - a area operacional principal permanece
-   * branca/neutra por design (70-80% branco/off-white recomendado pelo
-   * sistema de marca), pronta para receber a identidade visual do tenant
-   * (Mix Concept Hair) quando os ativos reais dela existirem no repo. */
+   * (sidebar, acoes primarias, gradiente de marca). */
   --insightlab-navy-900: #0c235a;
   --insightlab-navy-800: #102561;
   --insightlab-indigo-600: #444fb1;
   --insightlab-violet-600: #5c31d6;
   --insightlab-mist-100: #ebf0f9;
+  --insightlab-gradient-brand: linear-gradient(
+    135deg,
+    #40bcdf 0%,
+    #2fa1dd 34%,
+    #444fb1 67%,
+    #5c31d6 100%
+  );
 
-  --background: oklch(1 0 0);
+  /* Marca do tenant (Mix Concept Hair) - extraida visualmente do logo
+   * (pincelada dourada/bronze, moldura preta, fundo cru/pergaminho)
+   * enquanto o arquivo real do logo nao existe no repo (ver
+   * governance/insightlab-one-onda6-... e whitelabel_brand_status na
+   * memoria do Claude Code). Ajustar o hex se divergir do arquivo real
+   * quando ele chegar - isto e uma extracao visual, nao um color-pick
+   * exato. Aplicada so na area operacional (fundo, acento, sombra),
+   * nunca nas acoes primarias (essas continuam violeta do InsightLab,
+   * cor de marca consistente entre os dois lados). */
+  --mix-gold: #b08d45;
+  --mix-gold-bright: #c9a227;
+  --mix-black: #1a1a1a;
+  --mix-cream: #f4efe2;
+
+  --background: oklch(0.99 0.006 90);
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  --card: oklch(0.995 0.004 90);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --primary: var(--insightlab-violet-600);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.97 0.008 90);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
+  --muted: oklch(0.97 0.008 90);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: oklch(0.94 0.03 85);
+  --accent-foreground: oklch(0.25 0.05 75);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.9 0.012 85);
+  --input: oklch(0.9 0.012 85);
   --ring: var(--insightlab-violet-600);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
