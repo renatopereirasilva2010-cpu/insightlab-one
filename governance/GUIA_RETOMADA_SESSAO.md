@@ -1,6 +1,6 @@
 # Guia de Retomada de Sessão — InsightLab One
 
-**Última atualização:** 29/07/2026, ao fechar `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` (white-label completo, papéis Gerente/Recepção, Painel virou "Inteligência de Receita" com gráficos/exportação, 8 vulnerabilidades `high` corrigidas). Onda anterior: `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` (CRUD, resiliência via systemd, primeira aplicação de marca).
+**Última atualização:** 30/07/2026, ao fechar `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` (relatórios customizáveis, auditoria com leitura, logo por tenant data-driven, fotos em cadastros, menu de usuário no header). Onda anterior: `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` (white-label completo, papéis Gerente/Recepção, Inteligência de Receita, segurança).
 **Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero. **Leia isto antes de subir API/frontend manualmente — desde 29/07/2026 eles rodam supervisionados por `systemd --user`, não é mais `pnpm start:dev` direto no terminal.**
 
 ---
@@ -8,8 +8,8 @@
 ## 1. Estado exato no momento em que este guia foi escrito
 
 - **Branch ativa:** `onda-2/backend-crud-completo`
-- **Working tree:** com mudanças **não commitadas** desta sessão (29/07) — ver seção 4. Commit pendente de execução (Zona Amarela, sem push/merge); push/merge continuam Zona Vermelha.
-- **`main`:** não tocado nesta sessão.
+- **Working tree:** limpa — tudo da onda8 já commitado (ver seção 4).
+- **`main` local:** sincronizada com `onda-2/backend-crud-completo` (fast-forward feito em 30/07). **`origin/main` (GitHub) ainda não** — o push falhou por falta de credencial Git configurada nesta máquina/sessão (`fatal: could not read Username for 'https://github.com'`). Renato autorizou publicar o histórico completo; falta só rodar `git push origin main:main --force-with-lease` de um terminal autenticado (o force é necessário porque o `origin/main` antigo era um recorte de 6 commits sem ancestral comum com o histórico real).
 
 ### O que já está rodando (nesta máquina, agora) — via systemd, não mais processo solto
 | Serviço | Como está rodando | Porta | Observação |
@@ -54,7 +54,25 @@ systemctl --user restart insightlab-api          # o Restart=always eventualment
 
 Detalhe completo do diagnóstico em `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` seção 4.
 
-### 2.2 Comandos de gestão dos serviços systemd
+### 2.2 Se uma migration falhar com "must be owner of table" (P3018) ou "permission denied to create database" (P3014)
+
+Achado em 30/07/2026: a credencial que a API usa em runtime (`insightlab_app`, no `DATABASE_URL` do `.env`) **não tem privilégio de DDL** — só o dono das tabelas (`insightlab`) pode rodar `ALTER TABLE`/`CREATE DATABASE`. Isso é proposital (privilégio mínimo em runtime), mas quebra `prisma migrate dev`/`deploy` direto. Workaround até isso virar um fluxo formal:
+
+```bash
+cd services/api
+# 1. Editar prisma/schema.prisma normalmente.
+# 2. Criar a pasta de migration manualmente (sem depender do shadow DB):
+mkdir -p "prisma/migrations/$(date +%Y%m%d%H%M%S)_nome_da_mudanca"
+# 3. Escrever o SQL (ALTER TABLE etc.) em migration.sql dentro dessa pasta.
+# 4. Aplicar como o usuário dono, nao via prisma migrate deploy:
+docker exec -i insightlab_one_postgres psql -U insightlab -d insightlab_one < prisma/migrations/<pasta>/migration.sql
+# 5. Marcar como aplicada no controle do Prisma:
+npx prisma migrate resolve --applied <nome_da_pasta>
+# 6. Regenerar o client:
+npx prisma generate
+```
+
+### 2.3 Comandos de gestão dos serviços systemd
 ```bash
 systemctl --user status insightlab-api insightlab-web    # estado atual
 systemctl --user restart insightlab-api insightlab-web   # depois de pnpm build
@@ -110,9 +128,9 @@ cd ~/projects/insightlab-one/workspace/apps/web && pnpm dev
 
 ---
 
-## 4. O que foi entregue nesta sessão (29/07/2026)
+## 4. O que foi entregue (29-30/07/2026)
 
-Duas rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` e `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md`. Resumo:
+Três rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md`, `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` e `insightlab-one-onda8-relatorios-auditoria-fotos-header.md`. Resumo:
 
 **Onda 6:**
 1. **CRUD de verdade fechado** — Clientes, Serviços (edição geral), Produtos, Usuários e Papéis ganharam UI de editar/criar que nunca tinha sido implementada.
@@ -121,23 +139,33 @@ Duas rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-corr
 4. **White-label — primeira aplicação real do InsightLab.**
 
 **Onda 7:**
-5. **Segurança** — `pnpm audit`: 8 `high` → 0 (17 achados → 6, ver `DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` pro único não corrigido).
-6. **White-label do Mix Concept Hair** — paleta (dourado/preto/creme) aplicada na área operacional; logo real ainda pendente (Renato precisa salvar o arquivo em `apps/web/public/brand/mix-concept-hair-logo.png`).
+5. **Segurança** — `pnpm audit`: 8 `high` → 0 (17 achados → 6, ver `DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` pro único não corrigido, confirmado por Renato em 30/07).
+6. **White-label do Mix Concept Hair** — paleta (dourado/preto/creme) aplicada na área operacional.
 7. **RBAC** — papéis Gerente e Recepção, seguindo padrão de mercado (Vagaro). Credenciais na seção 3.5.
 8. **Painel → "Inteligência de Receita"** — gráficos (Recharts), exportação CSV, atualização automática via revalidação + refresh no foco.
 9. **Confirmação de ações destrutivas** — cancelar venda, bloquear usuário, cancelar comissão agora pedem confirmação (`AlertDialog`).
+
+**Onda 8:**
+10. **Upload de foto/logo, do zero** — disco local (`services/api/uploads/`), endpoints por entidade (profissional/cliente/produto/tenant).
+11. **Logo por tenant virou regra geral e data-driven** — `Tenant.logoUrl`, upload pelo Admin em Configurações. Resolve a pendência que estava aberta no `CLAUDE.md`; não precisa mais salvar arquivo manualmente.
+12. **Trilha de auditoria com leitura** — `/auditoria`, liberada agora pro Gerente (`audit.read`).
+13. **Módulo de Relatórios (`/relatorios`)** — 5 relatórios com filtro de período real e export CSV, permissão customizável por papel via checklist em Configurações → Papéis (escopo travado em `reports.*`, testado contra abuso).
+14. **Menu de usuário no header** — "Seja bem-vindo, {nome}" + papel + logout, todo perfil incluindo Admin.
+15. **Fotos em cadastros** — profissional/cliente/produto, avatar reaproveitado em listas e seletores (agendamento, venda, comissões).
 
 ---
 
 ## 5. Pendências conhecidas
 
-1. **Logo real do Mix Concept Hair** — Renato precisa salvar em `apps/web/public/brand/mix-concept-hair-logo.png`; o app já usa automaticamente assim que existir.
-2. **`@nestjs/core` (CVE-2026-35515)** — risco aceito, documentado em `DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` (código morto no projeto, correção exige migração de major do framework).
-3. **Sem tag Git formal pro Bloco 27** — administrativo, não bloqueia.
-4. **Sem testes de frontend** (`apps/web` sem `*.test.*`) — gap pré-existente.
-5. **Decremento de estoque na venda de produtos** (`stockQuantity` nunca é abatido) — gap de inventário, não endereçado.
-6. **Backlog de negócio** (apps mobile, superfície do cliente/WhatsApp/Pix, Focus NFe FASE 2, estorno de comissão liberada) — todos bloqueados em decisão de Renato ou conta em fornecedor externo, não em código. Ver `insightlab-one-onda5-backlog-consolidado.md` seção 6.
-7. **Merge de qualquer branch pra `main` e qualquer deploy** — Zona Vermelha, aguardando aprovação explícita.
+1. **Push do histórico completo pro GitHub** — autorizado por Renato, falta credencial. Ver seção 1 (comando exato).
+2. **`@nestjs/core` (CVE-2026-35515)** — risco aceito e confirmado por Renato, documentado em `DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` (código morto no projeto, correção exige migração de major do framework).
+3. **Fluxo formal de migração de schema** — hoje depende do workaround manual da seção 2.2 (a credencial de runtime não tem DDL).
+4. **Erro de lint pré-existente em `agenda-calendar.tsx`** (`react-hooks/incompatible-library` via React Compiler) — não introduzido nesta sessão, fora de escopo, reportado pra decisão de Renato.
+5. **Sem tag Git formal pro Bloco 27** — administrativo, não bloqueia.
+6. **Sem testes de frontend** (`apps/web` sem `*.test.*`) — gap pré-existente.
+7. **Decremento de estoque na venda de produtos** (`stockQuantity` nunca é abatido) — gap de inventário, não endereçado.
+8. **Backlog de negócio** (apps mobile, superfície do cliente/WhatsApp/Pix, Focus NFe FASE 2, estorno de comissão liberada) — todos bloqueados em decisão de Renato ou conta em fornecedor externo, não em código. Ver `insightlab-one-onda5-backlog-consolidado.md` seção 6.
+9. **Deploy pra staging/produção** — Zona Vermelha, aguardando aprovação explícita (merge local já autorizado, deploy é decisão separada).
 
 ---
 
@@ -155,6 +183,7 @@ Toda implementação nova vai primeiro pra **staging**, valida com Renato manual
 - `governance/insightlab-one-onda5-backlog-consolidado.md` — retrato único do backlog de produto (o que fechou, o que está bloqueado em decisão/fornecedor)
 - `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` — CRUD, bugs, resiliência, primeira aplicação de marca
 - `governance/insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` — white-label completo, RBAC, Inteligência de Receita, segurança
+- `governance/insightlab-one-onda8-relatorios-auditoria-fotos-header.md` — relatórios customizáveis, auditoria, logo por tenant, fotos, menu de usuário
 - `governance/DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` — por que a vulnerabilidade do `@nestjs/core` foi aceita, não corrigida
 - `governance/DECISAO_PRODUCAO_SUSPENSA_PRIORIZAR_STAGING.md` — por que produção está pausada
 - `governance/BACKLOG_PRODUTO_E_DIFERENCIACAO.md` — visão de produto/diferenciação de mercado
