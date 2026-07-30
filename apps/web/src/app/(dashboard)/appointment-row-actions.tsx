@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, UserX } from "lucide-react";
+import { X, UserX, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -15,18 +15,41 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import type { Appointment } from "@/lib/api-types";
+import { appointmentStatusLabels } from "@/components/status-badge";
 import { cancelAppointment, markAppointmentNoShow } from "./actions";
 
 const TERMINAL_STATUSES = ["CANCELED", "NO_SHOW", "COMPLETED"];
 
-export function AppointmentRowActions({ appointment }: { appointment: Appointment }) {
+export function AppointmentRowActions({
+  appointment,
+  onEdit,
+}: {
+  appointment: Appointment;
+  /** Quando presente, mostra o botão "Editar" pra este agendamento (visão Lista). */
+  onEdit?: () => void;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState<"cancel" | "no-show" | null>(null);
 
   if (TERMINAL_STATUSES.includes(appointment.status)) {
-    return <span className="text-muted-foreground text-xs">—</span>;
+    const label = appointmentStatusLabels[appointment.status] ?? appointment.status;
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <Button variant="ghost" size="sm" disabled aria-label="Edição indisponível">
+              <Pencil />
+            </Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          Agendamentos com status &ldquo;{label}&rdquo; não podem ser alterados.
+        </TooltipContent>
+      </Tooltip>
+    );
   }
 
   async function handleCancel() {
@@ -55,6 +78,12 @@ export function AppointmentRowActions({ appointment }: { appointment: Appointmen
 
   return (
     <div className="flex justify-end gap-1">
+      {onEdit && (
+        <Button variant="ghost" size="sm" disabled={pending !== null} title="Editar" onClick={onEdit}>
+          <Pencil />
+        </Button>
+      )}
+
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="ghost" size="sm" disabled={pending !== null} title="Não compareceu">

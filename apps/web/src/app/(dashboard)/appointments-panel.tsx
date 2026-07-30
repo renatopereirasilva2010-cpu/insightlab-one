@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table";
+import { EntityDialog } from "@/components/entity-dialog";
 import {
   StatusBadge,
   appointmentStatusLabels,
@@ -25,6 +26,7 @@ import type {
 } from "@/lib/api-types";
 import { NewAppointmentButton } from "./new-appointment-button";
 import { AppointmentRowActions } from "./appointment-row-actions";
+import { AppointmentForm } from "./appointment-form";
 import { AgendaCalendar } from "./agenda-calendar";
 import type { OperationalResource } from "@/lib/api-types";
 
@@ -54,6 +56,7 @@ export function AppointmentsPanel({
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [professionalFilter, setProfessionalFilter] = useState(ALL);
   const [statusFilter, setStatusFilter] = useState(ALL);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
   const clientById = useMemo(() => new Map(clients.map((c) => [c.id, c])), [clients]);
   const professionalById = useMemo(
@@ -152,6 +155,7 @@ export function AppointmentsPanel({
           resources={resources}
           canManage={canManage}
           canCreate={canCreate}
+          onAppointmentClick={(appointment) => setEditingAppointment(appointment)}
         />
       ) : (
         <DataTable<Appointment>
@@ -191,11 +195,40 @@ export function AppointmentsPanel({
             {
               header: "",
               className: "text-right",
-              cell: (a) => (canManage ? <AppointmentRowActions appointment={a} /> : null),
+              cell: (a) =>
+                canManage ? (
+                  <AppointmentRowActions
+                    appointment={a}
+                    onEdit={() => setEditingAppointment(a)}
+                  />
+                ) : null,
             },
           ]}
         />
       )}
+
+      <EntityDialog
+        title="Editar agendamento"
+        description="Altere o horário, profissional ou serviço deste agendamento."
+        open={editingAppointment !== null}
+        onOpenChange={(open) => !open && setEditingAppointment(null)}
+      >
+        {({ close }) =>
+          editingAppointment && (
+            <AppointmentForm
+              clients={clients}
+              professionals={professionals}
+              services={services}
+              resources={resources}
+              existing={editingAppointment}
+              onSuccess={() => {
+                close();
+                setEditingAppointment(null);
+              }}
+            />
+          )
+        }
+      </EntityDialog>
     </div>
   );
 }

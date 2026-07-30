@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EntityDialog } from "@/components/entity-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   StatusBadge,
   appointmentStatusLabels,
@@ -490,6 +498,7 @@ export function AgendaCalendar({
   resources,
   canManage,
   canCreate,
+  onAppointmentClick,
 }: {
   appointments: Appointment[];
   blocks: AppointmentBlock[];
@@ -499,13 +508,18 @@ export function AgendaCalendar({
   resources: OperationalResource[];
   canManage: boolean;
   canCreate: boolean;
+  /** Editar um agendamento - o dialogo em si vive no componente pai
+   * (AppointmentsPanel), reaproveitado tambem pela visao Lista. */
+  onAppointmentClick: (appointment: Appointment) => void;
 }) {
   const [mode, setMode] = useState<"day" | "week">("day");
   const [anchorDate, setAnchorDate] = useState(() => startOfDay(new Date()));
-  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [creatingSlot, setCreatingSlot] = useState<{ professionalId: string | null; startAt: Date } | null>(
     null,
   );
+  // Vazio = mostra todos (comportamento de sempre). So passa a filtrar
+  // quando o usuario desmarca alguem no menu "Profissionais".
+  const [hiddenProfessionalIds, setHiddenProfessionalIds] = useState<Set<string>>(new Set());
 
   const clientById = useMemo(() => new Map(clients.map((c) => [c.id, c])), [clients]);
   const serviceById = useMemo(() => new Map(services.map((s) => [s.id, s])), [services]);
@@ -513,6 +527,25 @@ export function AgendaCalendar({
     () => new Map(professionals.map((p) => [p.id, p])),
     [professionals],
   );
+
+  const visibleProfessionals = useMemo(
+    () => professionals.filter((p) => !hiddenProfessionalIds.has(p.id)),
+    [professionals, hiddenProfessionalIds],
+  );
+  const visibleAppointments = useMemo(
+    () =>
+      appointments.filter((a) => !a.professionalId || !hiddenProfessionalIds.has(a.professionalId)),
+    [appointments, hiddenProfessionalIds],
+  );
+
+  function toggleProfessionalVisible(id: string) {
+    setHiddenProfessionalIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   const weekStart = useMemo(() => startOfWeek(anchorDate), [anchorDate]);
 
@@ -567,6 +600,33 @@ export function AgendaCalendar({
               Semana
             </Button>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Users />
+                Profissionais
+                {hiddenProfessionalIds.size > 0 && (
+                  <span className="bg-primary text-primary-foreground ml-1 rounded-full px-1.5 text-xs">
+                    {professionals.length - hiddenProfessionalIds.size}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
+              <DropdownMenuLabel>Mostrar na agenda</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {professionals.map((p) => (
+                <DropdownMenuCheckboxItem
+                  key={p.id}
+                  checked={!hiddenProfessionalIds.has(p.id)}
+                  onCheckedChange={() => toggleProfessionalVisible(p.id)}
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  {p.name}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {canCreate && (
             <Button
               size="sm"
@@ -589,21 +649,21 @@ export function AgendaCalendar({
           </p>
           <DayGrid
             date={anchorDate}
-            appointments={appointments}
+            appointments={visibleAppointments}
             blocks={blocks}
-            professionals={professionals}
+            professionals={visibleProfessionals}
             clientById={clientById}
             serviceById={serviceById}
             canManage={canManage}
             canCreate={canCreate}
             onSlotClick={(professionalId, startAt) => setCreatingSlot({ professionalId, startAt })}
-            onAppointmentClick={(appointment) => setEditingAppointment(appointment)}
+            onAppointmentClick={onAppointmentClick}
           />
         </>
       ) : (
         <WeekAgenda
           weekStart={weekStart}
-          appointments={appointments}
+          appointments={visibleAppointments}
           professionalById={professionalById}
           clientById={clientById}
           serviceById={serviceById}
@@ -628,26 +688,6 @@ export function AgendaCalendar({
               onSuccess={() => {
                 close();
                 setCreatingSlot(null);
-              }}
-            />
-          )
-        }
-      </EntityDialog>
-
-      <EntityDialog
-        title="Editar agendamento"
-        description="Altere o horário, profissional ou serviço deste agendamento."
-        open={editingAppointment !== null}
-        onOpenChange={(open) => !open && setEditingAppointment(null)}
-      >
-        {({ close }) =>
-          editingAppointment && (
-            <AppointmentForm
-              {...newAppointmentProps}
-              existing={editingAppointment}
-              onSuccess={() => {
-                close();
-                setEditingAppointment(null);
               }}
             />
           )
