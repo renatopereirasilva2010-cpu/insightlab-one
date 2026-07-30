@@ -1,6 +1,6 @@
 # Guia de Retomada de Sessão — InsightLab One
 
-**Última atualização:** 30/07/2026, ao fechar o adendo de `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` seção 11 (nome social + correção de bug de UI na sidebar + validação mobile). Onda base: relatórios customizáveis, auditoria com leitura, logo por tenant data-driven, fotos em cadastros, menu de usuário no header. Onda anterior: `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` (white-label completo, papéis Gerente/Recepção, Inteligência de Receita, segurança).
+**Última atualização:** 30/07/2026, ao fechar `insightlab-one-onda9-agenda-visual-identidade.md` (filtro de profissionais na Agenda, correção de edição pela Lista, identidade visual de fundo nas duas áreas, botões/scrollbar modernos). Onda anterior: `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` (relatórios customizáveis, auditoria, logo por tenant, fotos, nome social, menu de usuário).
 **Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero. **Leia isto antes de subir API/frontend manualmente — desde 29/07/2026 eles rodam supervisionados por `systemd --user`, não é mais `pnpm start:dev` direto no terminal.**
 
 ---
@@ -132,7 +132,7 @@ cd ~/projects/insightlab-one/workspace/apps/web && pnpm dev
 
 ## 4. O que foi entregue (29-30/07/2026)
 
-Três rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md`, `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` e `insightlab-one-onda8-relatorios-auditoria-fotos-header.md`. Resumo:
+Quatro rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md`, `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md`, `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` e `insightlab-one-onda9-agenda-visual-identidade.md`. Resumo:
 
 **Onda 6:**
 1. **CRUD de verdade fechado** — Clientes, Serviços (edição geral), Produtos, Usuários e Papéis ganharam UI de editar/criar que nunca tinha sido implementada.
@@ -156,6 +156,12 @@ Três rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-cor
 15. **Fotos em cadastros** — profissional/cliente/produto, avatar reaproveitado em listas e seletores (agendamento, venda, comissões).
 16. **Nome social** — Usuário/Profissional/Cliente podem ter nome social, exibido como nome principal em toda a tela (header, listas, seletores) quando preenchido; nome de registro continua intacto.
 17. **Bug de UI corrigido** — texto "InsightLab One" quebrando durante transição do toggle da sidebar; mobile (375-390px) validado no shell de navegação e nas telas novas desta sessão.
+
+**Onda 9:**
+18. **Filtro de profissionais na Agenda** — dropdown com checkbox, todos visíveis por padrão.
+19. **Edição de agendamento pela Lista, corrigida** — a visão Lista nunca teve botão de editar; agora tem, reaproveitando o mesmo diálogo do Calendário. Agendamentos travados por status mostram tooltip explicando o motivo, em vez de sumir silenciosamente.
+20. **Identidade visual de fundo** — marca d'água sutil (ícones do lucide-react, 5-8% opacidade) na área operacional (Mix: tesoura/brilho dourado) e na sidebar (InsightLab: grafo de dados), decisão registrada de não usar banco de imagens.
+21. **Botões e scrollbar modernizados** — hover com elevação/sombra nas variantes principais, scrollbar fina dourada na área operacional.
 
 ---
 
@@ -187,6 +193,7 @@ Toda implementação nova vai primeiro pra **staging**, valida com Renato manual
 - `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` — CRUD, bugs, resiliência, primeira aplicação de marca
 - `governance/insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` — white-label completo, RBAC, Inteligência de Receita, segurança
 - `governance/insightlab-one-onda8-relatorios-auditoria-fotos-header.md` — relatórios customizáveis, auditoria, logo por tenant, fotos, menu de usuário
+- `governance/insightlab-one-onda9-agenda-visual-identidade.md` — filtro/edição na Agenda, identidade visual de fundo, botões/scrollbar
 - `governance/DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` — por que a vulnerabilidade do `@nestjs/core` foi aceita, não corrigida
 - `governance/DECISAO_PRODUCAO_SUSPENSA_PRIORIZAR_STAGING.md` — por que produção está pausada
 - `governance/BACKLOG_PRODUTO_E_DIFERENCIACAO.md` — visão de produto/diferenciação de mercado
