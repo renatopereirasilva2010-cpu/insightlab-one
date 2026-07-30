@@ -220,6 +220,7 @@ export interface Professional {
   tenantId: string;
   unitId: string | null;
   name: string;
+  socialName: string | null;
   phone: string | null;
   email: string | null;
   roleTitle: string | null;
@@ -373,6 +374,7 @@ export type UserStatus = "ACTIVE" | "INACTIVE" | "BLOCKED";
 export interface UserListItem {
   id: string;
   name: string;
+  socialName: string | null;
   email: string;
   status: UserStatus;
   unitId: string | null;
@@ -397,6 +399,7 @@ export interface Permission {
 
 export interface SessionProfile {
   name: string;
+  socialName: string | null;
   email: string;
   professionalId: string | null;
   photoUrl: string | null;

@@ -8,6 +8,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 const userSelect = {
   id: true,
   name: true,
+  socialName: true,
   email: true,
   status: true,
   unitId: true,
@@ -36,6 +37,7 @@ export class UsersService {
           tenantId,
           unitId: dto.unitId,
           name: dto.name,
+          socialName: dto.socialName,
           email: dto.email,
           phone: dto.phone,
           passwordHash,
@@ -89,6 +91,7 @@ export class UsersService {
         where: { id: user.id },
         data: {
           name: dto.name,
+          socialName: dto.socialName,
           phone: dto.phone,
           unitId: dto.unitId,
           status: dto.status,

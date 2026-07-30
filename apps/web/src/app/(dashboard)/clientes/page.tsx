@@ -4,7 +4,7 @@ import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
 import { EntityAvatar } from "@/components/entity-avatar";
 import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/components/status-badge";
-import { formatDate } from "@/lib/format";
+import { displayName, formatDate } from "@/lib/format";
 import type { Client } from "@/lib/api-types";
 import { NewClientButton } from "./new-client-button";
 import { EditClientButton } from "./edit-client-button";
@@ -41,8 +41,8 @@ export default async function ClientesPage() {
             header: "Nome",
             cell: (c) => (
               <Link href={`/clientes/${c.id}`} className="flex items-center gap-2 underline underline-offset-2">
-                <EntityAvatar name={c.name} photoUrl={c.photoUrl} />
-                {c.name}
+                <EntityAvatar name={displayName(c)} photoUrl={c.photoUrl} />
+                {displayName(c)}
               </Link>
             ),
           },

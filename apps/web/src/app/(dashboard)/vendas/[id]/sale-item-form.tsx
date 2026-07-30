@@ -24,6 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { EntityAvatar } from "@/components/entity-avatar";
+import { displayName } from "@/lib/format";
 import type { ServiceCatalogItem, Product, Professional } from "@/lib/api-types";
 import { addSaleItem } from "../actions";
 
@@ -195,8 +196,8 @@ export function SaleItemForm({
                   {professionals.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       <span className="flex items-center gap-2">
-                        <EntityAvatar name={p.name} photoUrl={p.photoUrl} />
-                        {p.name}
+                        <EntityAvatar name={displayName(p)} photoUrl={p.photoUrl} />
+                        {displayName(p)}
                       </span>
                     </SelectItem>
                   ))}

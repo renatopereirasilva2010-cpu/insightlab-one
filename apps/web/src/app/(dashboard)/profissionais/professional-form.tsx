@@ -39,6 +39,7 @@ const pixKeyTypeLabels: Record<string, string> = {
 
 const professionalSchema = z.object({
   name: z.string().min(1, "Informe o nome.").max(150),
+  socialName: z.string().max(150).optional().or(z.literal("")),
   roleTitle: z.string().max(100).optional().or(z.literal("")),
   phone: z.string().max(30).optional().or(z.literal("")),
   email: z.string().email("E-mail inválido.").max(150).optional().or(z.literal("")),
@@ -66,6 +67,7 @@ export function ProfessionalForm({
     resolver: zodResolver(professionalSchema),
     defaultValues: {
       name: existing?.name ?? "",
+      socialName: existing?.socialName ?? "",
       roleTitle: existing?.roleTitle ?? "",
       phone: existing?.phone ?? "",
       email: existing?.email ?? "",
@@ -81,6 +83,7 @@ export function ProfessionalForm({
     try {
       const payload = {
         name: values.name,
+        socialName: values.socialName || undefined,
         roleTitle: values.roleTitle || undefined,
         phone: values.phone || undefined,
         email: values.email || undefined,
@@ -129,6 +132,20 @@ export function ProfessionalForm({
               <FormLabel>Nome</FormLabel>
               <FormControl>
                 <Input placeholder="Nome completo" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="socialName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome social</FormLabel>
+              <FormControl>
+                <Input placeholder="Opcional — usado no lugar do nome acima em toda a tela" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

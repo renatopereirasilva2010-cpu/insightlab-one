@@ -114,6 +114,7 @@ describe('AuthService', () => {
         user: {
           findUnique: jest.fn().mockResolvedValue({
             name: 'Gerente Demo',
+            socialName: null,
             email: 'gerente.demo@mix-demo.local',
             professionalId: null,
             professional: null,
@@ -126,6 +127,7 @@ describe('AuthService', () => {
 
       await expect(service.me('user-1')).resolves.toEqual({
         name: 'Gerente Demo',
+        socialName: null,
         email: 'gerente.demo@mix-demo.local',
         professionalId: null,
         photoUrl: null,

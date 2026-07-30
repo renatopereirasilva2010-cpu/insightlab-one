@@ -166,6 +166,7 @@ export class AuthService {
 
     return {
       name: user.name,
+      socialName: user.socialName,
       email: user.email,
       professionalId: user.professionalId,
       photoUrl: user.professional?.photoUrl ?? null,

@@ -24,3 +24,14 @@ export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return "—";
   return dateFormatter.format(new Date(value));
 }
+
+/**
+ * Nome social tem prioridade sobre o nome de registro sempre que
+ * preenchido - o campo em si já é a escolha da pessoa, não precisa de um
+ * toggle separado. Usado em qualquer lugar que exibe o nome principal de
+ * um usuário/cliente/profissional (header, listas, avatares, seletores);
+ * o nome de registro continua disponível nos formulários/dados fiscais.
+ */
+export function displayName(entity: { name: string; socialName?: string | null }): string {
+  return entity.socialName?.trim() || entity.name;
+}

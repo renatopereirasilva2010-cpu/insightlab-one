@@ -21,6 +21,7 @@ export class ProfessionalsService {
         tenantId,
         unitId,
         name: dto.name,
+        socialName: dto.socialName,
         phone: dto.phone,
         email: dto.email,
         roleTitle: dto.roleTitle,
@@ -49,6 +50,7 @@ export class ProfessionalsService {
       where: { id: professional.id },
       data: {
         name: dto.name,
+        socialName: dto.socialName,
         phone: dto.phone,
         email: dto.email,
         roleTitle: dto.roleTitle,

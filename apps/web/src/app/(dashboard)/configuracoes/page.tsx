@@ -3,7 +3,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
 import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/components/status-badge";
-import { formatDate } from "@/lib/format";
+import { displayName, formatDate } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BusinessSettings, UserListItem, Role, Permission } from "@/lib/api-types";
@@ -139,7 +139,7 @@ export default async function ConfiguracoesPage() {
             emptyMessage="Nenhum usuário encontrado."
             emptyAction={hasPermission(user, "users.create") ? <NewUserButton /> : undefined}
             columns={[
-              { header: "Nome", cell: (u) => u.name },
+              { header: "Nome", cell: (u) => displayName(u) },
               { header: "E-mail", cell: (u) => u.email },
               {
                 header: "Status",

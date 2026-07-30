@@ -5,6 +5,11 @@ export class CreateUserDto {
   @MaxLength(150)
   name!: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  socialName?: string;
+
   @IsEmail()
   @MaxLength(150)
   email!: string;

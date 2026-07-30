@@ -10,7 +10,7 @@ import {
   payoutStatusVariants,
   payoutMethodLabels,
 } from "@/components/status-badge";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { displayName, formatCurrency, formatDateTime } from "@/lib/format";
 import type {
   Commission,
   CommissionPayout,
@@ -97,8 +97,8 @@ export default async function ComissoesPage() {
               const prof = professionalById.get(c.professionalId);
               return prof ? (
                 <span className="flex items-center gap-2">
-                  <EntityAvatar name={prof.name} photoUrl={prof.photoUrl} />
-                  {prof.name}
+                  <EntityAvatar name={displayName(prof)} photoUrl={prof.photoUrl} />
+                  {displayName(prof)}
                 </span>
               ) : (
                 "—"
@@ -154,7 +154,10 @@ export default async function ComissoesPage() {
             columns={[
               {
                 header: "Profissional",
-                cell: (p) => p.professional?.name ?? professionalById.get(p.professionalId)?.name ?? "—",
+                cell: (p) => {
+                  const prof = p.professional ?? professionalById.get(p.professionalId);
+                  return prof ? displayName(prof) : "—";
+                },
               },
               { header: "Valor", cell: (p) => formatCurrency(p.amount) },
               { header: "Método", cell: (p) => payoutMethodLabels[p.method] ?? p.method },

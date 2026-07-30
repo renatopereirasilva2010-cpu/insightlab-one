@@ -21,6 +21,7 @@ import { createUser, updateUser } from "./user-actions";
 
 const userSchema = z.object({
   name: z.string().min(1, "Informe o nome.").max(150),
+  socialName: z.string().max(150).optional().or(z.literal("")),
   email: z.string().email("E-mail inválido.").max(150),
   password: z.string().min(8, "Mínimo 8 caracteres.").or(z.literal("")),
   phone: z.string().max(30).optional().or(z.literal("")),
@@ -45,6 +46,7 @@ export function UserForm({
     resolver: zodResolver(userSchema),
     defaultValues: {
       name: existing?.name ?? "",
+      socialName: existing?.socialName ?? "",
       email: existing?.email ?? "",
       password: "",
       phone: "",
@@ -58,10 +60,12 @@ export function UserForm({
       const result = existing
         ? await updateUser(existing.id, {
             name: values.name,
+            socialName: values.socialName || undefined,
             phone: values.phone || undefined,
           })
         : await createUser({
             name: values.name,
+            socialName: values.socialName || undefined,
             email: values.email,
             password: values.password,
             phone: values.phone || undefined,
@@ -92,6 +96,20 @@ export function UserForm({
               <FormLabel>Nome</FormLabel>
               <FormControl>
                 <Input placeholder="Nome completo" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="socialName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome social</FormLabel>
+              <FormControl>
+                <Input placeholder="Opcional — usado no lugar do nome acima em toda a tela" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -7,6 +7,7 @@ import type { PixKeyType, Professional, UserListItem } from "@/lib/api-types";
 
 export interface CreateProfessionalInput {
   name: string;
+  socialName?: string;
   phone?: string;
   email?: string;
   roleTitle?: string;
@@ -31,6 +32,7 @@ export async function createProfessional(
 
 export interface UpdateProfessionalInput {
   name?: string;
+  socialName?: string;
   phone?: string;
   email?: string;
   roleTitle?: string;

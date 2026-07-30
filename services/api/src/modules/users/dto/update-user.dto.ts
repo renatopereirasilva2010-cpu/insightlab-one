@@ -14,6 +14,11 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(150)
+  socialName?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(30)
   phone?: string;
 

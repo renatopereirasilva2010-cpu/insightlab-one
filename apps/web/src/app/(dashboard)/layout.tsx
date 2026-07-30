@@ -33,6 +33,7 @@ export default async function DashboardLayout({
             <Separator orientation="vertical" className="h-6" />
             <UserMenu
               name={profile.name}
+              socialName={profile.socialName}
               email={profile.email}
               photoUrl={profile.photoUrl}
               roleNames={profile.roles.map((r) => r.name)}

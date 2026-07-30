@@ -7,6 +7,7 @@ import type { UserListItem } from "@/lib/api-types";
 
 export interface CreateUserInput {
   name: string;
+  socialName?: string;
   email: string;
   password: string;
   phone?: string;
@@ -28,6 +29,7 @@ export async function createUser(
 
 export interface UpdateUserInput {
   name?: string;
+  socialName?: string;
   phone?: string;
 }
 

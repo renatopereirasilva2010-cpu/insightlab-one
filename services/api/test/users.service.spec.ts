@@ -49,6 +49,7 @@ describe('UsersService', () => {
       select: {
         id: true,
         name: true,
+        socialName: true,
         email: true,
         status: true,
         unitId: true,
@@ -77,6 +78,7 @@ describe('UsersService', () => {
     expect(createArgs.select).toEqual({
       id: true,
       name: true,
+      socialName: true,
       email: true,
       status: true,
       unitId: true,
@@ -130,6 +132,7 @@ describe('UsersService', () => {
       select: {
         id: true,
         name: true,
+        socialName: true,
         email: true,
         status: true,
         unitId: true,
@@ -197,6 +200,7 @@ describe('UsersService', () => {
       select: {
         id: true,
         name: true,
+        socialName: true,
         email: true,
         status: true,
         unitId: true,

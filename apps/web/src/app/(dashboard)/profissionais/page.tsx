@@ -3,7 +3,7 @@ import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
 import { EntityAvatar } from "@/components/entity-avatar";
 import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/components/status-badge";
-import { formatDate } from "@/lib/format";
+import { displayName, formatDate } from "@/lib/format";
 import type { Professional, UserListItem } from "@/lib/api-types";
 import { NewProfessionalButton } from "./new-professional-button";
 import { LinkAccountButton } from "./link-account-button";
@@ -47,8 +47,8 @@ export default async function ProfissionaisPage() {
             header: "Nome",
             cell: (p) => (
               <div className="flex items-center gap-2">
-                <EntityAvatar name={p.name} photoUrl={p.photoUrl} />
-                {p.name}
+                <EntityAvatar name={displayName(p)} photoUrl={p.photoUrl} />
+                {displayName(p)}
               </div>
             ),
           },
