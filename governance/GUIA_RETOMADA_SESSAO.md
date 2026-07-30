@@ -1,6 +1,6 @@
 # Guia de Retomada de Sessão — InsightLab One
 
-**Última atualização:** 29/07/2026, ao fechar `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` (correções de CRUD, resiliência de processo via systemd, primeira aplicação real da marca).
+**Última atualização:** 29/07/2026, ao fechar `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` (white-label completo, papéis Gerente/Recepção, Painel virou "Inteligência de Receita" com gráficos/exportação, 8 vulnerabilidades `high` corrigidas). Onda anterior: `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` (CRUD, resiliência via systemd, primeira aplicação de marca).
 **Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero. **Leia isto antes de subir API/frontend manualmente — desde 29/07/2026 eles rodam supervisionados por `systemd --user`, não é mais `pnpm start:dev` direto no terminal.**
 
 ---
@@ -112,19 +112,27 @@ cd ~/projects/insightlab-one/workspace/apps/web && pnpm dev
 
 ## 4. O que foi entregue nesta sessão (29/07/2026)
 
-Detalhe completo em `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md`. Resumo:
+Duas rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` e `insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md`. Resumo:
 
-1. **CRUD de verdade fechado** — Clientes, Serviços (edição geral), Produtos, Usuários e Papéis ganharam UI de editar/criar que nunca tinha sido implementada (só Profissionais e Configurações tinham antes, apesar do backend já suportar desde 26/07 e o backlog dizer "Fechado").
-2. **3 bugs corrigidos:** hydration mismatch no calendário da Agenda, erro 403 cru ("Forbidden resource") em vez de mensagem humana (`PermissionGuard` corrigido — afeta a API inteira, não só onde foi encontrado), duração do agendamento não ajustando ao trocar serviço manualmente.
-3. **Resiliência de processo** — API e frontend agora rodam via `systemd --user` com `Restart=always`, sobrevivendo a crash sem intervenção manual (validado com `kill -9` duas vezes). Ver seção 1 e 2 acima.
-4. **White-label — primeira aplicação real** — sidebar com cores/logo reais do InsightLab (antes só existiam como arquivo, nunca usados no app). Área operacional principal (lado do tenant) mantida branca/neutra — **bloqueada** pra receber a identidade visual real do Mix Concept Hair porque **não existe nenhum ativo de marca do Mix no repositório** (nem logo, nem cor, nem campo no schema pra isso). Decisão pendente com Renato.
+**Onda 6:**
+1. **CRUD de verdade fechado** — Clientes, Serviços (edição geral), Produtos, Usuários e Papéis ganharam UI de editar/criar que nunca tinha sido implementada.
+2. **3 bugs corrigidos:** hydration mismatch na Agenda, erro 403 cru, duração do agendamento não ajustando ao trocar serviço.
+3. **Resiliência de processo** — API e frontend rodam via `systemd --user` com `Restart=always`. Ver seção 1 e 2 acima.
+4. **White-label — primeira aplicação real do InsightLab.**
+
+**Onda 7:**
+5. **Segurança** — `pnpm audit`: 8 `high` → 0 (17 achados → 6, ver `DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` pro único não corrigido).
+6. **White-label do Mix Concept Hair** — paleta (dourado/preto/creme) aplicada na área operacional; logo real ainda pendente (Renato precisa salvar o arquivo em `apps/web/public/brand/mix-concept-hair-logo.png`).
+7. **RBAC** — papéis Gerente e Recepção, seguindo padrão de mercado (Vagaro). Credenciais na seção 3.5.
+8. **Painel → "Inteligência de Receita"** — gráficos (Recharts), exportação CSV, atualização automática via revalidação + refresh no foco.
+9. **Confirmação de ações destrutivas** — cancelar venda, bloquear usuário, cancelar comissão agora pedem confirmação (`AlertDialog`).
 
 ---
 
 ## 5. Pendências conhecidas
 
-1. **Ativos de marca do Mix Concept Hair** — não existem no repo. Bloqueia completar o white-label do lado operacional. Ver seção 5.3 do onda6.
-2. **`pnpm audit` com vulnerabilidades `high`** em dependências não tocadas — não reavaliado nesta sessão, verificar antes do merge pra `main`.
+1. **Logo real do Mix Concept Hair** — Renato precisa salvar em `apps/web/public/brand/mix-concept-hair-logo.png`; o app já usa automaticamente assim que existir.
+2. **`@nestjs/core` (CVE-2026-35515)** — risco aceito, documentado em `DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` (código morto no projeto, correção exige migração de major do framework).
 3. **Sem tag Git formal pro Bloco 27** — administrativo, não bloqueia.
 4. **Sem testes de frontend** (`apps/web` sem `*.test.*`) — gap pré-existente.
 5. **Decremento de estoque na venda de produtos** (`stockQuantity` nunca é abatido) — gap de inventário, não endereçado.
@@ -145,6 +153,8 @@ Toda implementação nova vai primeiro pra **staging**, valida com Renato manual
 ## 7. Documentos relacionados
 - `governance/insightlab-one-onda0-adendo-governanca.md` — plano geral, zonas de autonomia, corte de MVP
 - `governance/insightlab-one-onda5-backlog-consolidado.md` — retrato único do backlog de produto (o que fechou, o que está bloqueado em decisão/fornecedor)
-- `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` — detalhe completo do trabalho desta sessão (CRUD, bugs, resiliência, white-label)
+- `governance/insightlab-one-onda6-correcoes-resiliencia-whitelabel.md` — CRUD, bugs, resiliência, primeira aplicação de marca
+- `governance/insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` — white-label completo, RBAC, Inteligência de Receita, segurança
+- `governance/DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` — por que a vulnerabilidade do `@nestjs/core` foi aceita, não corrigida
 - `governance/DECISAO_PRODUCAO_SUSPENSA_PRIORIZAR_STAGING.md` — por que produção está pausada
 - `governance/BACKLOG_PRODUTO_E_DIFERENCIACAO.md` — visão de produto/diferenciação de mercado
