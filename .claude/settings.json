@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git branch:*)",
+      "Bash(docker ps:*)", "Bash(docker volume ls:*)", "Bash(docker system df:*)", "Bash(docker compose ps:*)",
+      "Bash(npx prisma migrate status)", "Bash(pnpm audit:*)", "Bash(npm audit:*)", "Bash(pnpm test:*)", "Bash(pnpm lint:*)", "Bash(pg_dump:*)"
+    ],
+    "ask": [
+      "Bash(docker volume rm:*)", "Bash(docker volume prune:*)", "Bash(docker rm:*)", "Bash(docker compose down:*)",
+      "Bash(npx prisma migrate deploy:*)", "Bash(npx prisma migrate reset:*)", "Bash(psql:*)", "Bash(git push:*)", "Bash(git merge:*)"
+    ],
+    "deny": ["Read(./.env)", "Read(**/.env)", "Read(**/*.pem)", "Read(**/id_rsa*)"],
+    "defaultMode": "default"
+  }
+}

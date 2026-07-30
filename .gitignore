@@ -39,6 +39,7 @@ backups/
 
 # permissoes locais do Claude Code - especifico da maquina, nunca versionar
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 .playwright-mcp/
 
 # logs dos servicos systemd --user (API/web sempre-up) - runtime local, nunca versionar
