@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { EntityAvatar } from "@/components/entity-avatar";
 import type { ServiceCatalogItem, Product, Professional } from "@/lib/api-types";
 import { addSaleItem } from "../actions";
 
@@ -160,7 +161,14 @@ export function SaleItemForm({
                 <SelectContent>
                   {options.map((o) => (
                     <SelectItem key={o.id} value={o.id}>
-                      {o.name}
+                      {"photoUrl" in o ? (
+                        <span className="flex items-center gap-2">
+                          <EntityAvatar name={o.name} photoUrl={o.photoUrl} />
+                          {o.name}
+                        </span>
+                      ) : (
+                        o.name
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -186,7 +194,10 @@ export function SaleItemForm({
                   <SelectItem value={NONE}>Sem profissional definido</SelectItem>
                   {professionals.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.name}
+                      <span className="flex items-center gap-2">
+                        <EntityAvatar name={p.name} photoUrl={p.photoUrl} />
+                        {p.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -25,6 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { EntityAvatar } from "@/components/entity-avatar";
 import type { Appointment, Client, Professional, ServiceCatalogItem, OperationalResource } from "@/lib/api-types";
 import { createAppointment, updateAppointment, suggestAppointmentSlots } from "./actions";
 
@@ -206,7 +207,10 @@ export function AppointmentForm({
                 <SelectContent>
                   {clients.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.name}
+                      <span className="flex items-center gap-2">
+                        <EntityAvatar name={c.name} photoUrl={c.photoUrl} />
+                        {c.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -257,7 +261,10 @@ export function AppointmentForm({
                   <SelectItem value={NONE}>Sem preferência</SelectItem>
                   {professionals.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.name}
+                      <span className="flex items-center gap-2">
+                        <EntityAvatar name={p.name} photoUrl={p.photoUrl} />
+                        {p.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

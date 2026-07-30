@@ -41,15 +41,11 @@ async function refreshAccessToken(): Promise<string | null> {
   return tokens.accessToken as string;
 }
 
-/**
- * Chama a API NestJS a partir do servidor Next.js, anexando o token da
- * sessao. Renova automaticamente o access token expirado usando o refresh
- * token (uma unica vez) antes de desistir.
- */
-export async function apiFetch<T>(
+async function authenticatedFetch(
   path: string,
-  init: RequestInit = {},
-): Promise<T> {
+  init: RequestInit,
+  extraHeaders: Record<string, string>,
+): Promise<Response> {
   let accessToken = await getAccessToken();
 
   if (accessToken && isJwtExpired(accessToken)) {
@@ -60,7 +56,7 @@ export async function apiFetch<T>(
     fetch(`${API_URL}${path}`, {
       ...init,
       headers: {
-        "Content-Type": "application/json",
+        ...extraHeaders,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...init.headers,
       },
@@ -76,6 +72,20 @@ export async function apiFetch<T>(
     }
   }
 
+  return res;
+}
+
+/**
+ * Chama a API NestJS a partir do servidor Next.js, anexando o token da
+ * sessao. Renova automaticamente o access token expirado usando o refresh
+ * token (uma unica vez) antes de desistir.
+ */
+export async function apiFetch<T>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const res = await authenticatedFetch(path, init, { "Content-Type": "application/json" });
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new ApiError(
@@ -86,5 +96,25 @@ export async function apiFetch<T>(
   }
 
   if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+/**
+ * Mesma coisa que apiFetch, mas pra upload de arquivo (multipart/form-data) -
+ * sem Content-Type manual, o browser/undici define o boundary sozinho a
+ * partir do FormData.
+ */
+export async function apiFetchForm<T>(path: string, formData: FormData): Promise<T> {
+  const res = await authenticatedFetch(path, { method: "POST", body: formData }, {});
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(
+      res.status,
+      body.code ?? "UNKNOWN_ERROR",
+      body.message ?? `Erro ${res.status} ao chamar ${path}`,
+    );
+  }
+
   return res.json() as Promise<T>;
 }

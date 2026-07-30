@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiFetchForm } from "@/lib/api";
 import { runAction, type ActionResult } from "@/lib/action-result";
 import type { Client } from "@/lib/api-types";
 
@@ -45,6 +45,16 @@ export async function updateClient(
       body: JSON.stringify(input),
     }),
   );
+
+  if (result.ok) {
+    revalidatePath("/clientes");
+    revalidatePath(`/clientes/${id}`);
+  }
+  return result;
+}
+
+export async function uploadClientPhoto(id: string, formData: FormData): Promise<ActionResult<Client>> {
+  const result = await runAction(() => apiFetchForm<Client>(`/v1/clients/${id}/photo`, formData));
 
   if (result.ok) {
     revalidatePath("/clientes");

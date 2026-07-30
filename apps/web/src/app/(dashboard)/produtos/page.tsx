@@ -1,6 +1,7 @@
 import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
+import { EntityAvatar } from "@/components/entity-avatar";
 import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/format";
 import type { Product } from "@/lib/api-types";
@@ -33,7 +34,15 @@ export default async function ProdutosPage() {
         emptyMessage="Nenhum produto cadastrado ainda."
         emptyAction={hasPermission(user, "products.create") ? <NewProductButton /> : undefined}
         columns={[
-          { header: "Nome", cell: (p) => p.name },
+          {
+            header: "Nome",
+            cell: (p) => (
+              <div className="flex items-center gap-2">
+                <EntityAvatar name={p.name} photoUrl={p.photoUrl} />
+                {p.name}
+              </div>
+            ),
+          },
           { header: "SKU", cell: (p) => p.sku ?? "—" },
           { header: "Preço", cell: (p) => formatCurrency(p.salePrice) },
           { header: "Custo", cell: (p) => (p.cost != null ? formatCurrency(p.cost) : "—") },

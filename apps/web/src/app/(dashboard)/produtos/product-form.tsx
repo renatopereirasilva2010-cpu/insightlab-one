@@ -16,8 +16,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 import type { Product } from "@/lib/api-types";
-import { createProduct, updateProduct } from "./actions";
+import { createProduct, updateProduct, uploadProductPhoto } from "./actions";
 
 const productSchema = z.object({
   name: z.string().min(1, "Informe o nome.").max(150),
@@ -83,6 +84,14 @@ export function ProductForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {existing && (
+          <PhotoUploadField
+            name={existing.name}
+            currentPhotoUrl={existing.photoUrl}
+            uploadAction={(formData) => uploadProductPhoto(existing.id, formData)}
+          />
+        )}
+
         <FormField
           control={form.control}
           name="name"

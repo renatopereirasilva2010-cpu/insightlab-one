@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiFetchForm } from "@/lib/api";
 import { runAction, type ActionResult } from "@/lib/action-result";
 import type { PixKeyType, Professional, UserListItem } from "@/lib/api-types";
 
@@ -48,6 +48,18 @@ export async function updateProfessional(
       method: "PATCH",
       body: JSON.stringify(input),
     }),
+  );
+
+  if (result.ok) revalidatePath("/profissionais");
+  return result;
+}
+
+export async function uploadProfessionalPhoto(
+  id: string,
+  formData: FormData,
+): Promise<ActionResult<Professional>> {
+  const result = await runAction(() =>
+    apiFetchForm<Professional>(`/v1/professionals/${id}/photo`, formData),
   );
 
   if (result.ok) revalidatePath("/profissionais");

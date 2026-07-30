@@ -2,6 +2,7 @@ import Link from "next/link";
 import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
+import { EntityAvatar } from "@/components/entity-avatar";
 import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/components/status-badge";
 import { formatDate } from "@/lib/format";
 import type { Client } from "@/lib/api-types";
@@ -39,7 +40,8 @@ export default async function ClientesPage() {
           {
             header: "Nome",
             cell: (c) => (
-              <Link href={`/clientes/${c.id}`} className="underline underline-offset-2">
+              <Link href={`/clientes/${c.id}`} className="flex items-center gap-2 underline underline-offset-2">
+                <EntityAvatar name={c.name} photoUrl={c.photoUrl} />
                 {c.name}
               </Link>
             ),

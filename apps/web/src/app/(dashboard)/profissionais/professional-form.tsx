@@ -23,8 +23,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 import type { Professional } from "@/lib/api-types";
-import { createProfessional, updateProfessional } from "./actions";
+import { createProfessional, updateProfessional, uploadProfessionalPhoto } from "./actions";
 
 const NONE = "__none__";
 
@@ -112,6 +113,14 @@ export function ProfessionalForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {existing && (
+          <PhotoUploadField
+            name={existing.name}
+            currentPhotoUrl={existing.photoUrl}
+            uploadAction={(formData) => uploadProfessionalPhoto(existing.id, formData)}
+          />
+        )}
+
         <FormField
           control={form.control}
           name="name"

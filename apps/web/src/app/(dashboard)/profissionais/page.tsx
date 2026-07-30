@@ -1,6 +1,7 @@
 import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
+import { EntityAvatar } from "@/components/entity-avatar";
 import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/components/status-badge";
 import { formatDate } from "@/lib/format";
 import type { Professional, UserListItem } from "@/lib/api-types";
@@ -42,7 +43,15 @@ export default async function ProfissionaisPage() {
         emptyMessage="Nenhum profissional cadastrado ainda."
         emptyAction={hasPermission(user, "professionals.create") ? <NewProfessionalButton /> : undefined}
         columns={[
-          { header: "Nome", cell: (p) => p.name },
+          {
+            header: "Nome",
+            cell: (p) => (
+              <div className="flex items-center gap-2">
+                <EntityAvatar name={p.name} photoUrl={p.photoUrl} />
+                {p.name}
+              </div>
+            ),
+          },
           { header: "Função", cell: (p) => p.roleTitle ?? "—" },
           { header: "Telefone", cell: (p) => p.phone ?? "—" },
           { header: "E-mail", cell: (p) => p.email ?? "—" },

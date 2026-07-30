@@ -1,6 +1,7 @@
 import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
+import { EntityAvatar } from "@/components/entity-avatar";
 import {
   StatusBadge,
   commissionStatusLabels,
@@ -92,7 +93,17 @@ export default async function ComissoesPage() {
         columns={[
           {
             header: "Profissional",
-            cell: (c) => professionalById.get(c.professionalId)?.name ?? "—",
+            cell: (c) => {
+              const prof = professionalById.get(c.professionalId);
+              return prof ? (
+                <span className="flex items-center gap-2">
+                  <EntityAvatar name={prof.name} photoUrl={prof.photoUrl} />
+                  {prof.name}
+                </span>
+              ) : (
+                "—"
+              );
+            },
           },
           {
             header: "Cliente da venda",

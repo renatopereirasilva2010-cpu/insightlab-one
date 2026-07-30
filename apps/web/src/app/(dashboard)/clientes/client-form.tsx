@@ -16,8 +16,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 import type { Client } from "@/lib/api-types";
-import { createClient, updateClient } from "./actions";
+import { createClient, updateClient, uploadClientPhoto } from "./actions";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Informe o nome.").max(150),
@@ -85,6 +86,14 @@ export function ClientForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {existing && (
+          <PhotoUploadField
+            name={existing.name}
+            currentPhotoUrl={existing.photoUrl}
+            uploadAction={(formData) => uploadClientPhoto(existing.id, formData)}
+          />
+        )}
+
         <FormField
           control={form.control}
           name="name"
