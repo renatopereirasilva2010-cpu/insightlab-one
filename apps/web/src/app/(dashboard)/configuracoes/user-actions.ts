@@ -58,3 +58,14 @@ export async function blockUser(id: string): Promise<ActionResult<UserListItem>>
   if (result.ok) revalidatePath("/configuracoes");
   return result;
 }
+
+export async function unblockUser(id: string): Promise<ActionResult<UserListItem>> {
+  const result = await runAction(() =>
+    apiFetch<UserListItem>(`/v1/users/${id}/unblock`, {
+      method: "POST",
+    }),
+  );
+
+  if (result.ok) revalidatePath("/configuracoes");
+  return result;
+}

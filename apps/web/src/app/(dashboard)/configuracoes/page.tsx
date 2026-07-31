@@ -30,8 +30,14 @@ async function fetchBusinessSettings(): Promise<BusinessSettings | null> {
   }
 }
 
-export default async function ConfiguracoesPage() {
+export default async function ConfiguracoesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const user = await verifySession();
+  const { tab } = await searchParams;
+  const defaultTab = tab === "users" || tab === "roles" ? tab : "business";
 
   const [settings, { items: users }, { items: roles }, { items: permissions }] = await Promise.all([
     hasPermission(user, "settings.read") ? fetchBusinessSettings() : Promise.resolve(null),
@@ -49,7 +55,7 @@ export default async function ConfiguracoesPage() {
         <p className="text-muted-foreground">Parâmetros do negócio, usuários e papéis.</p>
       </div>
 
-      <Tabs defaultValue="business">
+      <Tabs defaultValue={defaultTab}>
         <TabsList>
           <TabsTrigger value="business">Negócio</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>

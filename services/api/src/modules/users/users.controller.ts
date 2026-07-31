@@ -40,4 +40,10 @@ export class UsersController {
   block(@CurrentTenant() tenant: { id: string }, @Param('id') id: string) {
     return this.usersService.block(tenant.id, id);
   }
+
+  @Post(':id/unblock')
+  @RequiredPermissions('users.block')
+  unblock(@CurrentTenant() tenant: { id: string }, @Param('id') id: string) {
+    return this.usersService.unblock(tenant.id, id);
+  }
 }

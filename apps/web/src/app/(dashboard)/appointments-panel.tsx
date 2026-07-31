@@ -25,7 +25,7 @@ import type {
   ServiceCatalogItem,
 } from "@/lib/api-types";
 import { NewAppointmentButton } from "./new-appointment-button";
-import { AppointmentRowActions } from "./appointment-row-actions";
+import { AppointmentRowActions, TERMINAL_STATUSES } from "./appointment-row-actions";
 import { AppointmentForm } from "./appointment-form";
 import { AgendaCalendar } from "./agenda-calendar";
 import type { OperationalResource } from "@/lib/api-types";
@@ -172,6 +172,13 @@ export function AppointmentsPanel({
               />
             ) : undefined
           }
+          onRowClick={
+            canManage
+              ? (a) => {
+                  if (!TERMINAL_STATUSES.includes(a.status)) setEditingAppointment(a);
+                }
+              : undefined
+          }
           columns={[
             { header: "Cliente", cell: (a) => clientById.get(a.clientId)?.name ?? "—" },
             { header: "Serviço", cell: (a) => serviceById.get(a.serviceId)?.name ?? "—" },
@@ -197,10 +204,9 @@ export function AppointmentsPanel({
               className: "text-right",
               cell: (a) =>
                 canManage ? (
-                  <AppointmentRowActions
-                    appointment={a}
-                    onEdit={() => setEditingAppointment(a)}
-                  />
+                  <div onClick={(event) => event.stopPropagation()}>
+                    <AppointmentRowActions appointment={a} onEdit={() => setEditingAppointment(a)} />
+                  </div>
                 ) : null,
             },
           ]}

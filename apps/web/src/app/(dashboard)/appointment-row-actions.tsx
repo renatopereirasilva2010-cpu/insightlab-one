@@ -21,7 +21,7 @@ import type { Appointment } from "@/lib/api-types";
 import { appointmentStatusLabels } from "@/components/status-badge";
 import { cancelAppointment, markAppointmentNoShow } from "./actions";
 
-const TERMINAL_STATUSES = ["CANCELED", "NO_SHOW", "COMPLETED"];
+export const TERMINAL_STATUSES = ["CANCELED", "NO_SHOW", "COMPLETED"];
 
 export function AppointmentRowActions({
   appointment,

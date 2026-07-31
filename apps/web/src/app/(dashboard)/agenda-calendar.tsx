@@ -17,7 +17,7 @@ import {
   appointmentStatusLabels,
   appointmentStatusVariants,
 } from "@/components/status-badge";
-import { AppointmentRowActions } from "./appointment-row-actions";
+import { AppointmentRowActions, TERMINAL_STATUSES } from "./appointment-row-actions";
 import { AppointmentForm } from "./appointment-form";
 import type {
   Appointment,
@@ -64,6 +64,26 @@ function startOfWeek(date: Date): Date {
   const d = startOfDay(date);
   const day = d.getDay();
   return addDays(d, -day);
+}
+
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function addMonths(date: Date, amount: number): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + amount);
+  return d;
+}
+
+function formatMonthLabel(date: Date): string {
+  return date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
+
+/** Grade fixa de 6 semanas (42 dias) começando no domingo anterior (ou igual) ao dia 1 do mês. */
+function buildMonthMatrix(anchorDate: Date): Date[] {
+  const gridStart = startOfWeek(startOfMonth(anchorDate));
+  return Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
 }
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -391,7 +411,7 @@ function DayGrid({
                     const { lane, laneCount } = lanes.get(a.id) ?? { lane: 0, laneCount: 1 };
                     const widthPct = 100 / laneCount;
                     const heightPx = durationMinutes * PX_PER_MINUTE;
-                    const editable = canManage && !["CANCELED", "NO_SHOW", "COMPLETED"].includes(a.status);
+                    const editable = canManage && !TERMINAL_STATUSES.includes(a.status);
 
                     return (
                       <AppointmentCard
@@ -417,6 +437,71 @@ function DayGrid({
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function MonthGrid({
+  anchorDate,
+  appointments,
+  onDayClick,
+}: {
+  anchorDate: Date;
+  appointments: Appointment[];
+  onDayClick: (date: Date) => void;
+}) {
+  const days = useMemo(() => buildMonthMatrix(anchorDate), [anchorDate]);
+  const countByDay = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const a of appointments) {
+      const key = startOfDay(new Date(a.startAt)).toISOString();
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return map;
+  }, [appointments]);
+  const currentMonth = anchorDate.getMonth();
+  const today = new Date();
+
+  return (
+    <div className="overflow-hidden rounded-md border">
+      <div className="text-muted-foreground grid grid-cols-7 border-b text-center text-xs font-medium">
+        {WEEKDAY_LABELS.map((label) => (
+          <div key={label} className="border-r px-2 py-2 last:border-r-0">
+            {label}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7">
+        {days.map((day) => {
+          const inMonth = day.getMonth() === currentMonth;
+          const count = countByDay.get(startOfDay(day).toISOString()) ?? 0;
+          const isToday = isSameDay(day, today);
+          return (
+            <button
+              key={day.toISOString()}
+              type="button"
+              onClick={() => onDayClick(day)}
+              className={`hover:bg-muted/50 flex min-h-20 flex-col items-start gap-1 border-r border-b p-2 text-left last:border-r-0 ${
+                inMonth ? "" : "text-muted-foreground/40"
+              }`}
+            >
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
+                  isToday ? "bg-primary text-primary-foreground font-semibold" : ""
+                }`}
+              >
+                {day.getDate()}
+              </span>
+              {count > 0 && (
+                <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <span className="bg-primary h-1.5 w-1.5 rounded-full" />
+                  {count} agendamento{count > 1 ? "s" : ""}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -512,7 +597,7 @@ export function AgendaCalendar({
    * (AppointmentsPanel), reaproveitado tambem pela visao Lista. */
   onAppointmentClick: (appointment: Appointment) => void;
 }) {
-  const [mode, setMode] = useState<"day" | "week">("day");
+  const [mode, setMode] = useState<"day" | "week" | "month">("day");
   const [anchorDate, setAnchorDate] = useState(() => startOfDay(new Date()));
   const [creatingSlot, setCreatingSlot] = useState<{ professionalId: string | null; startAt: Date } | null>(
     null,
@@ -552,10 +637,18 @@ export function AgendaCalendar({
   const newAppointmentProps: NewAppointmentButtonProps = { clients, professionals, services, resources };
 
   function goToPrevious() {
+    if (mode === "month") {
+      setAnchorDate((d) => addMonths(d, -1));
+      return;
+    }
     setAnchorDate((d) => addDays(d, mode === "day" ? -1 : -7));
   }
 
   function goToNext() {
+    if (mode === "month") {
+      setAnchorDate((d) => addMonths(d, 1));
+      return;
+    }
     setAnchorDate((d) => addDays(d, mode === "day" ? 1 : 7));
   }
 
@@ -579,7 +672,9 @@ export function AgendaCalendar({
           <span className="text-sm font-medium capitalize">
             {mode === "day"
               ? `${formatWeekdayLong(anchorDate)}, ${formatDayLabel(anchorDate)}`
-              : `Semana de ${formatDayLabel(weekStart)} a ${formatDayLabel(addDays(weekStart, 6))}`}
+              : mode === "week"
+                ? `Semana de ${formatDayLabel(weekStart)} a ${formatDayLabel(addDays(weekStart, 6))}`
+                : formatMonthLabel(anchorDate)}
           </span>
         </div>
 
@@ -598,6 +693,13 @@ export function AgendaCalendar({
               onClick={() => setMode("week")}
             >
               Semana
+            </Button>
+            <Button
+              variant={mode === "month" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setMode("month")}
+            >
+              Mês
             </Button>
           </div>
           <DropdownMenu>
@@ -660,7 +762,7 @@ export function AgendaCalendar({
             onAppointmentClick={onAppointmentClick}
           />
         </>
-      ) : (
+      ) : mode === "week" ? (
         <WeekAgenda
           weekStart={weekStart}
           appointments={visibleAppointments}
@@ -668,6 +770,18 @@ export function AgendaCalendar({
           clientById={clientById}
           serviceById={serviceById}
         />
+      ) : (
+        <>
+          <p className="text-muted-foreground text-xs">Clique num dia para ver a agenda completa.</p>
+          <MonthGrid
+            anchorDate={anchorDate}
+            appointments={visibleAppointments}
+            onDayClick={(date) => {
+              setAnchorDate(startOfDay(date));
+              setMode("day");
+            }}
+          />
+        </>
       )}
 
       <EntityDialog

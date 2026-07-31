@@ -11,6 +11,7 @@ import {
   Scissors,
   Package,
   Boxes,
+  UserCog,
   ShoppingCart,
   Wallet,
   Banknote,
@@ -59,6 +60,7 @@ const cadastrosItems = [
   { href: "/servicos", label: "Serviços", icon: Scissors },
   { href: "/produtos", label: "Produtos", icon: Package },
   { href: "/estoque", label: "Estoque", icon: Boxes },
+  { href: "/configuracoes?tab=users", label: "Usuários", icon: UserCog, permission: "users.read" },
 ];
 
 const configItems = [
@@ -77,6 +79,10 @@ export function AppSidebar({ user }: { user: SessionUser }) {
       ? [{ href: "/minhas-comissoes", label: "Minhas Comissões", icon: Receipt }]
       : []),
   ].filter((item) => !item.permission || user.permissions.includes(item.permission));
+
+  const visibleCadastrosItems = cadastrosItems.filter(
+    (item) => !item.permission || user.permissions.includes(item.permission),
+  );
 
   const visibleConfigItems = configItems.filter(
     (item) => !item.permission || user.permissions.includes(item.permission),
@@ -127,7 +133,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <SidebarGroupLabel>Cadastros</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {cadastrosItems.map((item) => (
+              {visibleCadastrosItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>

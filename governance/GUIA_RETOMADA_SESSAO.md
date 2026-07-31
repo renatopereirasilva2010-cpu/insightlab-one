@@ -1,6 +1,6 @@
 # Guia de Retomada de Sessão — InsightLab One
 
-**Última atualização:** 30/07/2026, após merge do PR #1 (`docs(governance): apps mobile and marketplace as explicit post-pilot backlog items`) — `main` em `e5b27d9`. Onda anterior: `insightlab-one-onda9-agenda-visual-identidade.md` (filtro de profissionais na Agenda, correção de edição pela Lista, identidade visual de fundo nas duas áreas, botões/scrollbar modernos). Onda anterior a essa: `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` (relatórios customizáveis, auditoria, logo por tenant, fotos, nome social, menu de usuário).
+**Última atualização:** 31/07/2026, ao fechar `insightlab-one-onda10-repaginacao-scrollbar-usuarios.md` (correção do bug real de scrollbar da onda9, módulo de Usuários com reativação, visão de Mês na Agenda, clique único na Lista, StatCard/tokens de marca conectados, login repaginado). Ainda não commitado/pushado nesta branch — ver seção 1. Onda anterior: `insightlab-one-onda9-agenda-visual-identidade.md` (filtro de profissionais na Agenda, correção de edição pela Lista, identidade visual de fundo nas duas áreas, botões/scrollbar modernos). Onda anterior a essa: `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` (relatórios customizáveis, auditoria, logo por tenant, fotos, nome social, menu de usuário).
 **Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero. **Leia isto antes de subir API/frontend manualmente — desde 29/07/2026 eles rodam supervisionados por `systemd --user`, não é mais `pnpm start:dev` direto no terminal.**
 
 ---
@@ -166,6 +166,15 @@ Quatro rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-co
 **Pós-onda 9 (30/07/2026):**
 22. **Backlog pós-piloto atualizado** — "Apps mobile" e "Marketplace de descoberta de salão" viraram itens próprios e explícitos em `insightlab-one-onda5-backlog-consolidado.md` seção 2.6 (antes dispersos/implícitos). PR #1 aberto e mergeado em `main` por fast-forward.
 
+**Onda 10 (31/07/2026):**
+23. **Scrollbar corrigida** — a barra dourada da onda9 vazava pra dentro de diálogos/dropdowns/selects (bug real de escopo CSS); agora só a rolagem principal do documento é estilizada.
+24. **Tokens de marca conectados** — `--shadow-*`/`--color-success/warning/danger/info`/`--gradient-brand-subtle`, já definidos em `design-tokens/insightlab.tokens.css`, ligados ao `@theme inline` (não estavam antes).
+25. **`StatCard`** — novo componente compartilhado (ícone+valor+tendência), primeiro uso nas 4 KPIs do Painel.
+26. **Login repaginado** — split-screen com gradiente de marca, logo real, tagline.
+27. **Agenda — visão de Mês** — terceiro modo Dia/Semana/Mês, grade com contador por dia, clique no dia leva pro Dia.
+28. **Agenda — clique único na Lista abre edição** — `DataTable` ganhou `onRowClick`, mesma regra de status travado do Calendário.
+29. **Usuários — reativação + módulo próprio** — `POST /v1/users/:id/unblock` novo no backend, botão "Reativar" no frontend, item "Usuários" próprio no sidebar (`/configuracoes?tab=users`).
+
 ---
 
 ## 5. Pendências conhecidas
@@ -197,6 +206,7 @@ Toda implementação nova vai primeiro pra **staging**, valida com Renato manual
 - `governance/insightlab-one-onda7-whitelabel-rbac-inteligencia-seguranca.md` — white-label completo, RBAC, Inteligência de Receita, segurança
 - `governance/insightlab-one-onda8-relatorios-auditoria-fotos-header.md` — relatórios customizáveis, auditoria, logo por tenant, fotos, menu de usuário
 - `governance/insightlab-one-onda9-agenda-visual-identidade.md` — filtro/edição na Agenda, identidade visual de fundo, botões/scrollbar
+- `governance/insightlab-one-onda10-repaginacao-scrollbar-usuarios.md` — correção de scrollbar, módulo de Usuários, visão de Mês, tokens de marca conectados, login repaginado
 - `governance/DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` — por que a vulnerabilidade do `@nestjs/core` foi aceita, não corrigida
 - `governance/DECISAO_PRODUCAO_SUSPENSA_PRIORIZAR_STAGING.md` — por que produção está pausada
 - `governance/BACKLOG_PRODUTO_E_DIFERENCIACAO.md` — visão de produto/diferenciação de mercado

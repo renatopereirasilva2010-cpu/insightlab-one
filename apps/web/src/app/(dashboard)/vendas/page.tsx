@@ -2,8 +2,9 @@ import Link from "next/link";
 import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
+import { EntityAvatar } from "@/components/entity-avatar";
 import { StatusBadge, saleStatusLabels, saleStatusVariants } from "@/components/status-badge";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, displayName } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import type { Sale, Client, Professional } from "@/lib/api-types";
 import { NewSaleButton } from "./new-sale-button";
@@ -52,10 +53,31 @@ export default async function VendasPage() {
           ) : undefined
         }
         columns={[
-          { header: "Cliente", cell: (s) => (s.clientId ? clientById.get(s.clientId)?.name ?? "—" : "—") },
+          {
+            header: "Cliente",
+            cell: (s) => {
+              const client = s.clientId ? clientById.get(s.clientId) : undefined;
+              if (!client) return "—";
+              return (
+                <span className="flex items-center gap-2">
+                  <EntityAvatar name={displayName(client)} photoUrl={client.photoUrl} />
+                  {displayName(client)}
+                </span>
+              );
+            },
+          },
           {
             header: "Profissional",
-            cell: (s) => (s.professionalId ? professionalById.get(s.professionalId)?.name ?? "—" : "—"),
+            cell: (s) => {
+              const professional = s.professionalId ? professionalById.get(s.professionalId) : undefined;
+              if (!professional) return "—";
+              return (
+                <span className="flex items-center gap-2">
+                  <EntityAvatar name={displayName(professional)} photoUrl={professional.photoUrl} />
+                  {displayName(professional)}
+                </span>
+              );
+            },
           },
           { header: "Itens", cell: (s) => s.items.length },
           { header: "Total", cell: (s) => formatCurrency(s.totalAmount) },

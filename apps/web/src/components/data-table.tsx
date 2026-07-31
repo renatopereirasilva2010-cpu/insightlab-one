@@ -19,12 +19,15 @@ export function DataTable<T>({
   rowKey,
   emptyMessage = "Nenhum registro encontrado.",
   emptyAction,
+  onRowClick,
 }: {
   columns: DataTableColumn<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   emptyMessage?: string;
   emptyAction?: React.ReactNode;
+  /** Quando presente, clicar em qualquer célula da linha (fora de botões que chamam stopPropagation) dispara isto. */
+  onRowClick?: (row: T) => void;
 }) {
   if (rows.length === 0) {
     return (
@@ -49,7 +52,11 @@ export function DataTable<T>({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={rowKey(row)}>
+            <TableRow
+              key={rowKey(row)}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              className={onRowClick ? "cursor-pointer" : undefined}
+            >
               {columns.map((col) => (
                 <TableCell key={col.header} className={col.className}>
                   {col.cell(row)}
