@@ -48,16 +48,56 @@ function isBlankCell(value: unknown): boolean {
   return text === '' || text === '-';
 }
 
+// Cabeçalho de coluna de verdade é sempre um rótulo curto ("Nome",
+// "Telefones") - uma célula de descrição de relatório ("Clientes com E-Mail
+// e Telefone") pode conter os mesmos sinônimos por acidente, mas é uma
+// frase, não um rótulo. Esse limite separa os dois casos sem precisar de
+// correspondência exata (que quebraria plural/variação, ex. "Telefones").
+const MAX_HEADER_CELL_LENGTH = 25;
+
+/** Sugere o mapeamento coluna -> campo por similaridade de nome de cabeçalho (não é IA, é dicionário de sinônimos comuns em PT-BR). */
+export function suggestColumnMapping(headers: string[]): ClientImportColumnMapping {
+  const normalized = headers.map((h) => (h.length <= MAX_HEADER_CELL_LENGTH ? normalizeHeader(h) : ''));
+  const mapping: ClientImportColumnMapping = { name: null, phone: null, email: null, source: null };
+
+  for (const field of Object.keys(FIELD_SYNONYMS) as (keyof ClientImportColumnMapping)[]) {
+    const synonyms = FIELD_SYNONYMS[field];
+    const matchIndex = normalized.findIndex((h) => h && synonyms.some((s) => h.includes(s)));
+    if (matchIndex >= 0) mapping[field] = headers[matchIndex];
+  }
+
+  return mapping;
+}
+
 /**
  * Acha a linha real de cabeçalho de coluna. Exports do AZ (e de sistemas
  * parecidos) trazem um bloco de cabeçalho de relatório antes (nome da
- * empresa, título, período) - a linha de cabeçalho de verdade é a primeira
- * com pelo menos 2 células preenchidas cuja linha seguinte também tem pelo
- * menos 2 células preenchidas (indício de tabela de dados começando).
+ * empresa, título, período, "Módulo: Cadastros de Clientes") - a linha
+ * certa é a que rende o maior número de campos reconhecidos (nome/telefone/
+ * e-mail), não simplesmente a primeira com duas células preenchidas (isso
+ * pegava a linha de metadado errada em arquivos reais do AZ - confirmado
+ * com o export real da Mix, não é hipotético).
  */
 export function detectHeaderRowIndex(rows: unknown[][]): number {
-  const limit = Math.min(rows.length - 1, 20);
+  const limit = Math.min(rows.length, 25);
+  let bestIndex = -1;
+  let bestScore = 0;
+
   for (let i = 0; i < limit; i++) {
+    const candidateHeaders = (rows[i] ?? []).map((h) => String(h ?? '').trim());
+    const mapping = suggestColumnMapping(candidateHeaders);
+    const score = [mapping.name, mapping.phone, mapping.email].filter(Boolean).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = i;
+    }
+  }
+
+  if (bestIndex >= 0) return bestIndex;
+
+  // Fallback pra arquivos sem cabeçalho reconhecível: primeira linha com
+  // pelo menos 2 células preenchidas cuja linha seguinte também tenha.
+  for (let i = 0; i < Math.min(rows.length - 1, limit); i++) {
     const nonEmpty = (rows[i] ?? []).filter((c) => !isBlankCell(c));
     const nextNonEmpty = (rows[i + 1] ?? []).filter((c) => !isBlankCell(c));
     if (nonEmpty.length >= 2 && nextNonEmpty.length >= 2) {
@@ -65,20 +105,6 @@ export function detectHeaderRowIndex(rows: unknown[][]): number {
     }
   }
   return 0;
-}
-
-/** Sugere o mapeamento coluna -> campo por similaridade de nome de cabeçalho (não é IA, é dicionário de sinônimos comuns em PT-BR). */
-export function suggestColumnMapping(headers: string[]): ClientImportColumnMapping {
-  const normalized = headers.map(normalizeHeader);
-  const mapping: ClientImportColumnMapping = { name: null, phone: null, email: null, source: null };
-
-  for (const field of Object.keys(FIELD_SYNONYMS) as (keyof ClientImportColumnMapping)[]) {
-    const synonyms = FIELD_SYNONYMS[field];
-    const matchIndex = normalized.findIndex((h) => synonyms.some((s) => h.includes(s)));
-    if (matchIndex >= 0) mapping[field] = headers[matchIndex];
-  }
-
-  return mapping;
 }
 
 /** Extrai só os dígitos de um telefone formatado (ex.: "Celular - (41) 99118-5995" -> "41991185995"). Vazio se não sobrar nada útil. */
@@ -94,6 +120,12 @@ function cleanCell(raw: unknown): string | null {
   const text = String(raw).trim();
   if (/^n[aã]o possui/i.test(text)) return null;
   return text;
+}
+
+/** Um nome real tem pelo menos uma letra - protege contra lixo de export real (célula com só ",", "--", etc.). */
+function looksLikeAName(value: string | null): string | null {
+  if (!value) return null;
+  return /\p{L}/u.test(value) ? value : null;
 }
 
 /**
@@ -132,7 +164,7 @@ export function analyzeClientSpreadsheet(
         rawRecord[h || `coluna_${idx + 1}`] = String(row[idx] ?? '').trim();
       });
 
-      const name = cleanCell(row[nameIdx]);
+      const name = looksLikeAName(cleanCell(row[nameIdx]));
       const phone = normalizePhone(cleanCell(phoneIdx >= 0 ? row[phoneIdx] : null));
       const email = cleanCell(emailIdx >= 0 ? row[emailIdx] : null);
 

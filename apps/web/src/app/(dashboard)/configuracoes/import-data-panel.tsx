@@ -241,6 +241,7 @@ export function ImportDataPanel() {
       <DataTable
         rows={analysis.rows}
         rowKey={(r) => String(r.rowIndex)}
+        pageSize={50}
         emptyMessage="Nenhuma linha reconhecida neste arquivo."
         columns={[
           {
