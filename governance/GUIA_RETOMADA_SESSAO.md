@@ -1,6 +1,6 @@
 # Guia de Retomada de Sessão — InsightLab One
 
-**Última atualização:** 30/07/2026, ao fechar `insightlab-one-onda9-agenda-visual-identidade.md` (filtro de profissionais na Agenda, correção de edição pela Lista, identidade visual de fundo nas duas áreas, botões/scrollbar modernos). Onda anterior: `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` (relatórios customizáveis, auditoria, logo por tenant, fotos, nome social, menu de usuário).
+**Última atualização:** 30/07/2026, após merge do PR #1 (`docs(governance): apps mobile and marketplace as explicit post-pilot backlog items`) — `main` em `e5b27d9`. Onda anterior: `insightlab-one-onda9-agenda-visual-identidade.md` (filtro de profissionais na Agenda, correção de edição pela Lista, identidade visual de fundo nas duas áreas, botões/scrollbar modernos). Onda anterior a essa: `insightlab-one-onda8-relatorios-auditoria-fotos-header.md` (relatórios customizáveis, auditoria, logo por tenant, fotos, nome social, menu de usuário).
 **Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero. **Leia isto antes de subir API/frontend manualmente — desde 29/07/2026 eles rodam supervisionados por `systemd --user`, não é mais `pnpm start:dev` direto no terminal.**
 
 ---
@@ -9,7 +9,7 @@
 
 - **Branch ativa:** `onda-2/backend-crud-completo`
 - **Working tree:** limpa — tudo da onda8 já commitado (ver seção 4).
-- **`main` local e `origin/main` (GitHub):** sincronizadas desde 30/07/2026, ambas em `b5df4ab` — push feito com `--force-with-lease` (necessário porque o `origin/main` antigo era um recorte de 6 commits sem ancestral comum com o histórico real; Renato autorizou publicar o histórico completo). Credencial Git configurada em `.git/credentials` (arquivo local do repositório, fora do controle de versão, permissão 600) — push futuro deste workspace autentica sozinho, sem precisar pedir token de novo. **Push continua sendo Zona Vermelha** — ter credencial funcionando não dispensa aprovação explícita de Renato a cada push real.
+- **`main` local e `origin/main` (GitHub):** sincronizadas, ambas em `e5b27d9` (30/07/2026) — histórico completo publicado em `b5df4ab` (push com `--force-with-lease`, autorizado por Renato pois o `origin/main` antigo era um recorte de 6 commits sem ancestral comum com o histórico real); desde então, `onda-2/backend-crud-completo` seguiu pra `main` via PR (#1) mergeado por fast-forward (`git merge --ff-only`), a pedido explícito de Renato. Credencial Git configurada em `.git/credentials` (arquivo local do repositório, fora do controle de versão, permissão 600) — push e chamadas à API do GitHub (abrir PR, comentar) deste workspace autenticam sozinhas, sem precisar pedir token de novo. **Nota de plataforma:** GitHub bloqueia auto-aprovação de PR pelo próprio autor (`"Can Not approve your own pull request"`) — quando pedido pra "aprovar" um PR aberto por este workspace, o review sai como comentário com veredito, não como approval formal; a decisão de mergear continua sendo de Renato. **Push e merge pra `main` continuam Zona Vermelha** — ter credencial funcionando não dispensa aprovação explícita de Renato a cada push/merge real.
 
 ### O que já está rodando (nesta máquina, agora) — via systemd, não mais processo solto
 | Serviço | Como está rodando | Porta | Observação |
@@ -162,6 +162,9 @@ Quatro rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-co
 19. **Edição de agendamento pela Lista, corrigida** — a visão Lista nunca teve botão de editar; agora tem, reaproveitando o mesmo diálogo do Calendário. Agendamentos travados por status mostram tooltip explicando o motivo, em vez de sumir silenciosamente.
 20. **Identidade visual de fundo** — marca d'água sutil (ícones do lucide-react, 5-8% opacidade) na área operacional (Mix: tesoura/brilho dourado) e na sidebar (InsightLab: grafo de dados), decisão registrada de não usar banco de imagens.
 21. **Botões e scrollbar modernizados** — hover com elevação/sombra nas variantes principais, scrollbar fina dourada na área operacional.
+
+**Pós-onda 9 (30/07/2026):**
+22. **Backlog pós-piloto atualizado** — "Apps mobile" e "Marketplace de descoberta de salão" viraram itens próprios e explícitos em `insightlab-one-onda5-backlog-consolidado.md` seção 2.6 (antes dispersos/implícitos). PR #1 aberto e mergeado em `main` por fast-forward.
 
 ---
 
