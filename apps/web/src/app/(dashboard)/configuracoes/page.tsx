@@ -14,6 +14,7 @@ import { NewRoleButton } from "./new-role-button";
 import { ManageRoleButton } from "./manage-role-button";
 import { ManageReportPermissionsButton } from "./manage-report-permissions-button";
 import { TenantLogoForm } from "./tenant-logo-form";
+import { ImportDataPanel } from "./import-data-panel";
 
 const RELEASE_MODE_LABELS: Record<string, string> = {
   ON_PAYMENT: "Ao pagamento",
@@ -37,7 +38,8 @@ export default async function ConfiguracoesPage({
 }) {
   const user = await verifySession();
   const { tab } = await searchParams;
-  const defaultTab = tab === "users" || tab === "roles" ? tab : "business";
+  const defaultTab = tab === "users" || tab === "roles" || tab === "import" ? tab : "business";
+  const canImport = hasPermission(user, "admin-master.migration.import");
 
   const [settings, { items: users }, { items: roles }, { items: permissions }] = await Promise.all([
     hasPermission(user, "settings.read") ? fetchBusinessSettings() : Promise.resolve(null),
@@ -60,6 +62,7 @@ export default async function ConfiguracoesPage({
           <TabsTrigger value="business">Negócio</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="roles">Papéis</TabsTrigger>
+          {canImport && <TabsTrigger value="import">Importação de Dados</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="business" className="space-y-4">
@@ -196,6 +199,12 @@ export default async function ConfiguracoesPage({
             ]}
           />
         </TabsContent>
+
+        {canImport && (
+          <TabsContent value="import" className="space-y-4">
+            <ImportDataPanel />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

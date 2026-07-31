@@ -42,6 +42,8 @@ Este adendo propõe um corte de MVP explícito, um mecanismo pra parar de repeti
 
 **Atualização 30/07/2026:** apps mobile e marketplace de descoberta de salão adicionados explicitamente ao pós-piloto, a pedido de Renato. Lista completa e detalhada agora vive em `insightlab-one-onda5-backlog-consolidado.md` seção 2.6 (documento que substitui esta seção como retrato corrente do backlog pós-piloto) — mantido aqui como registro histórico do corte original.
 
+**Atualização 31/07/2026 — decisão consciente de adiantar item:** "Migração assistida de outros tenants" deixa de ser puramente pós-piloto. Depois da higienização documental de `/mnt/d/InsightLab`, os dados reais de clientes da Mix Concept Hair (export do sistema AZ) ficaram organizados e utilizáveis; Renato pediu a construção de um mecanismo de importação (CSV/XLS/XLSX, com tela de análise/revisão antes de qualquer escrita real) e confirmou explicitamente, perguntado direto, que quer adiantar essa decisão agora — não é decisão unilateral do Claude Code. Escopo adiantado: só importação de **Clientes** (nome/telefone/e-mail), via a tela nova em Configurações → Importação de Dados. Migração completa de histórico financeiro/agendamento de outros tenants continua pós-piloto. Detalhe técnico em `insightlab-one-onda12-import-dados-clientes.md`.
+
 ---
 
 ## 3. Estratégia de ferramenta: Claude Code (local) vs. Cowork

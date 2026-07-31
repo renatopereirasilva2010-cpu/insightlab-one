@@ -1,6 +1,6 @@
 # Guia de Retomada de Sessão — InsightLab One
 
-**Última atualização:** 31/07/2026, ao fechar `insightlab-one-onda11-auditoria-multipersona.md` (auditoria multi-persona via Playwright, RBAC do sidebar corrigido pra bater com as permissões reais, widget de agendamento público ganhou logo/cor do tenant, banner de LGPD menos competitivo visualmente, `StatCard` em Minhas Comissões). Ainda não commitado/pushado nesta branch — ver seção 1. Onda anterior: `insightlab-one-onda10-repaginacao-scrollbar-usuarios.md` (correção do bug real de scrollbar da onda9, módulo de Usuários com reativação, visão de Mês na Agenda, clique único na Lista, StatCard/tokens de marca conectados, login repaginado). Onda anterior a essa: `insightlab-one-onda9-agenda-visual-identidade.md` (filtro de profissionais na Agenda, correção de edição pela Lista, identidade visual de fundo nas duas áreas, botões/scrollbar modernos).
+**Última atualização:** 31/07/2026, ao fechar `insightlab-one-onda12-import-dados-clientes.md` (higienização documental de `/mnt/d/InsightLab`, decisão consciente de adiantar "migração assistida" pra só Clientes, mecanismo de importação CSV/XLS/XLSX com tela de análise/revisão em Configurações → Importação de Dados). Ainda não commitado/pushado nesta branch — ver seção 1. Onda anterior: `insightlab-one-onda11-auditoria-multipersona.md` (auditoria multi-persona via Playwright, RBAC do sidebar corrigido pra bater com as permissões reais, widget de agendamento público ganhou logo/cor do tenant, banner de LGPD menos competitivo visualmente, `StatCard` em Minhas Comissões). Onda anterior a essa: `insightlab-one-onda10-repaginacao-scrollbar-usuarios.md` (correção do bug real de scrollbar da onda9, módulo de Usuários com reativação, visão de Mês na Agenda, clique único na Lista, StatCard/tokens de marca conectados, login repaginado).
 **Por que este arquivo existe:** se a sessão do Claude Code, tmux, WSL, VS Code ou Docker cair, este documento tem tudo que você precisa pra retomar sem precisar reconstruir contexto do zero. **Leia isto antes de subir API/frontend manualmente — desde 29/07/2026 eles rodam supervisionados por `systemd --user`, não é mais `pnpm start:dev` direto no terminal.**
 
 ---
@@ -181,6 +181,11 @@ Quatro rodadas na mesma sessão — detalhe completo em `insightlab-one-onda6-co
 32. **Banner de LGPD** menos competitivo visualmente (`variant="outline"`).
 33. **`StatCard` em Minhas Comissões** — consistência com o Painel.
 
+**Onda 12 (31/07/2026):**
+34. **Higienização de `/mnt/d/InsightLab`** — 194MB → 104MB, Documento-Mestre reduzido a uma única versão arquivada (`docs/llm/...V56.txt`), export do AZ duplicado resolvido (mantida a pasta `.xlsx`, comprovado que tinha o mesmo dado real que a `.XLS` maior), série "Memória Total do Projeto" (39 versões de acréscimo puro) reduzida a uma.
+35. **Migração assistida adiantada conscientemente** (decisão de Renato, registrada em `insightlab-one-onda0-adendo-governanca.md` §2.3) — só para Clientes, não para histórico financeiro/agendamento.
+36. **Mecanismo de importação de dados** — nova aba "Importação de Dados" em Configurações, upload CSV/XLS/XLSX, mapeamento de coluna auto-sugerido, tela de revisão linha a linha (importável/parcial/duplicado/não importável, com racional), só grava no confirm. Reaproveita `MigrationJob`/`admin-master` que já existiam sem uso real.
+
 ---
 
 ## 5. Pendências conhecidas
@@ -214,6 +219,7 @@ Toda implementação nova vai primeiro pra **staging**, valida com Renato manual
 - `governance/insightlab-one-onda9-agenda-visual-identidade.md` — filtro/edição na Agenda, identidade visual de fundo, botões/scrollbar
 - `governance/insightlab-one-onda10-repaginacao-scrollbar-usuarios.md` — correção de scrollbar, módulo de Usuários, visão de Mês, tokens de marca conectados, login repaginado
 - `governance/insightlab-one-onda11-auditoria-multipersona.md` — auditoria multi-persona, RBAC do sidebar corrigido, identidade visual no widget público, banner de LGPD, StatCard em Minhas Comissões
+- `governance/insightlab-one-onda12-import-dados-clientes.md` — higienização de `/mnt/d/InsightLab`, decisão de adiantar migração assistida, mecanismo de importação de clientes
 - `governance/DECISAO_RISCO_ACEITO_NESTJS_CORE_SSE.md` — por que a vulnerabilidade do `@nestjs/core` foi aceita, não corrigida
 - `governance/DECISAO_PRODUCAO_SUSPENSA_PRIORIZAR_STAGING.md` — por que produção está pausada
 - `governance/BACKLOG_PRODUTO_E_DIFERENCIACAO.md` — visão de produto/diferenciação de mercado

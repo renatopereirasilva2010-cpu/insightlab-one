@@ -509,3 +509,58 @@ export interface DataSubjectRequest {
   requestedAt: string;
   resolvedAt: string | null;
 }
+
+export type MigrationSourceType = "AZ_FDB" | "CSV" | "XLSX" | "MANUAL";
+export type MigrationJobStatus = "DRAFT" | "IMPORTING" | "IMPORTED" | "RECONCILING" | "RECONCILED" | "FAILED";
+
+export interface MigrationJob {
+  id: string;
+  tenantId: string;
+  sourceType: MigrationSourceType;
+  status: MigrationJobStatus;
+  sourceReference: string | null;
+  importedRecords: number;
+  reconciledRecords: number;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ClientImportRowStatus = "IMPORTAVEL" | "PARCIAL" | "DUPLICADO" | "NAO_IMPORTAVEL";
+
+export interface ClientImportRow {
+  rowIndex: number;
+  raw: Record<string, string>;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  status: ClientImportRowStatus;
+  reason: string;
+}
+
+export interface ClientImportColumnMapping {
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  source: string | null;
+}
+
+export interface ClientImportAnalysis {
+  fileToken: string;
+  recognized: boolean;
+  headers: string[];
+  mapping: ClientImportColumnMapping;
+  rows: ClientImportRow[];
+  summary: {
+    importavel: number;
+    parcial: number;
+    duplicado: number;
+    naoImportavel: number;
+  };
+}
+
+export interface ClientImportCommitResult {
+  importedCount: number;
+  skippedCount: number;
+  clients: Client[];
+}
