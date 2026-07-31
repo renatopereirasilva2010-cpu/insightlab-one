@@ -107,9 +107,9 @@ async function main() {
 
   const tenant = await prisma.tenant.upsert({
     where: { slug: 'mix-demo' },
-    update: {},
+    update: { name: 'Mix Concept Hair' },
     create: {
-      name: 'Mix Demo',
+      name: 'Mix Concept Hair',
       slug: 'mix-demo',
     },
   });
