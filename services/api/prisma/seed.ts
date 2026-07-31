@@ -227,11 +227,15 @@ async function main() {
     create: { userId: operatorUser.id, roleId: operatorRole.id },
   });
 
-  // Papel profissional - login somente-leitura escopado à própria comissão
-  // (governance/insightlab-one-onda3-benchmark-revisao-backlog.md, ONDA 3 FASE 1).
+  // Papel profissional - login somente-leitura escopado a propria agenda e
+  // comissao (governance/insightlab-one-onda3-benchmark-revisao-backlog.md,
+  // ONDA 3 FASE 1; appointments.read adicionado em 31/07/2026 apos auditoria
+  // multi-persona - Renato confirmou que o profissional deve ver a propria
+  // agenda, nao so o extrato de comissao).
   const professionalPermissionCodes = [
     'auth.login',
     'auth.refresh',
+    'appointments.read',
     'commissions.read-own',
     'commission-payouts.read-own',
   ];

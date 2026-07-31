@@ -1,6 +1,7 @@
 export interface PublicBusiness {
   name: string;
   slug: string;
+  logoUrl: string | null;
 }
 
 export interface PublicService {

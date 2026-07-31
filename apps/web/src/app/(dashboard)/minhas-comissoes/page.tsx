@@ -1,7 +1,9 @@
+import { Clock, CircleCheck } from "lucide-react";
 import { verifySession, hasPermission } from "@/lib/auth";
 import { apiFetch, ApiError } from "@/lib/api";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   StatusBadge,
   commissionStatusLabels,
@@ -65,14 +67,8 @@ export default async function MinhasComissoesPage() {
       {!errorMessage && (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-md border p-4">
-              <p className="text-muted-foreground text-sm">Pendente</p>
-              <p className="text-2xl font-semibold">{formatCurrency(totalPendente)}</p>
-            </div>
-            <div className="rounded-md border p-4">
-              <p className="text-muted-foreground text-sm">Liberado</p>
-              <p className="text-2xl font-semibold">{formatCurrency(totalLiberado)}</p>
-            </div>
+            <StatCard label="Pendente" value={formatCurrency(totalPendente)} icon={Clock} tone="gold" />
+            <StatCard label="Liberado" value={formatCurrency(totalLiberado)} icon={CircleCheck} tone="success" />
           </div>
 
           <DataTable<Commission>
