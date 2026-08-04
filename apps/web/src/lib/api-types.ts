@@ -211,6 +211,25 @@ export interface Client {
   updatedAt: string;
 }
 
+export interface ClientDeleteImpact {
+  client: { id: string; name: string; status: ClientStatus };
+  counts: {
+    appointments: number;
+    attendances: number;
+    whatsAppMessages: number;
+    sales: number;
+    payments: number;
+    commissions: number;
+    fiscalDocuments: number;
+  };
+  canHardDelete: boolean;
+}
+
+export interface ClientDeleteResult {
+  mode: "DELETED" | "DEACTIVATED";
+  impact: ClientDeleteImpact["counts"];
+}
+
 export type ProfessionalStatus = "ACTIVE" | "INACTIVE";
 
 export type PixKeyType = "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM";
@@ -404,7 +423,7 @@ export interface SessionProfile {
   professionalId: string | null;
   photoUrl: string | null;
   roles: { id: string; name: string }[];
-  tenant: { name: string; logoUrl: string | null };
+  tenant: { name: string; logoUrl: string | null; slug: string };
 }
 
 export interface BusinessSettings {

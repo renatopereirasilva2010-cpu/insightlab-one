@@ -331,15 +331,15 @@ function DayGrid({
           </p>
         </div>
       ) : (
-        <div className="flex min-w-max">
+        <div className="flex min-w-full">
           <div className="w-16 shrink-0 border-r">
             <div className="text-muted-foreground h-10 border-b px-2 py-2 text-xs">Hora</div>
             <div className="relative" style={{ height: gridHeight }}>
               {hours.map((h) => (
                 <div
                   key={h}
-                  className="text-muted-foreground absolute right-2 -translate-y-1/2 text-xs"
-                  style={{ top: (h * 60 - gridStartMinutes) * PX_PER_MINUTE }}
+                  className="text-muted-foreground absolute right-2 text-xs"
+                  style={{ top: (h * 60 - gridStartMinutes) * PX_PER_MINUTE + 2 }}
                 >
                   {formatHour(h)}
                 </div>
@@ -357,7 +357,7 @@ function DayGrid({
             const lanes = assignLanes(columnAppointments);
 
             return (
-              <div key={professional?.id ?? "sem-profissional"} className="w-52 shrink-0 border-r last:border-r-0">
+              <div key={professional?.id ?? "sem-profissional"} className="min-w-52 flex-1 border-r last:border-r-0">
                 <div className="h-10 truncate border-b px-2 py-2 text-sm font-medium">
                   {professional?.name ?? "Sem profissional"}
                 </div>

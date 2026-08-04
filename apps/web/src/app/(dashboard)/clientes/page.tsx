@@ -1,17 +1,48 @@
 import Link from "next/link";
 import { verifySession, hasPermission } from "@/lib/auth";
-import { safeList } from "@/lib/safe-fetch";
+import { apiFetch, ApiError } from "@/lib/api";
 import { DataTable } from "@/components/data-table";
+import { Button } from "@/components/ui/button";
 import { EntityAvatar } from "@/components/entity-avatar";
 import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/components/status-badge";
 import { displayName, formatDate } from "@/lib/format";
 import type { Client } from "@/lib/api-types";
 import { NewClientButton } from "./new-client-button";
 import { EditClientButton } from "./edit-client-button";
+import { DeleteClientButton } from "./delete-client-button";
 
-export default async function ClientesPage() {
+interface ClientPage {
+  items: Client[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+const PAGE_SIZE = 50;
+
+async function fetchClients(page: number): Promise<{ page: ClientPage | null; error?: string }> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) });
+  try {
+    return { page: await apiFetch<ClientPage>(`/v1/clients?${params.toString()}`) };
+  } catch (err) {
+    if (err instanceof ApiError) return { page: null, error: err.message };
+    throw err;
+  }
+}
+
+export default async function ClientesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const user = await verifySession();
-  const { items: clients, error } = await safeList<Client>("/v1/clients");
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam ?? "1") || 1);
+
+  const { page: result, error } = await fetchClients(page);
+  const clients = result?.items ?? [];
+  const total = result?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="space-y-6">
@@ -19,7 +50,7 @@ export default async function ClientesPage() {
         <div>
           <h1 className="text-2xl font-semibold">Clientes</h1>
           <p className="text-muted-foreground">
-            Cadastro de clientes para agenda e vendas.
+            Cadastro de clientes para agenda e vendas. {total} cliente(s) no total.
           </p>
         </div>
         {hasPermission(user, "clients.create") && <NewClientButton />}
@@ -64,11 +95,31 @@ export default async function ClientesPage() {
           {
             header: "",
             className: "text-right",
-            cell: (c) =>
-              hasPermission(user, "clients.update") ? <EditClientButton client={c} /> : null,
+            cell: (c) => (
+              <div className="flex justify-end gap-1">
+                {hasPermission(user, "clients.update") ? <EditClientButton client={c} /> : null}
+                {hasPermission(user, "clients.delete") ? <DeleteClientButton client={c} /> : null}
+              </div>
+            ),
           },
         ]}
       />
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground text-sm">
+            Página {page} de {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} asChild={page > 1}>
+              {page > 1 ? <a href={`/clientes?page=${page - 1}`}>Anterior</a> : <span>Anterior</span>}
+            </Button>
+            <Button variant="outline" size="sm" disabled={page >= totalPages} asChild={page < totalPages}>
+              {page < totalPages ? <a href={`/clientes?page=${page + 1}`}>Próxima</a> : <span>Próxima</span>}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

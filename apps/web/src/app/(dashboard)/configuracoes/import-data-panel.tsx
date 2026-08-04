@@ -42,6 +42,8 @@ export function ImportDataPanel() {
   const [accepted, setAccepted] = useState<Set<number>>(new Set());
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<{ importedCount: number; skippedCount: number } | null>(null);
+  const [reviewPage, setReviewPage] = useState(0);
+  const REVIEW_PAGE_SIZE = 50;
 
   async function runAnalysis(selectedFile: File, currentJobId: string, overrides: typeof mapping) {
     const formData = new FormData();
@@ -69,6 +71,7 @@ export function ImportDataPanel() {
           .map((r) => r.rowIndex),
       ),
     );
+    setReviewPage(0);
   }
 
   async function handleFileSelected(selectedFile: File) {
@@ -239,9 +242,8 @@ export function ImportDataPanel() {
       </div>
 
       <DataTable
-        rows={analysis.rows}
+        rows={analysis.rows.slice(reviewPage * REVIEW_PAGE_SIZE, (reviewPage + 1) * REVIEW_PAGE_SIZE)}
         rowKey={(r) => String(r.rowIndex)}
-        pageSize={50}
         emptyMessage="Nenhuma linha reconhecida neste arquivo."
         columns={[
           {
@@ -271,6 +273,33 @@ export function ImportDataPanel() {
           { header: "Racional", className: "max-w-xs text-muted-foreground text-xs", cell: (r) => r.reason },
         ]}
       />
+
+      {analysis.rows.length > REVIEW_PAGE_SIZE && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {reviewPage * REVIEW_PAGE_SIZE + 1}–
+            {Math.min((reviewPage + 1) * REVIEW_PAGE_SIZE, analysis.rows.length)} de {analysis.rows.length}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={reviewPage === 0}
+              onClick={() => setReviewPage((p) => Math.max(0, p - 1))}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={(reviewPage + 1) * REVIEW_PAGE_SIZE >= analysis.rows.length}
+              onClick={() => setReviewPage((p) => p + 1)}
+            >
+              Próxima
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={reset} disabled={pending}>

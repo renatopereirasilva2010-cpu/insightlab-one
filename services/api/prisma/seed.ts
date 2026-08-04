@@ -23,6 +23,7 @@ const permissions = [
   { code: 'clients.read', name: 'Read clients', module: 'clients' },
   { code: 'clients.create', name: 'Create clients', module: 'clients' },
   { code: 'clients.update', name: 'Update clients', module: 'clients' },
+  { code: 'clients.delete', name: 'Delete clients', module: 'clients' },
   { code: 'professionals.read', name: 'Read professionals', module: 'professionals' },
   { code: 'professionals.create', name: 'Create professionals', module: 'professionals' },
   { code: 'professionals.update', name: 'Update professionals', module: 'professionals' },
@@ -311,6 +312,10 @@ async function main() {
     'roles.assign',
     'data-subject-requests.read',
     'data-subject-requests.update',
+    // Excluir cliente (mesmo que só desative quando há histórico) é ação
+    // destrutiva demais pra ficar fora do gate de Admin - pedido explícito
+    // de Renato na onda12.
+    'clients.delete',
   ];
   const gerentePermissions = allPermissions.filter(
     (p) =>

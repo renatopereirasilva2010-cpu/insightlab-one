@@ -125,6 +125,7 @@ export class ClientImportService {
             phone: row.phone,
             email: row.email,
             source: 'IMPORT_CSV',
+            importJobId: job.id,
           },
         }),
       ),

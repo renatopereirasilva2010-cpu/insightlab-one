@@ -150,7 +150,7 @@ export class AuthService {
       where: { id: userId },
       include: {
         userRoles: { include: { role: { select: { id: true, name: true } } } },
-        tenant: { select: { name: true, logoUrl: true } },
+        tenant: { select: { name: true, logoUrl: true, slug: true } },
         professional: { select: { photoUrl: true } },
       },
     });
@@ -174,7 +174,7 @@ export class AuthService {
         id: userRole.role.id,
         name: userRole.role.name,
       })),
-      tenant: { name: user.tenant.name, logoUrl: user.tenant.logoUrl },
+      tenant: { name: user.tenant.name, logoUrl: user.tenant.logoUrl, slug: user.tenant.slug },
     };
   }
 }
