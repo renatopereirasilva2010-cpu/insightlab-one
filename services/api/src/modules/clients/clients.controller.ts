@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -17,6 +19,7 @@ import { PermissionGuard } from '../../common/guards/permission.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { createPhotoUploadInterceptor } from '../../common/upload/photo-upload.interceptor';
 import { CreateClientDto } from './dto/create-client.dto';
+import { QueryClientsDto } from './dto/query-clients.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { ClientsService } from './clients.service';
 
@@ -27,8 +30,8 @@ export class ClientsController {
 
   @Get()
   @RequiredPermissions('clients.read')
-  findAll(@CurrentTenant() tenant: { id: string }) {
-    return this.clientsService.findAllByTenant(tenant.id);
+  findAll(@CurrentTenant() tenant: { id: string }, @Query() query: QueryClientsDto) {
+    return this.clientsService.findAllByTenant(tenant.id, query);
   }
 
   @Post()
@@ -60,5 +63,21 @@ export class ClientsController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return this.clientsService.updatePhoto(tenant.id, id, file);
+  }
+
+  @Get(':id/delete-impact')
+  @RequiredPermissions('clients.delete')
+  getDeleteImpact(@CurrentTenant() tenant: { id: string }, @Param('id') id: string) {
+    return this.clientsService.getDeleteImpact(tenant.id, id);
+  }
+
+  @Delete(':id')
+  @RequiredPermissions('clients.delete')
+  remove(
+    @CurrentTenant() tenant: { id: string },
+    @CurrentUser() user: { id: string },
+    @Param('id') id: string,
+  ) {
+    return this.clientsService.remove(tenant.id, id, user.id);
   }
 }

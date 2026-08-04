@@ -73,7 +73,7 @@ Herdado do corte de MVP original (`insightlab-one-onda0-adendo-governanca.md` se
 - **Apps mobile** (app de operação para dono+equipe e app/superfície para cliente final — pesquisa de mercado e stack já prontas, ver seção 2.2 e seção 3; decisão de escopo/quantidade ainda pendente com Renato).
 - White-label.
 - **Marketplace de descoberta de salão** (vitrine multi-tenant para aquisição de novos clientes finais, distinto do widget de agendamento por tenant da seção 2.3 — item citado em `BACKLOG_PRODUTO_E_DIFERENCIACAO.md` linha 86, sem pesquisa de mercado dedicada ainda).
-- Migração assistida de outros tenants (parsing real de FDB/CSV/XLSX — decisão já confirmada como pós-piloto).
+- ~~Migração assistida de outros tenants~~ — **parcialmente adiantada em 31/07/2026** (decisão consciente de Renato, ver `insightlab-one-onda0-adendo-governanca.md` §2.3 atualização 31/07): import de **Clientes** via CSV/XLS/XLSX, com tela de análise/revisão, construído e usado pra popular o tenant Mix com dado real do AZ. Migração completa de outros tenants (histórico de venda/agendamento/comissão, parsing de `.FDB`) continua pós-piloto — ver `insightlab-one-onda12-import-dados-clientes.md`.
 - DevSecOps/qualidade formal completa (hoje só a higiene mínima da seção 7 do adendo original roda).
 - Split automático de pagamento com adquirente/maquininha (`insightlab-one-onda3-benchmark-revisao-backlog.md` seção 5) — mais fundo que qualquer item hoje, exige homologação com adquirente.
 

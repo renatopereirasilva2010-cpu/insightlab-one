@@ -6,7 +6,7 @@ import { StatusBadge, genericStatusLabels, genericStatusVariants } from "@/compo
 import { displayName, formatDate } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { BusinessSettings, UserListItem, Role, Permission } from "@/lib/api-types";
+import type { BusinessSettings, UserListItem, Role, Permission, SessionProfile } from "@/lib/api-types";
 import { EditSettingsButton } from "./edit-settings-button";
 import { NewUserButton } from "./new-user-button";
 import { UserRowActions } from "./user-row-actions";
@@ -14,6 +14,8 @@ import { NewRoleButton } from "./new-role-button";
 import { ManageRoleButton } from "./manage-role-button";
 import { ManageReportPermissionsButton } from "./manage-report-permissions-button";
 import { TenantLogoForm } from "./tenant-logo-form";
+import { ImportDataPanel } from "./import-data-panel";
+import { PublicBookingLinkCard } from "./public-booking-link-card";
 
 const RELEASE_MODE_LABELS: Record<string, string> = {
   ON_PAYMENT: "Ao pagamento",
@@ -30,16 +32,24 @@ async function fetchBusinessSettings(): Promise<BusinessSettings | null> {
   }
 }
 
-export default async function ConfiguracoesPage() {
+export default async function ConfiguracoesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const user = await verifySession();
+  const { tab } = await searchParams;
+  const defaultTab = tab === "users" || tab === "roles" || tab === "import" ? tab : "business";
+  const canImport = hasPermission(user, "admin-master.migration.import");
 
-  const [settings, { items: users }, { items: roles }, { items: permissions }] = await Promise.all([
+  const [settings, { items: users }, { items: roles }, { items: permissions }, profile] = await Promise.all([
     hasPermission(user, "settings.read") ? fetchBusinessSettings() : Promise.resolve(null),
     safeList<UserListItem>("/v1/users"),
     safeList<Role>("/v1/roles"),
     hasPermission(user, "roles.assign")
       ? safeList<Permission>("/v1/permissions")
       : Promise.resolve({ items: [] as Permission[] }),
+    apiFetch<SessionProfile>("/v1/auth/me"),
   ]);
 
   return (
@@ -49,11 +59,12 @@ export default async function ConfiguracoesPage() {
         <p className="text-muted-foreground">Parâmetros do negócio, usuários e papéis.</p>
       </div>
 
-      <Tabs defaultValue="business">
+      <Tabs defaultValue={defaultTab}>
         <TabsList>
           <TabsTrigger value="business">Negócio</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="roles">Papéis</TabsTrigger>
+          {canImport && <TabsTrigger value="import">Importação de Dados</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="business" className="space-y-4">
@@ -62,6 +73,7 @@ export default async function ConfiguracoesPage() {
               <TenantLogoForm tenantId={user.tenantId} />
             </div>
           )}
+          <PublicBookingLinkCard tenantSlug={profile.tenant.slug} />
           {!settings ? (
             <p className="text-muted-foreground text-sm">
               Nenhuma configuração encontrada para este negócio.
@@ -190,6 +202,12 @@ export default async function ConfiguracoesPage() {
             ]}
           />
         </TabsContent>
+
+        {canImport && (
+          <TabsContent value="import" className="space-y-4">
+            <ImportDataPanel />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

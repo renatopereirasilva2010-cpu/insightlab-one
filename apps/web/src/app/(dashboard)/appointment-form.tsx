@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,10 +26,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { EntityDialog } from "@/components/entity-dialog";
+import { ClientPickerDialog } from "@/components/client-picker-dialog";
 import { EntityAvatar } from "@/components/entity-avatar";
 import { displayName } from "@/lib/format";
 import type { Appointment, Client, Professional, ServiceCatalogItem, OperationalResource } from "@/lib/api-types";
 import { createAppointment, updateAppointment, suggestAppointmentSlots } from "./actions";
+import { ClientForm } from "./clientes/client-form";
 
 const NONE = "__none__";
 
@@ -95,6 +99,8 @@ export function AppointmentForm({
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestions, setSuggestions] = useState<{ startAt: string; endAt: string }[]>([]);
+  const [clientOptions, setClientOptions] = useState<Client[]>(clients);
+  const [newClientOpen, setNewClientOpen] = useState(false);
 
   const form = useForm<AppointmentValues>({
     resolver: zodResolver(appointmentSchema),
@@ -113,6 +119,18 @@ export function AppointmentForm({
 
   const serviceId = form.watch("serviceId");
   const professionalId = form.watch("professionalId");
+
+  useEffect(() => {
+    setClientOptions(clients);
+  }, [clients]);
+
+  function handleClientCreated(client?: Client) {
+    if (client) {
+      setClientOptions((prev) => [client, ...prev]);
+      form.setValue("clientId", client.id, { shouldValidate: true });
+    }
+    setNewClientOpen(false);
+  }
 
   useEffect(() => {
     if (!serviceId || professionalId === NONE) {
@@ -196,29 +214,55 @@ export function AppointmentForm({
         <FormField
           control={form.control}
           name="clientId"
-          render={({ field }) => (
+          render={({ field }) => {
+            const selectedClient = clientOptions.find((c) => c.id === field.value);
+            return (
             <FormItem>
-              <FormLabel>Cliente</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o cliente" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <span className="flex items-center gap-2">
-                        <EntityAvatar name={displayName(c)} photoUrl={c.photoUrl} />
-                        {displayName(c)}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <FormLabel>Cliente</FormLabel>
+                <EntityDialog
+                  title="Novo cliente"
+                  description="Cadastre um cliente sem sair do agendamento - ele já fica selecionado aqui."
+                  trigger={
+                    <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs">
+                      <Plus className="h-3.5 w-3.5" />
+                      Novo cliente
+                    </Button>
+                  }
+                  open={newClientOpen}
+                  onOpenChange={setNewClientOpen}
+                >
+                  {() => <ClientForm onSuccess={handleClientCreated} skipRefresh />}
+                </EntityDialog>
+              </div>
+              <ClientPickerDialog
+                clients={clientOptions}
+                value={field.value}
+                onChange={field.onChange}
+                trigger={
+                  <FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start font-normal"
+                      aria-invalid={!field.value}
+                    >
+                      {selectedClient ? (
+                        <span className="flex items-center gap-2">
+                          <EntityAvatar name={displayName(selectedClient)} photoUrl={selectedClient.photoUrl} />
+                          {displayName(selectedClient)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Selecione o cliente</span>
+                      )}
+                    </Button>
+                  </FormControl>
+                }
+              />
               <FormMessage />
             </FormItem>
-          )}
+            );
+          }}
         />
 
         <FormField

@@ -337,7 +337,12 @@ export function BookingForm({
           </p>
         )}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          style={{ backgroundColor: "var(--mix-gold)" }}
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Agendando..." : "Confirmar agendamento"}
         </Button>
 

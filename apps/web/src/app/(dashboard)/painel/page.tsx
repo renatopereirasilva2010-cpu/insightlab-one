@@ -1,9 +1,9 @@
-import { Sparkles } from "lucide-react";
+import { Sparkles, Wallet, Percent, Banknote, PiggyBank } from "lucide-react";
 import { verifySession, hasPermission } from "@/lib/auth";
 import { apiFetch, ApiError } from "@/lib/api";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { formatCurrency } from "@/lib/format";
 import type {
   Client,
@@ -219,30 +219,25 @@ export default async function PainelPage() {
 
       <div className="flex items-center justify-between">
         <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader>
-              <CardDescription>Faturamento hoje</CardDescription>
-              <CardTitle className="text-2xl">{formatCurrency(revenueToday)}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardDescription>Comissão gerada hoje</CardDescription>
-              <CardTitle className="text-2xl">{formatCurrency(commissionTotalToday)}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardDescription>Caixas abertos agora</CardDescription>
-              <CardTitle className="text-2xl">{openRegisters.length}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardDescription>Saldo de abertura (caixas abertos)</CardDescription>
-              <CardTitle className="text-2xl">{formatCurrency(openBalance)}</CardTitle>
-            </CardHeader>
-          </Card>
+          <StatCard label="Faturamento hoje" value={formatCurrency(revenueToday)} icon={Wallet} tone="gold" />
+          <StatCard
+            label="Comissão gerada hoje"
+            value={formatCurrency(commissionTotalToday)}
+            icon={Percent}
+            tone="indigo"
+          />
+          <StatCard
+            label="Caixas abertos agora"
+            value={String(openRegisters.length)}
+            icon={Banknote}
+            tone="gold"
+          />
+          <StatCard
+            label="Saldo de abertura (caixas abertos)"
+            value={formatCurrency(openBalance)}
+            icon={PiggyBank}
+            tone="indigo"
+          />
         </div>
       </div>
 

@@ -73,6 +73,7 @@ export function ConsentBanner() {
         {pending.map((type) => (
           <Button
             key={type}
+            variant="outline"
             size="sm"
             disabled={accepting !== null}
             onClick={() => handleAccept(type)}

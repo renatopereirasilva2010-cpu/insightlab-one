@@ -133,4 +133,25 @@ export class UsersService {
       select: userSelect,
     });
   }
+
+  async unblock(tenantId: string, userId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, tenantId },
+    });
+
+    if (!user) {
+      throw new NotFoundException({
+        code: 'USER_NOT_FOUND',
+        title: 'Usuário não encontrado',
+        message: 'Não encontramos o usuário informado para este tenant.',
+        recommendedAction: 'Revise o usuário selecionado e tente novamente.',
+      });
+    }
+
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: { status: 'ACTIVE' },
+      select: userSelect,
+    });
+  }
 }

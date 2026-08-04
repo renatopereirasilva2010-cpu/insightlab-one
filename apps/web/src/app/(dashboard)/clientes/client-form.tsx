@@ -33,10 +33,20 @@ type ClientValues = z.infer<typeof clientSchema>;
 export function ClientForm({
   existing,
   onSuccess,
+  skipRefresh,
 }: {
   /** Quando presente, o formulario edita este cliente em vez de criar um novo. */
   existing?: Client;
-  onSuccess: () => void;
+  /** Recebe o cliente criado/atualizado - quem so precisa fechar o dialog pode ignorar o argumento. */
+  onSuccess: (client?: Client) => void;
+  /**
+   * Quando usado embutido em outro form (ex.: criar cliente sem sair do
+   * agendamento), o `router.refresh()` padrão remonta a árvore de Server
+   * Components e junto com ela o form pai (perdendo o clientId que acabou
+   * de ser selecionado) - quem já mantém a lista atualizada localmente via
+   * `onSuccess` não precisa desse refresh.
+   */
+  skipRefresh?: boolean;
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -67,7 +77,7 @@ export function ClientForm({
 
       const result = existing
         ? await updateClient(existing.id, payload)
-        : await createClient(payload);
+        : await createClient(payload, { skipRevalidate: skipRefresh });
 
       if (!result.ok) {
         setServerError(result.message);
@@ -76,8 +86,8 @@ export function ClientForm({
 
       toast.success(existing ? "Cliente atualizado." : "Cliente cadastrado.");
       form.reset();
-      router.refresh();
-      onSuccess();
+      if (!skipRefresh) router.refresh();
+      onSuccess(result.data);
     } finally {
       setIsSubmitting(false);
     }

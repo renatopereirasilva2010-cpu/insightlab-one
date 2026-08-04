@@ -119,7 +119,7 @@ describe('AuthService', () => {
             professionalId: null,
             professional: null,
             userRoles: [{ role: { id: 'role-1', name: 'Gerente' } }],
-            tenant: { name: 'Mix Demo', logoUrl: '/uploads/tenants/t-1/logo.png' },
+            tenant: { name: 'Mix Concept Hair', logoUrl: '/uploads/tenants/t-1/logo.png', slug: 'mix-demo' },
           }),
         },
       };
@@ -132,7 +132,7 @@ describe('AuthService', () => {
         professionalId: null,
         photoUrl: null,
         roles: [{ id: 'role-1', name: 'Gerente' }],
-        tenant: { name: 'Mix Demo', logoUrl: '/uploads/tenants/t-1/logo.png' },
+        tenant: { name: 'Mix Concept Hair', logoUrl: '/uploads/tenants/t-1/logo.png', slug: 'mix-demo' },
       });
     });
 
@@ -145,7 +145,7 @@ describe('AuthService', () => {
             professionalId: 'prof-1',
             professional: { photoUrl: '/uploads/professionals/t-1/prof-1-1.png' },
             userRoles: [{ role: { id: 'role-2', name: 'Profissional' } }],
-            tenant: { name: 'Mix Demo', logoUrl: null },
+            tenant: { name: 'Mix Concept Hair', logoUrl: null, slug: 'mix-demo' },
           }),
         },
       };

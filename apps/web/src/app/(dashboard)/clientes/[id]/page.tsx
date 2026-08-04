@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { verifySession } from "@/lib/auth";
+import { verifySession, hasPermission } from "@/lib/auth";
 import { safeList } from "@/lib/safe-fetch";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import type {
   ServiceCatalogItem,
   Professional,
 } from "@/lib/api-types";
+import { DeleteClientButton } from "../delete-client-button";
 
 export default async function ClientDetailPage({
   params,
@@ -33,7 +34,7 @@ export default async function ClientDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await verifySession();
+  const user = await verifySession();
 
   const [
     { items: clients },
@@ -94,7 +95,10 @@ export default async function ClientDetailPage({
             {formatDate(client.createdAt)}
           </p>
         </div>
-        <StatusBadge status={client.status} labels={genericStatusLabels} variants={genericStatusVariants} />
+        <div className="flex items-center gap-2">
+          <StatusBadge status={client.status} labels={genericStatusLabels} variants={genericStatusVariants} />
+          {hasPermission(user, "clients.delete") && <DeleteClientButton client={client} />}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

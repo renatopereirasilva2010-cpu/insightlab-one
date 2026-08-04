@@ -46,6 +46,13 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-lg);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
 }
 
 :root {
@@ -76,6 +83,21 @@
   --mix-gold-bright: #c9a227;
   --mix-black: #1a1a1a;
   --mix-cream: #f4efe2;
+
+  /* Tokens de elevacao/estado semantico - fonte: design-tokens/insightlab.tokens.css
+   * (ja aprovado como parte da marca, so nao estava conectado ao @theme). */
+  --elevation-sm: 0 1px 2px rgb(12 35 90 / 6%);
+  --elevation-md: 0 6px 18px rgb(12 35 90 / 8%);
+  --elevation-lg: 0 16px 40px rgb(12 35 90 / 12%);
+  --success: #168a60;
+  --warning: #c98200;
+  --danger: #c43d57;
+  --info: #2fa1dd;
+  --gradient-brand-subtle: linear-gradient(
+    135deg,
+    rgb(64 188 223 / 12%) 0%,
+    rgb(92 49 214 / 10%) 100%
+  );
 
   --background: oklch(0.99 0.006 90);
   --foreground: oklch(0.145 0 0);
@@ -143,6 +165,14 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --elevation-sm: 0 1px 2px rgb(0 0 0 / 30%);
+  --elevation-md: 0 6px 18px rgb(0 0 0 / 35%);
+  --elevation-lg: 0 16px 40px rgb(0 0 0 / 45%);
+  --success: #22b47c;
+  --warning: #e0a13a;
+  --danger: #e2637c;
+  --info: #5cb8e6;
 }
 
 @layer base {
@@ -157,26 +187,42 @@
   }
 
   /* Barra de rolagem com acento da marca do tenant - fina, arredondada,
-   * cor dourada. Nao afeta a sidebar, que esconde a propria barra via a
-   * classe .no-scrollbar (mais especifica, sempre vence). */
+   * cor dourada, mas SO na rolagem principal do documento (html). A regra
+   * anterior usava "::-webkit-scrollbar" sem elemento, que no Chrome/Edge/
+   * Safari estiliza QUALQUER caixa com overflow no documento - inclusive
+   * diálogos, dropdowns e selects (Radix, renderizados em portal), onde uma
+   * barra de 10px dourada fica desproporcional e atrapalha a navegacao
+   * (achado de Renato, 30/07/2026). Corrigido escopando ao seletor "html".
+   * A sidebar continua com .no-scrollbar (mais especifica, sem conflito). */
   html {
     scrollbar-width: thin;
     scrollbar-color: var(--mix-gold) transparent;
   }
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+  html::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
   }
-  ::-webkit-scrollbar-track {
+  html::-webkit-scrollbar-track {
     background: transparent;
   }
-  ::-webkit-scrollbar-thumb {
+  html::-webkit-scrollbar-thumb {
     background-color: var(--mix-gold);
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
-  ::-webkit-scrollbar-thumb:hover {
+  html::-webkit-scrollbar-thumb:hover {
     background-color: var(--mix-gold-bright);
+  }
+
+  /* Firefox herda scrollbar-width/scrollbar-color pros descendentes por
+   * padrao (spec, nao bug do browser) - sem isso, o mesmo problema do
+   * paragrafo acima voltaria a acontecer so no Firefox. Reseta explicito
+   * nos conteineres de overflow que sao portais Radix/shadcn. */
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="select-content"] {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
   }
 }

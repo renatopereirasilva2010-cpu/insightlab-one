@@ -16,7 +16,13 @@ describe('PublicBookingService', () => {
     client: { findFirst: jest.Mock; create: jest.Mock };
   };
 
-  const activeTenant = { id: 'tenant_1', name: 'Mix Concept Hair', slug: 'mix-demo', status: 'ACTIVE' };
+  const activeTenant = {
+    id: 'tenant_1',
+    name: 'Mix Concept Hair',
+    slug: 'mix-demo',
+    status: 'ACTIVE',
+    logoUrl: '/uploads/tenants/tenant_1/logo.png',
+  };
 
   beforeEach(() => {
     prisma = {
@@ -49,12 +55,16 @@ describe('PublicBookingService', () => {
       await expect(service.getBusiness('mix-demo')).rejects.toThrow(NotFoundException);
     });
 
-    it('returns only name and slug for an active tenant - no internal data leaked', async () => {
+    it('returns only name, slug and logoUrl for an active tenant - no internal data leaked', async () => {
       prisma.tenant.findUnique.mockResolvedValueOnce(activeTenant);
 
       const result = await service.getBusiness('mix-demo');
 
-      expect(result).toEqual({ name: 'Mix Concept Hair', slug: 'mix-demo' });
+      expect(result).toEqual({
+        name: 'Mix Concept Hair',
+        slug: 'mix-demo',
+        logoUrl: '/uploads/tenants/tenant_1/logo.png',
+      });
     });
   });
 

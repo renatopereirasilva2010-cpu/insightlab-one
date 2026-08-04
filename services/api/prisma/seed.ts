@@ -23,6 +23,7 @@ const permissions = [
   { code: 'clients.read', name: 'Read clients', module: 'clients' },
   { code: 'clients.create', name: 'Create clients', module: 'clients' },
   { code: 'clients.update', name: 'Update clients', module: 'clients' },
+  { code: 'clients.delete', name: 'Delete clients', module: 'clients' },
   { code: 'professionals.read', name: 'Read professionals', module: 'professionals' },
   { code: 'professionals.create', name: 'Create professionals', module: 'professionals' },
   { code: 'professionals.update', name: 'Update professionals', module: 'professionals' },
@@ -107,9 +108,9 @@ async function main() {
 
   const tenant = await prisma.tenant.upsert({
     where: { slug: 'mix-demo' },
-    update: {},
+    update: { name: 'Mix Concept Hair' },
     create: {
-      name: 'Mix Demo',
+      name: 'Mix Concept Hair',
       slug: 'mix-demo',
     },
   });
@@ -227,11 +228,15 @@ async function main() {
     create: { userId: operatorUser.id, roleId: operatorRole.id },
   });
 
-  // Papel profissional - login somente-leitura escopado à própria comissão
-  // (governance/insightlab-one-onda3-benchmark-revisao-backlog.md, ONDA 3 FASE 1).
+  // Papel profissional - login somente-leitura escopado a propria agenda e
+  // comissao (governance/insightlab-one-onda3-benchmark-revisao-backlog.md,
+  // ONDA 3 FASE 1; appointments.read adicionado em 31/07/2026 apos auditoria
+  // multi-persona - Renato confirmou que o profissional deve ver a propria
+  // agenda, nao so o extrato de comissao).
   const professionalPermissionCodes = [
     'auth.login',
     'auth.refresh',
+    'appointments.read',
     'commissions.read-own',
     'commission-payouts.read-own',
   ];
@@ -307,6 +312,10 @@ async function main() {
     'roles.assign',
     'data-subject-requests.read',
     'data-subject-requests.update',
+    // Excluir cliente (mesmo que só desative quando há histórico) é ação
+    // destrutiva demais pra ficar fora do gate de Admin - pedido explícito
+    // de Renato na onda12.
+    'clients.delete',
   ];
   const gerentePermissions = allPermissions.filter(
     (p) =>

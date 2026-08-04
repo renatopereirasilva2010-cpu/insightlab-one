@@ -66,6 +66,7 @@ model MigrationJob {
 
   tenant  Tenant           @relation(fields: [tenantId], references: [id])
   batches MigrationBatch[]
+  clients Client[]
 
   @@index([tenantId])
   @@index([status])
@@ -396,11 +397,14 @@ model Client {
   source                  String?
   photoUrl                String?
   status                  ClientStatus @default(ACTIVE)
+  /// Preenchido só quando o registro veio de um import de planilha (onda12) - permite reverter um job específico sem afetar clientes cadastrados manualmente ou por outro import.
+  importJobId             String?
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
 
   tenant           Tenant            @relation(fields: [tenantId], references: [id])
   unit             Unit?             @relation(fields: [unitId], references: [id])
+  importJob        MigrationJob?     @relation(fields: [importJobId], references: [id])
   appointments     Appointment[]
   attendances      Attendance[]
   sales            Sale[]
@@ -410,6 +414,7 @@ model Client {
   @@index([unitId])
   @@index([phone])
   @@index([email])
+  @@index([importJobId])
 }
 
 model Professional {

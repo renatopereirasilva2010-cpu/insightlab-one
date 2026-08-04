@@ -32,7 +32,7 @@ export class PublicBookingService {
 
   async getBusiness(tenantSlug: string) {
     const tenant = await this.resolveTenant(tenantSlug);
-    return { name: tenant.name, slug: tenant.slug };
+    return { name: tenant.name, slug: tenant.slug, logoUrl: tenant.logoUrl };
   }
 
   async listServices(tenantSlug: string) {

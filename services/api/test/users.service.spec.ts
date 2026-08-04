@@ -209,4 +209,35 @@ describe('UsersService', () => {
       },
     });
   });
+
+  it('unblock should throw NotFoundException when the user does not belong to the tenant', async () => {
+    prisma.user.findFirst.mockResolvedValue(null);
+
+    await expect(service.unblock('tenant-1', 'user-x')).rejects.toThrow(NotFoundException);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('unblock should set the user status to ACTIVE', async () => {
+    const existing = { id: 'user-1', tenantId: 'tenant-1', status: 'BLOCKED' };
+    const updated = { ...existing, status: 'ACTIVE' };
+
+    prisma.user.findFirst.mockResolvedValue(existing);
+    prisma.user.update.mockResolvedValue(updated);
+
+    await expect(service.unblock('tenant-1', 'user-1')).resolves.toEqual(updated);
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      data: { status: 'ACTIVE' },
+      select: {
+        id: true,
+        name: true,
+        socialName: true,
+        email: true,
+        status: true,
+        unitId: true,
+        professionalId: true,
+        createdAt: true,
+      },
+    });
+  });
 });

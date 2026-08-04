@@ -11,6 +11,7 @@ import {
   Scissors,
   Package,
   Boxes,
+  UserCog,
   ShoppingCart,
   Wallet,
   Banknote,
@@ -43,14 +44,14 @@ import type { SessionUser } from "@/lib/session";
 const navItems = [
   { href: "/painel", label: "Inteligência de Receita", icon: LayoutDashboard },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3, permission: "reports.read" },
-  { href: "/", label: "Agenda", icon: Calendar },
-  { href: "/atendimentos", label: "Atendimentos", icon: ClipboardList },
-  { href: "/vendas", label: "Vendas", icon: ShoppingCart },
-  { href: "/pagamentos", label: "Pagamentos", icon: Wallet },
-  { href: "/caixa", label: "Caixa", icon: Banknote },
-  { href: "/comissoes", label: "Comissões", icon: Percent },
-  { href: "/fiscal", label: "Documentos Fiscais", icon: FileText },
-  { href: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
+  { href: "/", label: "Agenda", icon: Calendar, permission: "appointments.read" },
+  { href: "/atendimentos", label: "Atendimentos", icon: ClipboardList, permission: "attendances.read" },
+  { href: "/vendas", label: "Vendas", icon: ShoppingCart, permission: "sales.read" },
+  { href: "/pagamentos", label: "Pagamentos", icon: Wallet, permission: "payments.read" },
+  { href: "/caixa", label: "Caixa", icon: Banknote, permission: "cash-register.read" },
+  { href: "/comissoes", label: "Comissões", icon: Percent, permission: "commissions.read" },
+  { href: "/fiscal", label: "Documentos Fiscais", icon: FileText, permission: "fiscal-documents.read" },
+  { href: "/whatsapp", label: "WhatsApp", icon: MessageCircle, permission: "whatsapp.read" },
 ];
 
 const cadastrosItems = [
@@ -59,10 +60,11 @@ const cadastrosItems = [
   { href: "/servicos", label: "Serviços", icon: Scissors },
   { href: "/produtos", label: "Produtos", icon: Package },
   { href: "/estoque", label: "Estoque", icon: Boxes },
+  { href: "/configuracoes?tab=users", label: "Usuários", icon: UserCog, permission: "users.read" },
 ];
 
 const configItems = [
-  { href: "/configuracoes", label: "Configurações", icon: Settings },
+  { href: "/configuracoes", label: "Configurações", icon: Settings, permission: "settings.read" },
   { href: "/auditoria", label: "Auditoria", icon: History, permission: "audit.read" },
   { href: "/lgpd", label: "LGPD", icon: ShieldCheck },
   { href: "/ajuda", label: "Ajuda", icon: CircleHelp },
@@ -77,6 +79,10 @@ export function AppSidebar({ user }: { user: SessionUser }) {
       ? [{ href: "/minhas-comissoes", label: "Minhas Comissões", icon: Receipt }]
       : []),
   ].filter((item) => !item.permission || user.permissions.includes(item.permission));
+
+  const visibleCadastrosItems = cadastrosItems.filter(
+    (item) => !item.permission || user.permissions.includes(item.permission),
+  );
 
   const visibleConfigItems = configItems.filter(
     (item) => !item.permission || user.permissions.includes(item.permission),
@@ -127,7 +133,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <SidebarGroupLabel>Cadastros</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {cadastrosItems.map((item) => (
+              {visibleCadastrosItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>
